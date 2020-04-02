@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Laravel</title>
+        <title>Bevy Chat - A chat for the birds</title>
 
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
@@ -20,9 +20,6 @@
                 margin: 0;
             }
 
-            .full-height {
-                height: 100vh;
-            }
 
             .flex-center {
                 align-items: center;
@@ -80,19 +77,28 @@
             @endif
 
             <div class="content">
-                <div class="title m-b-md">
-                    Laravel
-                </div>
-
-                <div class="links">
-                    <a href="https://laravel.com/docs">Docs</a>
-                    <a href="https://laracasts.com">Laracasts</a>
-                    <a href="https://laravel-news.com">News</a>
-                    <a href="https://blog.laravel.com">Blog</a>
-                    <a href="https://nova.laravel.com">Nova</a>
-                    <a href="https://forge.laravel.com">Forge</a>
-                    <a href="https://vapor.laravel.com">Vapor</a>
-                    <a href="https://github.com/laravel/laravel">GitHub</a>
+                <div class="m-b-md">
+                    <img src='{{URL::asset('img/logo_color.png')}}' alt='BevyChat Logo' />
+                    <h1 class='title'>Bev·y</h1>
+                    <p>
+                        <span class="text-muted">/ˈbevē/</span>
+                    </p>
+                    <blockquote>
+                        <p>
+                            <em>noun</em>
+                        </p>
+                        <p>
+                            <ul>
+                                <li>
+                                    a large group of people or things of a particular kind.
+                                    "a bevy of big-name cameos will keep the adults entertained"
+                                </li>
+                                <li>
+                                    a group of birds, especially quail, particularly when closely gathered on the ground.
+                                </li>
+                            </ul>
+                        </p>
+                    </blockquote>
                 </div>
             </div>
         </div>
