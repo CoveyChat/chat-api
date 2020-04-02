@@ -11,3 +11,15 @@
 @import '~@fortawesome/fontawesome-free/scss/regular';
 @import '~@fortawesome/fontawesome-free/scss/solid';
 @import '~@fortawesome/fontawesome-free/scss/fontawesome';
+
+.btn-google {
+    color: #fff;
+    background-color:#dd4b39;
+    border-color:#dd4b39;
+}
+
+.btn-google:hover {
+    color:#fff;
+    background-color:#b53e2f;
+    border-color:#b53e2f;
+}
