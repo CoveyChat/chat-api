@@ -64,6 +64,11 @@
                                 @endif
                             </div>
                         </div>
+                        <div class="form-group row mb-0">
+                            <div class="col-md-8 offset-md-4">
+                                <a href="{{ url('/oauth/google') }}" class="btn btn-primary"><i class="fab fa-google"></i> Login With Google</a>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
