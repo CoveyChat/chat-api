@@ -68,12 +68,6 @@
                                 </button>
                             </div>
                         </div>
-
-                        <div class="form-group row mb-0 mt-4">
-                            <div class="col-md-4 offset-md-4">
-                                <a href="{{ url('/oauth/google') }}" class="btn btn-google btn-block"><i class="fab fa-google"></i> Register With Google</a>
-                            </div>
-                        </div>
                     </form>
                 </div>
             </div>
