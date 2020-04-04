@@ -41,6 +41,7 @@
                         <a href="{{ route('register') }}">Register</a>
                     @endif
                 @endauth
+                <a href="{{ url('/chat') }}">Create Chat</a>
             </div>
         </div>
         <div class="row">

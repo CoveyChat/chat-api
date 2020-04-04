@@ -17,12 +17,17 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Auth::routes();
-
-Route::get('/home', 'HomeController@index')->name('home');
 
 Route::get('oauth/{provider}', 'Auth\LoginController@redirectToProvider');
 Route::get('oauth/{provider}/callback', 'Auth\LoginController@handleProviderCallback');
-Auth::routes();
+
 
 Route::get('/home', 'HomeController@index')->name('home');
+Route::get('/terms', 'HomeController@index')->name('home');
+Route::get('/privacy', 'HomeController@index')->name('home');
+
+Route::get('/chat', 'Chat\ChatController@index');
+Route::post('/chat', 'Chat\ChatController@create')->name('chat_create');
+Route::get('/chat/{chat}', 'Chat\ChatController@launch')->name('chat_launch');
+
+Auth::routes();
