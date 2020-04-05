@@ -7,7 +7,6 @@ use App\Http\Requests\Chat\ChatCreateRequest;
 use App\Models\Chat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class ChatController extends Controller
 {
@@ -29,7 +28,6 @@ class ChatController extends Controller
     public function create(ChatCreateRequest $request)
     {
         $chat = new Chat([
-            'key' => Str::uuid(),
             'name' => $request->name,
             'description' => $request->description,
             'password' => (!empty($request->password) ? Hash::make($request->password) : null),
@@ -37,21 +35,15 @@ class ChatController extends Controller
 
         $chat->save();
 
-        return redirect()->route('chat_launch', ['chat' => $chat->key]);
+        return redirect()->route('chat_launch', ['chat' => $chat->id]);
     }
 
-    public function launch($chatKey)
+    public function launch(Chat $chat)
     {
-        $chat = Chat::where('key', $chatKey)->first();
-        if(empty($chat)) {
-            error_log("Womp Womp");
+        if(empty($chat->password)) {
+            return view('chat.launch');
         } else {
-            if(empty($chat->password)) {
-                return view('chat.launch');
-            } else {
-                return view('chat.verify_launch');
-            }
+            return view('chat.verify_launch');
         }
-
     }
 }

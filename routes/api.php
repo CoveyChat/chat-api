@@ -17,3 +17,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::group(['namespace' => 'Api', 'prefix' => '1.0'], function () use ($router) {
+    Route::get('chats/{chat}', 'ChatController@get');
+    Route::patch('chats/{chat}', 'ChatController@update');
+
+});

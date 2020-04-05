@@ -5,13 +5,10 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">Chats</div>
+                <div class="card-header">{{ __('Not Found') }}</div>
 
                 <div class="card-body">
-                    Woo
-
-
-                    <chat-component></chat-component>
+                    Womp Womp! This chat was not found!
                 </div>
             </div>
         </div>

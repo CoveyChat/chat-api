@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Chat extends Model
 {
@@ -24,21 +25,11 @@ class Chat extends Model
      */
     protected $primaryKey = 'id';
 
-    public function delete()
+    public static function boot()
     {
-        $this->permissions()->delete();
-        parent::delete();
-    }
-
-    public function permissions(){
-        return $this->hasMany('App\Models\Permission', 'role_id', 'id');
-    }
-
-    public function hasPermission($name, $access){
-        $permission = Permission::where('role_id', $this->id)->whereHas('permissiontype', function($q) use ($name) {
-            $q->where('name', $name);
-        })->first();
-
-        return $permission->$access ?? false;
+        parent::boot();
+        self::creating(function ($model) {
+            $model->id = (string) Str::uuid();
+        });
     }
 }
