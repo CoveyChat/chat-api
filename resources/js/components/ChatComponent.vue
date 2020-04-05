@@ -23,29 +23,42 @@
 </template>
 
 <script>
+
+//Backfills for Mozilla / Safari
+navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia ||
+navigator.webkitGetUserMedia ||
+navigator.mozGetUserMedia;
+
 export default {
 mounted() {
     console.log('Component mounted.')
-
     var chatId = location.pathname.replace('/chat/', '');
-    //Get this chat
+
+
+    var io = require('socket.io-client');
+    var signalserver = io.connect('http://localhost:1337');
+
+    signalserver.on('connect', function () {
+        signalserver.emit('joinroom', chatId);
+        console.log("Connected to signal server");
+    });
+
+    signalserver.on('inithost', function (webRtcStr) {
+
+
+    });
+
+    //Get this chat database record
     axios.get('/api/1.0/chats/' + chatId).then(response => {
         var chat = response.data;
-        var isHost = (chat.host == null); //No host? Well become it
+    });
 
 
-        //Backfills for Mozilla / Safari
-        navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia ||
-        navigator.webkitGetUserMedia ||
-        navigator.mozGetUserMedia;
-
-        navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(function(stream) {
 
         var Peer =  require('simple-peer');
         var peer = new Peer({
-            initiator: isHost,
+            initiator: location.hash === "#1",
             trickle: false,
-            stream: stream
         });
 
         peer.on('signal', function (data) {
@@ -58,12 +71,6 @@ mounted() {
                 });
             }
         });
-
-        if(!!chat.host) {
-            console.log("Connect to dat host!");
-            //console.log(chat.host);
-            //peer.signal(JSON.parse(chat.host));
-        }
 
         document.getElementById('connect').addEventListener('click', function() {
             var otherId = JSON.parse(document.getElementById('otherId').value);
@@ -79,6 +86,19 @@ mounted() {
             peer.send(message);
         });
 
+
+        document.getElementById('startvideo').addEventListener('click', function() {
+            console.log("starting video...");
+
+            navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(function(stream) {
+                peer.addStream(stream);
+            }).catch(function(err) {
+                /* handle the error */
+                alert(err);
+                console.log(err);
+            });
+        });
+
         peer.on('data', function(data) {
             document.getElementById('messages').textContent += data + '\n';
         });
@@ -91,13 +111,9 @@ mounted() {
 
             video.srcObject = stream;
             video.play();
-        })
-        }).catch(function(err) {
-            /* handle the error */
-            alert(err);
-            console.log(err);
         });
-    })
+
+
 }
 
 }
