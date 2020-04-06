@@ -1,21 +1,34 @@
 <template>
+
   <div class="container">
+<input v-model="message" placeholder="edit me">
+<p>Message is: {{ message }}</p>
+
+
     <strong>Log</strong><br />
-    <textarea id="logger" readonly class="form-control" rows=5></textarea>
+    <textarea id="logger" readonly class="form-control" rows=2></textarea>
     <hr />
 
-    <strong>Connections</strong><br />
+    <strong>Peer Connections</strong><br />
     <textarea id="connections" readonly class="form-control" rows=5></textarea>
     <hr />
 
     <label>Message</label><br />
-    <textarea id="message" class="form-control" rows=1></textarea>
-    <button id="send" class="btn btn-outline-primary">Send</button>
+
     <pre id="messages"></pre>
 
-    <div id='videos'>
+    <div class="input-group">
+        <input type="text" class="form-control" id="message" />
 
+        <span class="input-group-btn">
+                <button class="btn btn-primary" type="button"  id="send">
+                    <span class="sr-only">Send Message</span>
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+        </span>
     </div>
+
+    <div id='videos'></div>
   </div>
 </template>
 
@@ -27,6 +40,20 @@ navigator.webkitGetUserMedia ||
 navigator.mozGetUserMedia;
 
 export default {
+    data: function () {
+      return {
+        message: ''
+      }
+    },
+    methods: {
+        checkEnter (object) {
+            console.log('CHECKING ENTER')
+            console.log(object)
+        },
+        someFunction (txt) {
+            console.log("hello " + txt);
+        }
+    },
 mounted() {
     var dumpConnections = function(cons) {
         var txtConnections = document.getElementById('connections');
@@ -40,7 +67,7 @@ mounted() {
 
         }
     };
-
+    //this.someFunction("TEST");
     var Peer =  require('simple-peer');
 
     console.log('Component mounted.');
@@ -165,6 +192,7 @@ mounted() {
             }
             console.log("Close id" + id);
             delete connections[id];
+            dumpConnections(connections);
 
         });
 
@@ -175,6 +203,7 @@ mounted() {
             }
             console.log("Error id" + id);
             delete connections[id];
+            dumpConnections(connections);
         });
 
         dumpConnections(connections);
@@ -182,32 +211,53 @@ mounted() {
 
 
     document.getElementById('send').addEventListener('click', function() {
-        console.log("sending message...");
+
         var message = document.getElementById('message').value;
-        document.getElementById('message').value = '';
 
-        console.log(Object.keys(connections).length + " open connections");
-        for(var id in connections) {
-            if(connections[id] == null || !connections[id].connected || connections[id].destroyed) {
-                console.log("Tried sending through bad connection id " + id);
-                console.log(connections);
-                console.log(connections[id]);
-                console.log("Connected " + connections[id].connected);
-                console.log("Destroyed " + connections[id].destroyed);
-
-                if(connections[id].destroyed) {
-                    delete connections[id];
-                }
-                continue;
+        if(message != '') {
+            console.log("sending message...");
+            if(Message.send(connections, message)) {
+                document.getElementById('message').value = '';
+                document.getElementById('messages').textContent += message + '\n';
+            } else {
+                alert("Something went wrong!");
             }
-
-            console.log("Sending through: " + id);
-            connections[id].send(message);
         }
 
-        document.getElementById('messages').textContent += message + '\n';
+
     });
 
+    class Message {
+        constructor() {}
+
+        static send(connections, message) {
+            if(message == '') {
+                return false;
+            }
+
+            console.log(Object.keys(connections).length + " open connections");
+
+            for(var id in connections) {
+                if(connections[id] == null || !connections[id].connected || connections[id].destroyed) {
+                    console.log("Tried sending through bad connection id " + id);
+                    console.log(connections);
+                    console.log(connections[id]);
+                    console.log("Connected " + connections[id].connected);
+                    console.log("Destroyed " + connections[id].destroyed);
+                    delete connections[id];
+                    continue;
+                }
+
+                console.log("Sending to " + id);
+                connections[id].send(message);
+            }
+
+            //After deleting any bad connections, if there's any left that we sent to then return true
+            return Object.keys(connections).length > 0;
+
+
+        }
+    }
 }
 }
 

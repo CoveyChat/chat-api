@@ -1987,6 +1987,25 @@ module.exports = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -2011,6 +2030,20 @@ __webpack_require__.r(__webpack_exports__);
 //Backfills for Mozilla / Safari
 navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 /* harmony default export */ __webpack_exports__["default"] = ({
+  data: function data() {
+    return {
+      message: ''
+    };
+  },
+  methods: {
+    checkEnter: function checkEnter(object) {
+      console.log('CHECKING ENTER');
+      console.log(object);
+    },
+    someFunction: function someFunction(txt) {
+      console.log("hello " + txt);
+    }
+  },
   mounted: function mounted() {
     var dumpConnections = function dumpConnections(cons) {
       var txtConnections = document.getElementById('connections');
@@ -2023,7 +2056,8 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
           txtConnections.textContent += cons[id]._id + " -> " + id + "\n";
         }
       }
-    };
+    }; //this.someFunction("TEST");
+
 
     var Peer = __webpack_require__(/*! simple-peer */ "./node_modules/simple-peer/index.js");
 
@@ -2129,6 +2163,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
 
         console.log("Close id" + id);
         delete connections[id];
+        dumpConnections(connections);
       });
       connections[id].on('error', function (err) {
         if (typeof connections[id] != 'undefined') {
@@ -2138,36 +2173,61 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
 
         console.log("Error id" + id);
         delete connections[id];
+        dumpConnections(connections);
       });
       dumpConnections(connections);
     });
     document.getElementById('send').addEventListener('click', function () {
-      console.log("sending message...");
       var message = document.getElementById('message').value;
-      document.getElementById('message').value = '';
-      console.log(Object.keys(connections).length + " open connections");
 
-      for (var id in connections) {
-        if (connections[id] == null || !connections[id].connected || connections[id].destroyed) {
-          console.log("Tried sending through bad connection id " + id);
-          console.log(connections);
-          console.log(connections[id]);
-          console.log("Connected " + connections[id].connected);
-          console.log("Destroyed " + connections[id].destroyed);
+      if (message != '') {
+        console.log("sending message...");
 
-          if (connections[id].destroyed) {
-            delete connections[id];
-          }
-
-          continue;
+        if (Message.send(connections, message)) {
+          document.getElementById('message').value = '';
+          document.getElementById('messages').textContent += message + '\n';
+        } else {
+          alert("Something went wrong!");
         }
+      }
+    });
 
-        console.log("Sending through: " + id);
-        connections[id].send(message);
+    var Message = /*#__PURE__*/function () {
+      function Message() {
+        _classCallCheck(this, Message);
       }
 
-      document.getElementById('messages').textContent += message + '\n';
-    });
+      _createClass(Message, null, [{
+        key: "send",
+        value: function send(connections, message) {
+          if (message == '') {
+            return false;
+          }
+
+          console.log(Object.keys(connections).length + " open connections");
+
+          for (var id in connections) {
+            if (connections[id] == null || !connections[id].connected || connections[id].destroyed) {
+              console.log("Tried sending through bad connection id " + id);
+              console.log(connections);
+              console.log(connections[id]);
+              console.log("Connected " + connections[id].connected);
+              console.log("Destroyed " + connections[id].destroyed);
+              delete connections[id];
+              continue;
+            }
+
+            console.log("Sending to " + id);
+            connections[id].send(message);
+          } //After deleting any bad connections, if there's any left that we sent to then return true
+
+
+          return Object.keys(connections).length > 0;
+        }
+      }]);
+
+      return Message;
+    }();
   }
 });
 
@@ -53780,51 +53840,85 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _vm._m(0)
+  return _c("div", { staticClass: "container" }, [
+    _c("input", {
+      directives: [
+        {
+          name: "model",
+          rawName: "v-model",
+          value: _vm.message,
+          expression: "message"
+        }
+      ],
+      attrs: { placeholder: "edit me" },
+      domProps: { value: _vm.message },
+      on: {
+        input: function($event) {
+          if ($event.target.composing) {
+            return
+          }
+          _vm.message = $event.target.value
+        }
+      }
+    }),
+    _vm._v(" "),
+    _c("p", [_vm._v("Message is: " + _vm._s(_vm.message))]),
+    _vm._v(" "),
+    _c("strong", [_vm._v("Log")]),
+    _c("br"),
+    _vm._v(" "),
+    _c("textarea", {
+      staticClass: "form-control",
+      attrs: { id: "logger", readonly: "", rows: "2" }
+    }),
+    _vm._v(" "),
+    _c("hr"),
+    _vm._v(" "),
+    _c("strong", [_vm._v("Peer Connections")]),
+    _c("br"),
+    _vm._v(" "),
+    _c("textarea", {
+      staticClass: "form-control",
+      attrs: { id: "connections", readonly: "", rows: "5" }
+    }),
+    _vm._v(" "),
+    _c("hr"),
+    _vm._v(" "),
+    _c("label", [_vm._v("Message")]),
+    _c("br"),
+    _vm._v(" "),
+    _c("pre", { attrs: { id: "messages" } }),
+    _vm._v(" "),
+    _vm._m(0),
+    _vm._v(" "),
+    _c("div", { attrs: { id: "videos" } })
+  ])
 }
 var staticRenderFns = [
   function() {
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "container" }, [
-      _c("strong", [_vm._v("Log")]),
-      _c("br"),
-      _vm._v(" "),
-      _c("textarea", {
+    return _c("div", { staticClass: "input-group" }, [
+      _c("input", {
         staticClass: "form-control",
-        attrs: { id: "logger", readonly: "", rows: "5" }
+        attrs: { type: "text", id: "message" }
       }),
       _vm._v(" "),
-      _c("hr"),
-      _vm._v(" "),
-      _c("strong", [_vm._v("Connections")]),
-      _c("br"),
-      _vm._v(" "),
-      _c("textarea", {
-        staticClass: "form-control",
-        attrs: { id: "connections", readonly: "", rows: "5" }
-      }),
-      _vm._v(" "),
-      _c("hr"),
-      _vm._v(" "),
-      _c("label", [_vm._v("Message")]),
-      _c("br"),
-      _vm._v(" "),
-      _c("textarea", {
-        staticClass: "form-control",
-        attrs: { id: "message", rows: "1" }
-      }),
-      _vm._v(" "),
-      _c(
-        "button",
-        { staticClass: "btn btn-outline-primary", attrs: { id: "send" } },
-        [_vm._v("Send")]
-      ),
-      _vm._v(" "),
-      _c("pre", { attrs: { id: "messages" } }),
-      _vm._v(" "),
-      _c("div", { attrs: { id: "videos" } })
+      _c("span", { staticClass: "input-group-btn" }, [
+        _c(
+          "button",
+          {
+            staticClass: "btn btn-primary",
+            attrs: { type: "button", id: "send" }
+          },
+          [
+            _c("span", { staticClass: "sr-only" }, [_vm._v("Send Message")]),
+            _vm._v(" "),
+            _c("i", { staticClass: "fas fa-paper-plane" })
+          ]
+        )
+      ])
     ])
   }
 ]
