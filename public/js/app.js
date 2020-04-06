@@ -2008,13 +2008,23 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//
-//
-//
 //Backfills for Mozilla / Safari
 navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 /* harmony default export */ __webpack_exports__["default"] = ({
   mounted: function mounted() {
+    var dumpConnections = function dumpConnections(cons) {
+      var txtConnections = document.getElementById('connections');
+      txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
+
+      for (var id in cons) {
+        if (id == cons[id]._id) {
+          txtConnections.textContent += "Hosting " + id + "\n";
+        } else {
+          txtConnections.textContent += cons[id]._id + " -> " + id + "\n";
+        }
+      }
+    };
+
     var Peer = __webpack_require__(/*! simple-peer */ "./node_modules/simple-peer/index.js");
 
     console.log('Component mounted.');
@@ -2024,6 +2034,8 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
 
     var signalserver = io.connect('http://localhost:1337');
     var connections = [];
+    var signalIds = {};
+    var txtLogger = document.getElementById('logger');
     signalserver.on('disconnect', function () {
       alert("Server Died!");
       connections = [];
@@ -2036,159 +2048,128 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       console.log("init (" + numHosts + ") hosts");
 
       for (var i = 0; i < numHosts; i++) {
+        console.log("CREATE HOST");
         var host = new Peer({
-          initiator: true,
-          trickle: false
+          initiator: true
+        });
+        host.on('data', function (data) {
+          document.getElementById('messages').textContent += data + '\n';
         });
         host.on('signal', function (webRtcId) {
-          document.getElementById('yourId').value = JSON.stringify(webRtcId);
-          signalserver.emit('setconnection', {
+          connections[this._id] = this;
+          txtLogger.textContent += "Signal HostID " + this._id + '\n';
+          txtLogger.scrollTop = txtLogger.scrollHeight;
+          signalserver.emit('bindtohost', {
             webRtcId: webRtcId,
-            hostid: host._id
+            hostid: this._id
           });
+          dumpConnections(connections);
+        }).on('close', function () {
+          console.log("Destroy connection " + this._id);
+          dumpConnections(connections);
+          this.destroy();
+          delete connections[this._id];
         });
-        connections[host._id] = host;
+        host.on('error', function (err) {
+          console.log("Lost connection... Killing host " + this._id);
+          this.destroy();
+          delete connections[this._id];
+        });
       }
     });
     signalserver.on('bindtoclient', function (obj) {
-      console.log("Bind host " + obj.hostid + " to client");
-      document.getElementById('otherId').value = JSON.stringify(obj.webRtcId);
-      connections[obj.hostid].signal(obj.webRtcId);
-      connections[obj.hostid].on('data', function (data) {
-        document.getElementById('messages').textContent += data + '\n';
-      });
+      console.log("Bound HostID " + obj.hostid + " to client");
+      txtLogger.textContent += "Bound HostID " + obj.hostid + ' to client ' + obj.clientid + '\n';
+      txtLogger.scrollTop = txtLogger.scrollHeight;
+
+      if (typeof connections[obj.hostid] != 'undefined' && !connections[obj.hostid].destroyed) {
+        connections[obj.hostid].signal(obj.webRtcId);
+      }
+
+      dumpConnections(connections);
     });
     signalserver.on('initclient', function (obj) {
-      var client = new Peer({
-        initiator: false,
-        trickle: false
+      //Use the remote host id so that the client is overridden if it re-signals
+      var id = obj.hostid;
+      console.log("New connection peer object on id " + id);
+      connections[id] = new Peer({
+        initiator: false
       }); //Bind to the host
 
-      client.signal(obj.webRtcId);
-      document.getElementById('otherId').value = JSON.stringify(obj.webRtcId); //Recieve it's connection details
+      connections[id].signal(obj.webRtcId);
+      txtLogger.textContent += "Bound client " + connections[id]._id + " to host " + id + '\n';
+      txtLogger.scrollTop = txtLogger.scrollHeight; //Recieve it's connection details
 
-      client.on('signal', function (webRtcId) {
-        console.log("Binding to host..." + obj.hostid);
-        document.getElementById('yourId').value = JSON.stringify(webRtcId);
+      connections[id].on('signal', function (webRtcId) {
+        console.log("Sending client (" + connections[id]._id + ") connection to host..." + obj.hostid);
+        txtLogger.textContent += "Bound to " + obj.hostid + '\n';
+        txtLogger.scrollTop = txtLogger.scrollHeight;
         signalserver.emit('bindconnection', {
           webRtcId: webRtcId,
           hostid: obj.hostid,
-          clientid: client._id
-        }); //client.send("IS IT WORKING?!");
+          clientid: connections[id]._id
+        });
+        dumpConnections(connections);
       });
-      connections[client._id] = client;
-
-      connections[client._id].on('data', function (data) {
+      connections[id].on('data', function (data) {
         document.getElementById('messages').textContent += data + '\n';
       });
+      connections[id].on('connect', function () {
+        txtLogger.textContent += "Client " + connections[id]._id + ' connected to host ' + id + '\n';
+        txtLogger.scrollTop = txtLogger.scrollHeight; //Set the opened connection
+
+        connections[id] = this;
+        dumpConnections(connections);
+      });
+      connections[id].on('close', function () {
+        if (typeof connections[id] != 'undefined') {
+          console.log("Graceful close connection " + connections[id]._id + " -> " + id);
+          connections[id].destroy();
+        }
+
+        console.log("Close id" + id);
+        delete connections[id];
+      });
+      connections[id].on('error', function (err) {
+        if (typeof connections[id] != 'undefined') {
+          console.log("Lost connection... Killing client " + connections[id]._id + " -> " + id);
+          connections[id].destroy();
+        }
+
+        console.log("Error id" + id);
+        delete connections[id];
+      });
+      dumpConnections(connections);
     });
     document.getElementById('send').addEventListener('click', function () {
       console.log("sending message...");
       var message = document.getElementById('message').value;
       document.getElementById('message').value = '';
+      console.log(Object.keys(connections).length + " open connections");
 
       for (var id in connections) {
+        if (connections[id] == null || !connections[id].connected || connections[id].destroyed) {
+          console.log("Tried sending through bad connection id " + id);
+          console.log(connections);
+          console.log(connections[id]);
+          console.log("Connected " + connections[id].connected);
+          console.log("Destroyed " + connections[id].destroyed);
+
+          if (connections[id].destroyed) {
+            delete connections[id];
+          }
+
+          continue;
+        }
+
+        console.log("Sending through: " + id);
         connections[id].send(message);
       }
 
       document.getElementById('messages').textContent += message + '\n';
     });
-    /*
-     signalserver.on('retry', function () {
-        console.log("Retry client conn in 5 seconds");
-        setTimeout(function() {
-            console.log("Retrying...");
-            signalserver.emit('join', chatId);
-         }, 5000);
-    });
-     signalserver.on('inithost', function () {
-        var host = new Peer({
-            initiator: true,
-            trickle: false,
-        });
-         //Since initiator is set, this is auto-generated on load
-        host.on('signal', function (data) {
-            console.log("Bound host");
-            document.getElementById('yourId').value = JSON.stringify(data);
-            signalserver.emit('setlocalconnection', data);
-        });
-         signalserver.on('bindclient', function (webRtcStr) {
-            host.signal(webRtcStr);
-            console.log("Conenction established");
-        });
-         connections.push(host);
-    });
-     signalserver.on('initclient', function (webRtcStr) {
-        var client = new Peer({
-            initiator: false,
-            trickle: false,
-        });
-         //Bind to the host
-        client.signal(webRtcStr);
-        document.getElementById('otherId').value = JSON.stringify(webRtcStr);
-         //Recieve it's connection details
-        client.on('signal', function (data) {
-            console.log("Binding to client" + data);
-            document.getElementById('yourId').value = JSON.stringify(data);
-            signalserver.emit('setconnection', data);
-             //client.send("IS IT WORKING?!");
-        });
-         connections.push(client);
-    });
-    */
-
-    /**
-     * If you're the initiator then this will be auto-called, otherwise it will be triggered
-     * Once we signal the initator string into this peer
-     */
-
-    /*peer.on('signal', function (data) {
-        document.getElementById('yourId').value = JSON.stringify(data);
-    });
-     peer.on('data', function(data) {
-        document.getElementById('messages').textContent += data + '\n';
-    });
-       peer.on('stream', function(remoteStream) {
-        var video = document.createElement('video');
-        document.getElementById('videos').appendChild(video);
-         video.srcObject = stream;
-        video.play();
-    });
-     document.getElementById('connect').addEventListener('click', function() {
-        var otherId = JSON.parse(document.getElementById('otherId').value);
-        console.log("Attempting to connect...");
-        peer.signal(otherId);
-    });
-      document.getElementById('send').addEventListener('click', function() {
-        console.log("sending message...");
-        var message = document.getElementById('message').value;
-        document.getElementById('messages').textContent += message + '\n';
-        peer.send(message);
-    });
-     document.getElementById('startvideo').addEventListener('click', function() {
-        console.log("starting video...");
-         navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(function(stream) {
-            peer.addStream(stream);
-        }).catch(function(err) {
-            //handle the error
-            alert(err);
-            console.log(err);
-        });
-    });
-     //Get this chat database record
-    axios.get('/api/1.0/chats/' + chatId).then(response => {
-        var chat = response.data;
-    });
-    */
   }
 });
-/*
-
-    axios.patch('/api/1.0/chats/' + chatId, {host: data}).then(response => {
-        console.log("Set the host");
-        console.log(response);
-    });
-*/
 
 /***/ }),
 
@@ -53807,40 +53788,33 @@ var staticRenderFns = [
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
     return _c("div", { staticClass: "container" }, [
-      _c("label", [_vm._v("Local ID")]),
+      _c("strong", [_vm._v("Log")]),
       _c("br"),
       _vm._v(" "),
       _c("textarea", {
         staticClass: "form-control",
-        attrs: { id: "yourId", readonly: "" }
+        attrs: { id: "logger", readonly: "", rows: "5" }
       }),
-      _c("br"),
       _vm._v(" "),
       _c("hr"),
       _vm._v(" "),
-      _c("label", [_vm._v("Remote ID")]),
+      _c("strong", [_vm._v("Connections")]),
       _c("br"),
       _vm._v(" "),
-      _c("textarea", { staticClass: "form-control", attrs: { id: "otherId" } }),
-      _c("br"),
-      _vm._v(" "),
-      _c("hr"),
-      _vm._v(" "),
-      _c(
-        "button",
-        { staticClass: "btn btn-outline-primary", attrs: { id: "connect" } },
-        [_vm._v("Connect")]
-      ),
-      _vm._v(" "),
-      _c("br"),
-      _c("br"),
+      _c("textarea", {
+        staticClass: "form-control",
+        attrs: { id: "connections", readonly: "", rows: "5" }
+      }),
       _vm._v(" "),
       _c("hr"),
       _vm._v(" "),
       _c("label", [_vm._v("Message")]),
       _c("br"),
       _vm._v(" "),
-      _c("textarea", { staticClass: "form-control", attrs: { id: "message" } }),
+      _c("textarea", {
+        staticClass: "form-control",
+        attrs: { id: "message", rows: "1" }
+      }),
       _vm._v(" "),
       _c(
         "button",

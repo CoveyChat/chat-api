@@ -8,9 +8,6 @@
                 <div class="card-header">Chats</div>
 
                 <div class="card-body">
-                    Woo
-
-
                     <chat-component></chat-component>
                 </div>
             </div>
