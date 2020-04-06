@@ -2023,29 +2023,29 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 //
 //
 //
-//
-//
-//
-//
 //Backfills for Mozilla / Safari
 navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
-      message: ''
+      message: '',
+      connections: []
     };
   },
   methods: {
-    checkEnter: function checkEnter(object) {
-      console.log('CHECKING ENTER');
-      console.log(object);
+    sendMessage: function sendMessage(e) {
+      console.log('Called message sender');
+
+      if (this.message != '' && Object.keys(this.connections).length > 0) {
+        if (Message.send(this.connections, this.message)) {
+          document.getElementById('messages').textContent += this.message + '\n';
+          this.message = '';
+        } else {
+          alert("Something went wrong!");
+        }
+      }
     },
-    someFunction: function someFunction(txt) {
-      console.log("hello " + txt);
-    }
-  },
-  mounted: function mounted() {
-    var dumpConnections = function dumpConnections(cons) {
+    outputConnections: function outputConnections(cons) {
       var txtConnections = document.getElementById('connections');
       txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
 
@@ -2056,8 +2056,11 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
           txtConnections.textContent += cons[id]._id + " -> " + id + "\n";
         }
       }
-    }; //this.someFunction("TEST");
-
+    }
+  },
+  mounted: function mounted() {
+    //View model reference for inside scoped functions
+    var vm = this; //this.someFunction("TEST");
 
     var Peer = __webpack_require__(/*! simple-peer */ "./node_modules/simple-peer/index.js");
 
@@ -2067,12 +2070,11 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     var io = __webpack_require__(/*! socket.io-client */ "./node_modules/socket.io-client/lib/index.js");
 
     var signalserver = io.connect('http://localhost:1337');
-    var connections = [];
     var signalIds = {};
     var txtLogger = document.getElementById('logger');
     signalserver.on('disconnect', function () {
       alert("Server Died!");
-      connections = [];
+      vm.connections = [];
     });
     signalserver.on('connect', function () {
       signalserver.emit('join', chatId);
@@ -2090,24 +2092,25 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
           document.getElementById('messages').textContent += data + '\n';
         });
         host.on('signal', function (webRtcId) {
-          connections[this._id] = this;
+          vm.connections[this._id] = this;
           txtLogger.textContent += "Signal HostID " + this._id + '\n';
           txtLogger.scrollTop = txtLogger.scrollHeight;
           signalserver.emit('bindtohost', {
             webRtcId: webRtcId,
             hostid: this._id
           });
-          dumpConnections(connections);
+          vm.outputConnections(vm.connections);
         }).on('close', function () {
           console.log("Destroy connection " + this._id);
-          dumpConnections(connections);
           this.destroy();
-          delete connections[this._id];
+          delete vm.connections[this._id];
+          vm.outputConnections(vm.connections);
         });
         host.on('error', function (err) {
           console.log("Lost connection... Killing host " + this._id);
           this.destroy();
-          delete connections[this._id];
+          delete vm.connections[this._id];
+          vm.outputConnections(vm.connections);
         });
       }
     });
@@ -2116,120 +2119,106 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       txtLogger.textContent += "Bound HostID " + obj.hostid + ' to client ' + obj.clientid + '\n';
       txtLogger.scrollTop = txtLogger.scrollHeight;
 
-      if (typeof connections[obj.hostid] != 'undefined' && !connections[obj.hostid].destroyed) {
-        connections[obj.hostid].signal(obj.webRtcId);
+      if (typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].destroyed) {
+        vm.connections[obj.hostid].signal(obj.webRtcId);
       }
 
-      dumpConnections(connections);
+      vm.outputConnections(vm.connections);
     });
     signalserver.on('initclient', function (obj) {
       //Use the remote host id so that the client is overridden if it re-signals
       var id = obj.hostid;
       console.log("New connection peer object on id " + id);
-      connections[id] = new Peer({
+      vm.connections[id] = new Peer({
         initiator: false
       }); //Bind to the host
 
-      connections[id].signal(obj.webRtcId);
-      txtLogger.textContent += "Bound client " + connections[id]._id + " to host " + id + '\n';
+      vm.connections[id].signal(obj.webRtcId);
+      txtLogger.textContent += "Bound client " + vm.connections[id]._id + " to host " + id + '\n';
       txtLogger.scrollTop = txtLogger.scrollHeight; //Recieve it's connection details
 
-      connections[id].on('signal', function (webRtcId) {
-        console.log("Sending client (" + connections[id]._id + ") connection to host..." + obj.hostid);
+      vm.connections[id].on('signal', function (webRtcId) {
+        console.log("Sending client (" + vm.connections[id]._id + ") connection to host..." + obj.hostid);
         txtLogger.textContent += "Bound to " + obj.hostid + '\n';
         txtLogger.scrollTop = txtLogger.scrollHeight;
         signalserver.emit('bindconnection', {
           webRtcId: webRtcId,
           hostid: obj.hostid,
-          clientid: connections[id]._id
+          clientid: vm.connections[id]._id
         });
-        dumpConnections(connections);
+        vm.outputConnections(vm.connections);
       });
-      connections[id].on('data', function (data) {
+      vm.connections[id].on('data', function (data) {
         document.getElementById('messages').textContent += data + '\n';
       });
-      connections[id].on('connect', function () {
-        txtLogger.textContent += "Client " + connections[id]._id + ' connected to host ' + id + '\n';
+      vm.connections[id].on('connect', function () {
+        txtLogger.textContent += "Client " + vm.connections[id]._id + ' connected to host ' + id + '\n';
         txtLogger.scrollTop = txtLogger.scrollHeight; //Set the opened connection
 
-        connections[id] = this;
-        dumpConnections(connections);
+        vm.connections[id] = this;
+        vm.outputConnections(vm.connections);
       });
-      connections[id].on('close', function () {
-        if (typeof connections[id] != 'undefined') {
-          console.log("Graceful close connection " + connections[id]._id + " -> " + id);
-          connections[id].destroy();
+      vm.connections[id].on('close', function () {
+        if (typeof vm.connections[id] != 'undefined') {
+          console.log("Graceful close connection " + vm.connections[id]._id + " -> " + id);
+          vm.connections[id].destroy();
         }
 
         console.log("Close id" + id);
-        delete connections[id];
-        dumpConnections(connections);
+        delete vm.connections[id];
+        vm.outputConnections(vm.connections);
       });
-      connections[id].on('error', function (err) {
-        if (typeof connections[id] != 'undefined') {
-          console.log("Lost connection... Killing client " + connections[id]._id + " -> " + id);
-          connections[id].destroy();
+      vm.connections[id].on('error', function (err) {
+        if (typeof vm.connections[id] != 'undefined') {
+          console.log("Lost connection... Killing client " + vm.connections[id]._id + " -> " + id);
+          vm.connections[id].destroy();
         }
 
         console.log("Error id" + id);
-        delete connections[id];
-        dumpConnections(connections);
+        delete vm.connections[id];
+        vm.outputConnections(vm.connections);
       });
-      dumpConnections(connections);
+      vm.outputConnections(vm.connections);
     });
-    document.getElementById('send').addEventListener('click', function () {
-      var message = document.getElementById('message').value;
-
-      if (message != '') {
-        console.log("sending message...");
-
-        if (Message.send(connections, message)) {
-          document.getElementById('message').value = '';
-          document.getElementById('messages').textContent += message + '\n';
-        } else {
-          alert("Something went wrong!");
-        }
-      }
-    });
-
-    var Message = /*#__PURE__*/function () {
-      function Message() {
-        _classCallCheck(this, Message);
-      }
-
-      _createClass(Message, null, [{
-        key: "send",
-        value: function send(connections, message) {
-          if (message == '') {
-            return false;
-          }
-
-          console.log(Object.keys(connections).length + " open connections");
-
-          for (var id in connections) {
-            if (connections[id] == null || !connections[id].connected || connections[id].destroyed) {
-              console.log("Tried sending through bad connection id " + id);
-              console.log(connections);
-              console.log(connections[id]);
-              console.log("Connected " + connections[id].connected);
-              console.log("Destroyed " + connections[id].destroyed);
-              delete connections[id];
-              continue;
-            }
-
-            console.log("Sending to " + id);
-            connections[id].send(message);
-          } //After deleting any bad connections, if there's any left that we sent to then return true
-
-
-          return Object.keys(connections).length > 0;
-        }
-      }]);
-
-      return Message;
-    }();
   }
 });
+
+var Message = /*#__PURE__*/function () {
+  function Message() {
+    _classCallCheck(this, Message);
+  }
+
+  _createClass(Message, null, [{
+    key: "send",
+    value: function send(connections, message) {
+      if (message == '' || Object.keys(connections).length == 0) {
+        return false;
+      }
+
+      console.log(Object.keys(connections).length + " open connections");
+
+      for (var id in connections) {
+        if (connections[id] == null || !connections[id].connected || connections[id].destroyed) {
+          console.log("Tried sending through bad connection id " + id);
+          console.log(connections);
+          console.log(connections[id]);
+          console.log("Connected " + connections[id].connected);
+          console.log("Destroyed " + connections[id].destroyed);
+          delete connections[id];
+          continue;
+        }
+
+        console.log("Sending to " + id);
+        connections[id].send(message);
+      } //After deleting any bad connections, if there's any left that we sent to then return true
+
+
+      return Object.keys(connections).length > 0;
+    }
+  }]);
+
+  return Message;
+}();
 
 /***/ }),
 
@@ -53841,29 +53830,6 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("div", { staticClass: "container" }, [
-    _c("input", {
-      directives: [
-        {
-          name: "model",
-          rawName: "v-model",
-          value: _vm.message,
-          expression: "message"
-        }
-      ],
-      attrs: { placeholder: "edit me" },
-      domProps: { value: _vm.message },
-      on: {
-        input: function($event) {
-          if ($event.target.composing) {
-            return
-          }
-          _vm.message = $event.target.value
-        }
-      }
-    }),
-    _vm._v(" "),
-    _c("p", [_vm._v("Message is: " + _vm._s(_vm.message))]),
-    _vm._v(" "),
     _c("strong", [_vm._v("Log")]),
     _c("br"),
     _vm._v(" "),
@@ -53889,20 +53855,36 @@ var render = function() {
     _vm._v(" "),
     _c("pre", { attrs: { id: "messages" } }),
     _vm._v(" "),
-    _vm._m(0),
-    _vm._v(" "),
-    _c("div", { attrs: { id: "videos" } })
-  ])
-}
-var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "input-group" }, [
+    _c("div", { staticClass: "input-group" }, [
       _c("input", {
+        directives: [
+          {
+            name: "model",
+            rawName: "v-model",
+            value: _vm.message,
+            expression: "message"
+          }
+        ],
         staticClass: "form-control",
-        attrs: { type: "text", id: "message" }
+        attrs: { type: "text", id: "message" },
+        domProps: { value: _vm.message },
+        on: {
+          keyup: function($event) {
+            if (
+              !$event.type.indexOf("key") &&
+              _vm._k($event.keyCode, "enter", 13, $event.key, "Enter")
+            ) {
+              return null
+            }
+            return _vm.sendMessage($event)
+          },
+          input: function($event) {
+            if ($event.target.composing) {
+              return
+            }
+            _vm.message = $event.target.value
+          }
+        }
       }),
       _vm._v(" "),
       _c("span", { staticClass: "input-group-btn" }, [
@@ -53910,7 +53892,8 @@ var staticRenderFns = [
           "button",
           {
             staticClass: "btn btn-primary",
-            attrs: { type: "button", id: "send" }
+            attrs: { type: "button", id: "send" },
+            on: { click: _vm.sendMessage }
           },
           [
             _c("span", { staticClass: "sr-only" }, [_vm._v("Send Message")]),
@@ -53919,9 +53902,12 @@ var staticRenderFns = [
           ]
         )
       ])
-    ])
-  }
-]
+    ]),
+    _vm._v(" "),
+    _c("div", { attrs: { id: "videos" } })
+  ])
+}
+var staticRenderFns = []
 render._withStripped = true
 
 

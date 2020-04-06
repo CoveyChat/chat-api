@@ -1,10 +1,6 @@
 <template>
 
   <div class="container">
-<input v-model="message" placeholder="edit me">
-<p>Message is: {{ message }}</p>
-
-
     <strong>Log</strong><br />
     <textarea id="logger" readonly class="form-control" rows=2></textarea>
     <hr />
@@ -18,10 +14,10 @@
     <pre id="messages"></pre>
 
     <div class="input-group">
-        <input type="text" class="form-control" id="message" />
+        <input type="text" v-model="message" class="form-control" id="message" v-on:keyup.enter="sendMessage" />
 
         <span class="input-group-btn">
-                <button class="btn btn-primary" type="button"  id="send">
+                <button class="btn btn-primary" type="button"  id="send" v-on:click="sendMessage">
                     <span class="sr-only">Send Message</span>
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -41,32 +37,40 @@ navigator.mozGetUserMedia;
 
 export default {
     data: function () {
-      return {
-        message: ''
-      }
+        return {
+            message: '',
+            connections: []
+        }
     },
     methods: {
-        checkEnter (object) {
-            console.log('CHECKING ENTER')
-            console.log(object)
+        sendMessage (e) {
+            console.log('Called message sender');
+            if(this.message != '' && Object.keys(this.connections).length > 0) {
+                if(Message.send(this.connections, this.message)) {
+                    document.getElementById('messages').textContent += this.message + '\n';
+                    this.message = '';
+                } else {
+                    alert("Something went wrong!");
+                }
+            }
         },
-        someFunction (txt) {
-            console.log("hello " + txt);
+        outputConnections (cons) {
+            var txtConnections = document.getElementById('connections');
+            txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
+            for(var id in cons) {
+                if(id == cons[id]._id) {
+                    txtConnections.textContent += "Hosting " + id + "\n";
+                } else {
+                    txtConnections.textContent += cons[id]._id + " -> " + id + "\n";
+                }
+
+            }
         }
     },
 mounted() {
-    var dumpConnections = function(cons) {
-        var txtConnections = document.getElementById('connections');
-        txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
-        for(var id in cons) {
-            if(id == cons[id]._id) {
-                txtConnections.textContent += "Hosting " + id + "\n";
-            } else {
-                txtConnections.textContent += cons[id]._id + " -> " + id + "\n";
-            }
+    //View model reference for inside scoped functions
+    var vm = this;
 
-        }
-    };
     //this.someFunction("TEST");
     var Peer =  require('simple-peer');
 
@@ -76,14 +80,13 @@ mounted() {
     var io = require('socket.io-client');
     var signalserver = io.connect('http://localhost:1337');
 
-    var connections = [];
     var signalIds = {};
 
     var txtLogger = document.getElementById('logger');
 
     signalserver.on('disconnect', function () {
         alert("Server Died!");
-        connections = [];
+        vm.connections = [];
     });
 
     signalserver.on('connect', function () {
@@ -104,24 +107,27 @@ mounted() {
             });
 
             host.on('signal', function (webRtcId) {
-                connections[this._id] = this;
+                vm.connections[this._id] = this;
 
                 txtLogger.textContent += "Signal HostID " + this._id + '\n';
                 txtLogger.scrollTop = txtLogger.scrollHeight;
 
                 signalserver.emit('bindtohost', {webRtcId: webRtcId, hostid: this._id});
-                dumpConnections(connections);
+                vm.outputConnections(vm.connections);
             }).on('close', function() {
                 console.log("Destroy connection " + this._id);
-                dumpConnections(connections);
                 this.destroy();
-                delete connections[this._id];
+                delete vm.connections[this._id];
+
+                vm.outputConnections(vm.connections);
             });
 
             host.on('error', function(err) {
                 console.log("Lost connection... Killing host " + this._id);
                 this.destroy();
-                delete connections[this._id];
+                delete vm.connections[this._id];
+
+                vm.outputConnections(vm.connections);
             });
 
 
@@ -135,11 +141,11 @@ mounted() {
         txtLogger.textContent += "Bound HostID " + obj.hostid + ' to client ' + obj.clientid + '\n';
         txtLogger.scrollTop = txtLogger.scrollHeight;
 
-        if(typeof connections[obj.hostid] != 'undefined' && !connections[obj.hostid].destroyed) {
-            connections[obj.hostid].signal(obj.webRtcId);
+        if(typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].destroyed) {
+            vm.connections[obj.hostid].signal(obj.webRtcId);
         }
 
-        dumpConnections(connections);
+        vm.outputConnections(vm.connections);
 
 
 
@@ -152,113 +158,98 @@ mounted() {
         var id=obj.hostid;
 
         console.log("New connection peer object on id " + id);
-        connections[id] = new Peer({
+        vm.connections[id] = new Peer({
             initiator: false
         });
 
         //Bind to the host
-        connections[id].signal(obj.webRtcId);
+        vm.connections[id].signal(obj.webRtcId);
 
-        txtLogger.textContent += "Bound client " + connections[id]._id + " to host " +  id + '\n';
+        txtLogger.textContent += "Bound client " + vm.connections[id]._id + " to host " +  id + '\n';
         txtLogger.scrollTop = txtLogger.scrollHeight;
 
         //Recieve it's connection details
-        connections[id].on('signal', function (webRtcId) {
-            console.log("Sending client ("+ connections[id]._id +") connection to host..." + obj.hostid);
+        vm.connections[id].on('signal', function (webRtcId) {
+            console.log("Sending client ("+ vm.connections[id]._id +") connection to host..." + obj.hostid);
             txtLogger.textContent += "Bound to " + obj.hostid + '\n';
             txtLogger.scrollTop = txtLogger.scrollHeight;
 
-            signalserver.emit('bindconnection', {webRtcId:webRtcId, hostid: obj.hostid, clientid: connections[id]._id});
-            dumpConnections(connections);
+            signalserver.emit('bindconnection', {webRtcId:webRtcId, hostid: obj.hostid, clientid: vm.connections[id]._id});
+            vm.outputConnections(vm.connections);
         });
 
-        connections[id].on('data', function(data) {
+        vm.connections[id].on('data', function(data) {
             document.getElementById('messages').textContent += data + '\n';
         });
 
-        connections[id].on('connect', function() {
-            txtLogger.textContent += "Client " + connections[id]._id + ' connected to host ' + id + '\n';
+        vm.connections[id].on('connect', function() {
+            txtLogger.textContent += "Client " + vm.connections[id]._id + ' connected to host ' + id + '\n';
             txtLogger.scrollTop = txtLogger.scrollHeight;
 
             //Set the opened connection
-            connections[id] = this;
-            dumpConnections(connections);
+            vm.connections[id] = this;
+            vm.outputConnections(vm.connections);
         });
 
-        connections[id].on('close', function() {
-            if(typeof(connections[id]) != 'undefined') {
-                console.log("Graceful close connection " + connections[id]._id + " -> " + id);
-                connections[id].destroy();
+        vm.connections[id].on('close', function() {
+            if(typeof(vm.connections[id]) != 'undefined') {
+                console.log("Graceful close connection " + vm.connections[id]._id + " -> " + id);
+                vm.connections[id].destroy();
             }
             console.log("Close id" + id);
-            delete connections[id];
-            dumpConnections(connections);
+            delete vm.connections[id];
+            vm.outputConnections(vm.connections);
 
         });
 
-        connections[id].on('error', function(err) {
-            if(typeof(connections[id]) != 'undefined') {
-                console.log("Lost connection... Killing client " + connections[id]._id + " -> " + id);
-                connections[id].destroy();
+        vm.connections[id].on('error', function(err) {
+            if(typeof(vm.connections[id]) != 'undefined') {
+                console.log("Lost connection... Killing client " + vm.connections[id]._id + " -> " + id);
+                vm.connections[id].destroy();
             }
             console.log("Error id" + id);
-            delete connections[id];
-            dumpConnections(connections);
+            delete vm.connections[id];
+            vm.outputConnections(vm.connections);
         });
 
-        dumpConnections(connections);
+        vm.outputConnections(vm.connections);
     });
 
-
-    document.getElementById('send').addEventListener('click', function() {
-
-        var message = document.getElementById('message').value;
-
-        if(message != '') {
-            console.log("sending message...");
-            if(Message.send(connections, message)) {
-                document.getElementById('message').value = '';
-                document.getElementById('messages').textContent += message + '\n';
-            } else {
-                alert("Something went wrong!");
-            }
-        }
-
-
-    });
-
-    class Message {
-        constructor() {}
-
-        static send(connections, message) {
-            if(message == '') {
-                return false;
-            }
-
-            console.log(Object.keys(connections).length + " open connections");
-
-            for(var id in connections) {
-                if(connections[id] == null || !connections[id].connected || connections[id].destroyed) {
-                    console.log("Tried sending through bad connection id " + id);
-                    console.log(connections);
-                    console.log(connections[id]);
-                    console.log("Connected " + connections[id].connected);
-                    console.log("Destroyed " + connections[id].destroyed);
-                    delete connections[id];
-                    continue;
-                }
-
-                console.log("Sending to " + id);
-                connections[id].send(message);
-            }
-
-            //After deleting any bad connections, if there's any left that we sent to then return true
-            return Object.keys(connections).length > 0;
-
-
-        }
-    }
 }
+}
+
+
+
+class Message {
+    constructor() {}
+
+    static send(connections, message) {
+        if(message == '' || Object.keys(connections).length == 0) {
+            return false;
+        }
+
+        console.log(Object.keys(connections).length + " open connections");
+
+        for(var id in connections) {
+            if(connections[id] == null || !connections[id].connected || connections[id].destroyed) {
+                console.log("Tried sending through bad connection id " + id);
+                console.log(connections);
+                console.log(connections[id]);
+                console.log("Connected " + connections[id].connected);
+                console.log("Destroyed " + connections[id].destroyed);
+                delete connections[id];
+                continue;
+            }
+
+            console.log("Sending to " + id);
+            connections[id].send(message);
+        }
+
+        //After deleting any bad connections, if there's any left that we sent to then return true
+        return Object.keys(connections).length > 0;
+
+
+    }
 }
 
 
