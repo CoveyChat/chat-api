@@ -39,7 +39,9 @@ export default {
     data: function () {
         return {
             message: '',
-            connections: []
+            connections: [],
+            chatId: null,
+            server: {ip:'localhost', port:1337, signal: null}
         }
     },
     methods: {
@@ -68,33 +70,32 @@ export default {
         }
     },
 mounted() {
+    console.log('Component mounted.');
+
     //View model reference for inside scoped functions
     var vm = this;
 
     //this.someFunction("TEST");
-    var Peer =  require('simple-peer');
-
-    console.log('Component mounted.');
-    var chatId = location.pathname.replace('/chat/', '');
-
+    var Peer = require('simple-peer');
     var io = require('socket.io-client');
-    var signalserver = io.connect('http://localhost:1337');
 
-    var signalIds = {};
+
+    vm.chatId = location.pathname.replace('/chat/', '');
+    vm.server.signal = io.connect('http://' + vm.server.ip + ':' + vm.server.port);
 
     var txtLogger = document.getElementById('logger');
 
-    signalserver.on('disconnect', function () {
+    vm.server.signal.on('disconnect', function () {
         alert("Server Died!");
         vm.connections = [];
     });
 
-    signalserver.on('connect', function () {
-        signalserver.emit('join', chatId);
+    vm.server.signal.on('connect', function () {
+        vm.server.signal.emit('join', vm.chatId);
         console.log("Connected to signal server");
     });
 
-    signalserver.on('inithosts', function (numHosts) {
+    vm.server.signal.on('inithosts', function (numHosts) {
         console.log("init (" + numHosts + ") hosts");
 
         for(var i=0;i<numHosts;i++) {
@@ -112,7 +113,7 @@ mounted() {
                 txtLogger.textContent += "Signal HostID " + this._id + '\n';
                 txtLogger.scrollTop = txtLogger.scrollHeight;
 
-                signalserver.emit('bindtohost', {webRtcId: webRtcId, hostid: this._id});
+                vm.server.signal.emit('bindtohost', {webRtcId: webRtcId, hostid: this._id});
                 vm.outputConnections(vm.connections);
             }).on('close', function() {
                 console.log("Destroy connection " + this._id);
@@ -129,14 +130,11 @@ mounted() {
 
                 vm.outputConnections(vm.connections);
             });
-
-
-
         }
     });
 
 
-    signalserver.on('bindtoclient', function (obj) {
+    vm.server.signal.on('bindtoclient', function (obj) {
         console.log("Bound HostID " + obj.hostid + " to client");
         txtLogger.textContent += "Bound HostID " + obj.hostid + ' to client ' + obj.clientid + '\n';
         txtLogger.scrollTop = txtLogger.scrollHeight;
@@ -146,14 +144,10 @@ mounted() {
         }
 
         vm.outputConnections(vm.connections);
-
-
-
     });
 
 
-
-    signalserver.on('initclient', function (obj) {
+    vm.server.signal.on('initclient', function (obj) {
         //Use the remote host id so that the client is overridden if it re-signals
         var id=obj.hostid;
 
@@ -174,7 +168,7 @@ mounted() {
             txtLogger.textContent += "Bound to " + obj.hostid + '\n';
             txtLogger.scrollTop = txtLogger.scrollHeight;
 
-            signalserver.emit('bindconnection', {webRtcId:webRtcId, hostid: obj.hostid, clientid: vm.connections[id]._id});
+            vm.server.signal.emit('bindconnection', {webRtcId:webRtcId, hostid: obj.hostid, clientid: vm.connections[id]._id});
             vm.outputConnections(vm.connections);
         });
 
