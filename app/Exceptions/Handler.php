@@ -3,6 +3,12 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+
+
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -50,6 +56,30 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+        if ($request->wantsJson()) {
+            //Catch any bad ids in route
+            if ($exception instanceof ModelNotFoundException) {
+                //Get just the model name and not the whole namespace
+                $modelName = array_slice(explode("\\", $exception->getModel()), -1, 1)[0];
+
+                throw new NotFoundException("could not find '" . $modelName . "' id " . implode(",", $exception->getIds()));
+            }
+
+            //Catch any malformed / non-existent routes
+            if ($exception instanceof NotFoundHttpException) {
+                throw new NotFoundException('invalid or malformed route');
+            }
+
+            //Catch any malformed / non-existent routes
+            if ($exception instanceof MethodNotAllowedHttpException) {
+                throw new MethodNotAllowedException();
+            }
+
+            //Catch any malformed request data
+            if ($exception instanceof ValidationException) {
+                throw new InvalidArgumentException('validation error', $exception->validator->errors());
+            }
+        }
         return parent::render($request, $exception);
     }
 }

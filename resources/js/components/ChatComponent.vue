@@ -85,15 +85,14 @@ export default {
                 }
 
             }
-            console.log("Sending to chart");
-            console.log(networkChartData);
-
             vm.$refs.networkGraph.update(networkChartData);
 
         }
     },
 mounted() {
     console.log('Component mounted.');
+
+    var user = new User();
 
     //View model reference for inside scoped functions
     var vm = this;
@@ -237,7 +236,21 @@ mounted() {
 }
 }
 
+class User {
+    //Gets the current authenticated user
+    constructor() {
+        this.transport = axios.create({
+            withCredentials: true
+        });
+        console.log("Try and get the user");
+        //Get this chat database record
+        return this.transport.get('/api/1.0/users/whoami').then(response => {
+            console.log("Got the user");
+            console.log(response);
+        });
+    }
 
+}
 
 class Message {
     constructor() {}

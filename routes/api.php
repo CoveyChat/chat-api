@@ -14,12 +14,18 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
 Route::group(['namespace' => 'Api', 'prefix' => '1.0'], function () use ($router) {
-    Route::get('chats/{chat}', 'ChatController@get');
-    Route::patch('chats/{chat}', 'ChatController@update');
+    Route::group(['prefix' => 'chats'], function() {
+        Route::get('{chat}', 'ChatController@get');
+        Route::patch('{chat}', 'ChatController@update');
+    });
+
+    Route::post('users/login', 'AuthController@login');
+
+    Route::group(['middleware' => 'auth:api'], function() {
+        Route::group(['prefix' => 'users'], function() {
+            Route::get('whoami', 'UserController@whoami');
+        });
+    });
 
 });

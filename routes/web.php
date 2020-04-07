@@ -30,4 +30,10 @@ Route::get('/chat', 'Chat\ChatController@index');
 Route::post('/chat', 'Chat\ChatController@create')->name('chat_create');
 Route::get('/chat/{chat}', 'Chat\ChatController@launch')->name('chat_launch');
 
+
+Route::group(['prefix' => 'myuser'], function() {
+    Route::get('whoami', 'Api\UserController@whoami');
+});
+
+
 Auth::routes();
