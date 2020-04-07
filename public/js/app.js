@@ -2025,12 +2025,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //Backfills for Mozilla / Safari
 navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
       message: '',
+      chatLog: [],
       connections: [],
       chatId: null,
       user: null,
@@ -2043,16 +2059,30 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
   },
   methods: {
     sendMessage: function sendMessage(e) {
+      var vm = this;
       console.log('Called message sender');
 
-      if (this.message != '' && Object.keys(this.connections).length > 0) {
-        if (Message.send(this.connections, this.message)) {
-          document.getElementById('messages').textContent += "Me: " + this.message + '\n';
-          this.message = '';
+      if (vm.message != '' && Object.keys(vm.connections).length > 0) {
+        if (Message.send(vm.connections, vm.message)) {
+          //Write the message we just sent
+          vm.recieveMessage(vm.user, vm.message, true); //document.getElementById('messages').textContent += "Me: " + this.message + '\n';
+
+          vm.message = '';
         } else {
           alert("Something went wrong!");
         }
       }
+    },
+    recieveMessage: function recieveMessage(user, data) {
+      var self = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+      var vm = this; //document.getElementById('messages').textContent += vm.connections[id].user.name + ": " + data + '\n'
+
+      vm.chatLog.push({
+        index: vm.chatLog.length,
+        message: data,
+        user: user,
+        self: self
+      });
     },
     outputConnections: function outputConnections(cons) {
       var vm = this;
@@ -2062,9 +2092,8 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
           name: 'Me'
         }],
         links: []
-      };
-      var txtConnections = document.getElementById('connections');
-      txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
+      }; //var txtConnections = document.getElementById('connections');
+      //txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
 
       for (var id in cons) {
         var host = cons[id];
@@ -2082,8 +2111,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
           networkChartData.links.push({
             source: host.boundClient,
             target: 'me'
-          });
-          txtConnections.textContent += id + " <- " + host.boundClient + "\n";
+          }); //txtConnections.textContent += id + " <- " + host.boundClient + "\n";
         } else if (typeof host != 'undefined') {
           //When you're a client of a host
           networkChartData.nodes.push({
@@ -2096,8 +2124,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
           networkChartData.links.push({
             source: 'me',
             target: id
-          });
-          txtConnections.textContent += host._id + " -> " + id + "\n";
+          }); //txtConnections.textContent += host._id + " -> " + id + "\n";
         }
       }
 
@@ -2112,8 +2139,8 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       var io = __webpack_require__(/*! socket.io-client */ "./node_modules/socket.io-client/lib/index.js");
 
       vm.chatId = location.pathname.replace('/chat/', '');
-      vm.server.signal = io.connect('http://' + vm.server.ip + ':' + vm.server.port);
-      var txtLogger = document.getElementById('logger');
+      vm.server.signal = io.connect('http://' + vm.server.ip + ':' + vm.server.port); //var txtLogger = document.getElementById('logger');
+
       vm.server.signal.on('disconnect', function () {
         alert("Server Died!");
         vm.connections = [];
@@ -2136,12 +2163,12 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
             initiator: true
           });
           host.on('data', function (data) {
-            document.getElementById('messages').textContent += host.user.name + ": " + data + '\n';
+            vm.recieveMessage(host.user, data); //document.getElementById('messages').textContent += host.user.name + ": " + data + '\n';
           });
           host.on('signal', function (webRtcId) {
-            vm.connections[this._id] = this;
-            txtLogger.textContent += "Signal HostID " + this._id + '\n';
-            txtLogger.scrollTop = txtLogger.scrollHeight;
+            vm.connections[this._id] = this; //txtLogger.textContent += "Signal HostID " + this._id + '\n';
+            //txtLogger.scrollTop = txtLogger.scrollHeight;
+
             vm.server.signal.emit('bindtohost', {
               webRtcId: webRtcId,
               hostid: this._id
@@ -2162,9 +2189,8 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
         }
       });
       vm.server.signal.on('bindtoclient', function (obj) {
-        console.log("Bound HostID " + obj.hostid + " to client");
-        txtLogger.textContent += "Bound HostID " + obj.hostid + ' to client ' + obj.clientid + '\n';
-        txtLogger.scrollTop = txtLogger.scrollHeight;
+        console.log("Bound HostID " + obj.hostid + " to client"); //txtLogger.textContent += "Bound HostID " + obj.hostid + ' to client ' + obj.clientid + '\n';
+        //txtLogger.scrollTop = txtLogger.scrollHeight;
 
         if (typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].destroyed) {
           vm.connections[obj.hostid].signal(obj.webRtcId);
@@ -2183,14 +2209,14 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
         });
         vm.connections[id].user = obj.user; //Bind to the host
 
-        vm.connections[id].signal(obj.webRtcId);
-        txtLogger.textContent += "Bound client " + vm.connections[id]._id + " to host " + id + '\n';
-        txtLogger.scrollTop = txtLogger.scrollHeight; //Recieve it's connection details
+        vm.connections[id].signal(obj.webRtcId); //txtLogger.textContent += "Bound client " + vm.connections[id]._id + " to host " +  id + '\n';
+        //txtLogger.scrollTop = txtLogger.scrollHeight;
+        //Recieve it's connection details
 
         vm.connections[id].on('signal', function (webRtcId) {
-          console.log("Sending client (" + vm.connections[id]._id + ") connection to host..." + obj.hostid);
-          txtLogger.textContent += "Bound to " + obj.hostid + '\n';
-          txtLogger.scrollTop = txtLogger.scrollHeight;
+          console.log("Sending client (" + vm.connections[id]._id + ") connection to host..." + obj.hostid); //txtLogger.textContent += "Bound to " + obj.hostid + '\n';
+          //txtLogger.scrollTop = txtLogger.scrollHeight;
+
           vm.server.signal.emit('bindconnection', {
             webRtcId: webRtcId,
             hostid: obj.hostid,
@@ -2199,12 +2225,12 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
           vm.outputConnections(vm.connections);
         });
         vm.connections[id].on('data', function (data) {
-          document.getElementById('messages').textContent += vm.connections[id].user.name + ": " + data + '\n';
+          vm.recieveMessage(vm.connections[id].user, data); //document.getElementById('messages').textContent += vm.connections[id].user.name + ": " + data + '\n';
         });
         vm.connections[id].on('connect', function () {
-          txtLogger.textContent += "Client " + vm.connections[id]._id + ' successfully connected to host ' + id + '\n';
-          txtLogger.scrollTop = txtLogger.scrollHeight; //Set the opened connection
-
+          //txtLogger.textContent += "Client " + vm.connections[id]._id + ' successfully connected to host ' + id + '\n';
+          //txtLogger.scrollTop = txtLogger.scrollHeight;
+          //Set the opened connection
           vm.connections[id] = this;
           vm.outputConnections(vm.connections);
         });
@@ -54702,31 +54728,6 @@ var render = function() {
     [
       _c("network-graph-component", { ref: "networkGraph" }),
       _vm._v(" "),
-      _c("strong", [_vm._v("Log")]),
-      _c("br"),
-      _vm._v(" "),
-      _c("textarea", {
-        staticClass: "form-control",
-        attrs: { id: "logger", readonly: "", rows: "1" }
-      }),
-      _vm._v(" "),
-      _c("hr"),
-      _vm._v(" "),
-      _c("strong", [_vm._v("Peer Connections")]),
-      _c("br"),
-      _vm._v(" "),
-      _c("textarea", {
-        staticClass: "form-control",
-        attrs: { id: "connections", readonly: "", rows: "1" }
-      }),
-      _vm._v(" "),
-      _c("hr"),
-      _vm._v(" "),
-      _c("label", [_vm._v("Message")]),
-      _c("br"),
-      _vm._v(" "),
-      _c("pre", { attrs: { id: "messages" } }),
-      _vm._v(" "),
       _c("div", { staticClass: "input-group" }, [
         _c("input", {
           directives: [
@@ -54775,6 +54776,52 @@ var render = function() {
           )
         ])
       ]),
+      _vm._v(" "),
+      _c("br"),
+      _vm._v(" "),
+      _c(
+        "div",
+        { attrs: { id: "messages" } },
+        _vm._l(_vm.chatLog, function(item) {
+          return _c("div", { key: item.index }, [
+            item.index == 0 ||
+            (item.index > 0 &&
+              _vm.chatLog[item.index - 1].user.name != item.user.name)
+              ? _c(
+                  "p",
+                  {
+                    staticClass: "text-muted p-0 mb-0",
+                    class: { "text-right": item.self, "text-left": !item.self }
+                  },
+                  [
+                    _vm._v(
+                      "\n                " +
+                        _vm._s(item.user.name) +
+                        "\n            "
+                    )
+                  ]
+                )
+              : _vm._e(),
+            _vm._v(" "),
+            _c(
+              "p",
+              {
+                staticClass: "card p-3 m-1",
+                class: {
+                  "text-right alert-info ml-6": item.self,
+                  "mr-6": !item.self
+                }
+              },
+              [
+                _vm._v(
+                  "\n                " + _vm._s(item.message) + "\n            "
+                )
+              ]
+            )
+          ])
+        }),
+        0
+      ),
       _vm._v(" "),
       _c("div", { attrs: { id: "videos" } })
     ],
