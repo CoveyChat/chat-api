@@ -8,9 +8,11 @@ use App\Http\Requests\Chat\ChatCreateRequest;
 use App\Models\Chat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Helpers\AuthHelpers;
 
 class UserController extends Controller
 {
+    use AuthHelpers;
     /**
      * Create a new controller instance.
      *
@@ -18,12 +20,14 @@ class UserController extends Controller
      */
     public function __construct()
     {
-        //$this->middleware('auth');
+        $this->middleware('auth');
     }
 
     public function whoami(Request $request)
     {
-        return response()->api()->get(Auth::user());
+        $user = Auth::user();
+        $user->token = $this->generateTokenForUser($user);
+        return response()->api()->get($user);
     }
 
 

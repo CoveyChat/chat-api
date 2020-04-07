@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Helpers\AuthHelpers;
 use App\Http\Requests\Auth\AuthLoginRequest;
 use App\Exceptions\UnauthorizedException;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -22,6 +23,15 @@ class AuthController extends Controller
 
     public function login(AuthLoginRequest $request){
         return $this->resolveAuthFromCredentials($request->auth['email'], $request->auth['password']);
+    }
+
+    public function get(){
+        $user = Auth::user();
+        if(!empty($user)) {
+            return $this->returnTokenForUser($user);
+        } else {
+            throw new UnauthorizedException();
+        }
     }
 
     public function invalid() {

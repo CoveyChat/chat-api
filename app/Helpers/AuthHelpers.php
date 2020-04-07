@@ -4,7 +4,7 @@ namespace App\Helpers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\User;
+use App\Models\User;
 use Socialite;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Support\Str;
@@ -45,9 +45,17 @@ trait AuthHelpers {
         return $this->returnTokenForUser($user);
     }
 
+    protected function generateTokenForUser($user) {
+        if(!empty($user)) {
+            return $user->createToken('bevychat')->accessToken;
+        } else {
+            throw new UnauthorizedException('Invalid Credentials');
+        }
+    }
+
     protected function returnTokenForUser($user) {
         if(!empty($user)) {
-            $success['token'] = $user->createToken('bevychat')->accessToken;
+            $success['token'] = $this->generateTokenForUser($user);
             return response()->api()->get($success);
         } else {
             throw new UnauthorizedException('Invalid Credentials');

@@ -43,6 +43,7 @@ export default {
             message: '',
             connections: [],
             chatId: null,
+            user: null,
             server: {ip:'localhost', port:1337, signal: null}
         }
     },
@@ -87,152 +88,157 @@ export default {
             }
             vm.$refs.networkGraph.update(networkChartData);
 
+        },
+        init(user) {
+            var vm = this;
+            vm.user = user;
+
+            var Peer = require('simple-peer');
+            var io = require('socket.io-client');
+
+
+            vm.chatId = location.pathname.replace('/chat/', '');
+            vm.server.signal = io.connect('http://' + vm.server.ip + ':' + vm.server.port);
+
+            var txtLogger = document.getElementById('logger');
+
+            vm.server.signal.on('disconnect', function () {
+                alert("Server Died!");
+                vm.connections = [];
+            });
+
+            vm.server.signal.on('connect', function () {
+                vm.server.signal.emit('join', vm.chatId);
+                console.log("Connected to signal server");
+            });
+
+            vm.server.signal.on('inithosts', function (numHosts) {
+                console.log("init (" + numHosts + ") hosts");
+
+                for(var i=0;i<numHosts;i++) {
+                    console.log("CREATE HOST");
+                    var host = new Peer({
+                        initiator: true
+                    })
+                    host.on('data', function(data) {
+                        document.getElementById('messages').textContent += data + '\n';
+                    });
+
+                    host.on('signal', function (webRtcId) {
+                        vm.connections[this._id] = this;
+
+                        txtLogger.textContent += "Signal HostID " + this._id + '\n';
+                        txtLogger.scrollTop = txtLogger.scrollHeight;
+
+                        vm.server.signal.emit('bindtohost', {webRtcId: webRtcId, hostid: this._id});
+                        vm.outputConnections(vm.connections);
+                    }).on('close', function() {
+                        console.log("Destroy connection " + this._id);
+                        this.destroy();
+                        delete vm.connections[this._id];
+
+                        vm.outputConnections(vm.connections);
+                    });
+
+                    host.on('error', function(err) {
+                        console.log("Lost connection... Killing host " + this._id);
+                        this.destroy();
+                        delete vm.connections[this._id];
+
+                        vm.outputConnections(vm.connections);
+                    });
+                }
+            });
+
+
+            vm.server.signal.on('bindtoclient', function (obj) {
+                console.log("Bound HostID " + obj.hostid + " to client");
+                txtLogger.textContent += "Bound HostID " + obj.hostid + ' to client ' + obj.clientid + '\n';
+                txtLogger.scrollTop = txtLogger.scrollHeight;
+
+                if(typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].destroyed) {
+                    vm.connections[obj.hostid].signal(obj.webRtcId);
+                    vm.connections[obj.hostid].boundClient = obj.clientid;
+                }
+
+                vm.outputConnections(vm.connections);
+            });
+
+
+            vm.server.signal.on('initclient', function (obj) {
+                //Use the remote host id so that the client is overridden if it re-signals
+                var id=obj.hostid;
+
+                console.log("New connection peer object on id " + id);
+                vm.connections[id] = new Peer({
+                    initiator: false
+                });
+
+                //Bind to the host
+                vm.connections[id].signal(obj.webRtcId);
+
+                txtLogger.textContent += "Bound client " + vm.connections[id]._id + " to host " +  id + '\n';
+                txtLogger.scrollTop = txtLogger.scrollHeight;
+
+                //Recieve it's connection details
+                vm.connections[id].on('signal', function (webRtcId) {
+                    console.log("Sending client ("+ vm.connections[id]._id +") connection to host..." + obj.hostid);
+                    txtLogger.textContent += "Bound to " + obj.hostid + '\n';
+                    txtLogger.scrollTop = txtLogger.scrollHeight;
+
+                    vm.server.signal.emit('bindconnection', {webRtcId:webRtcId, hostid: obj.hostid, clientid: vm.connections[id]._id});
+                    vm.outputConnections(vm.connections);
+                });
+
+                vm.connections[id].on('data', function(data) {
+                    document.getElementById('messages').textContent += data + '\n';
+                });
+
+                vm.connections[id].on('connect', function() {
+                    txtLogger.textContent += "Client " + vm.connections[id]._id + ' connected to host ' + id + '\n';
+                    txtLogger.scrollTop = txtLogger.scrollHeight;
+
+                    //Set the opened connection
+                    vm.connections[id] = this;
+                    vm.outputConnections(vm.connections);
+                });
+
+                vm.connections[id].on('close', function() {
+                    if(typeof(vm.connections[id]) != 'undefined') {
+                        console.log("Graceful close connection " + vm.connections[id]._id + " -> " + id);
+                        vm.connections[id].destroy();
+                    }
+                    console.log("Close id" + id);
+                    delete vm.connections[id];
+                    vm.outputConnections(vm.connections);
+
+                });
+
+                vm.connections[id].on('error', function(err) {
+                    if(typeof(vm.connections[id]) != 'undefined') {
+                        console.log("Lost connection... Killing client " + vm.connections[id]._id + " -> " + id);
+                        vm.connections[id].destroy();
+                    }
+                    console.log("Error id" + id);
+                    delete vm.connections[id];
+                    vm.outputConnections(vm.connections);
+                });
+
+                vm.outputConnections(vm.connections);
+            });
+
         }
     },
 mounted() {
     console.log('Component mounted.');
-
-    var user = new User();
-
     //View model reference for inside scoped functions
     var vm = this;
 
-    vm.$refs.networkGraph.init();
-
-    var Peer = require('simple-peer');
-    var io = require('socket.io-client');
-
-
-    vm.chatId = location.pathname.replace('/chat/', '');
-    vm.server.signal = io.connect('http://' + vm.server.ip + ':' + vm.server.port);
-
-    var txtLogger = document.getElementById('logger');
-
-    vm.server.signal.on('disconnect', function () {
-        alert("Server Died!");
-        vm.connections = [];
+    var user = new User();
+    user.then(function(response) {
+        vm.init(response.data);
+        vm.$refs.networkGraph.init();
     });
-
-    vm.server.signal.on('connect', function () {
-        vm.server.signal.emit('join', vm.chatId);
-        console.log("Connected to signal server");
-    });
-
-    vm.server.signal.on('inithosts', function (numHosts) {
-        console.log("init (" + numHosts + ") hosts");
-
-        for(var i=0;i<numHosts;i++) {
-            console.log("CREATE HOST");
-            var host = new Peer({
-                initiator: true
-            })
-            host.on('data', function(data) {
-                document.getElementById('messages').textContent += data + '\n';
-            });
-
-            host.on('signal', function (webRtcId) {
-                vm.connections[this._id] = this;
-
-                txtLogger.textContent += "Signal HostID " + this._id + '\n';
-                txtLogger.scrollTop = txtLogger.scrollHeight;
-
-                vm.server.signal.emit('bindtohost', {webRtcId: webRtcId, hostid: this._id});
-                vm.outputConnections(vm.connections);
-            }).on('close', function() {
-                console.log("Destroy connection " + this._id);
-                this.destroy();
-                delete vm.connections[this._id];
-
-                vm.outputConnections(vm.connections);
-            });
-
-            host.on('error', function(err) {
-                console.log("Lost connection... Killing host " + this._id);
-                this.destroy();
-                delete vm.connections[this._id];
-
-                vm.outputConnections(vm.connections);
-            });
-        }
-    });
-
-
-    vm.server.signal.on('bindtoclient', function (obj) {
-        console.log("Bound HostID " + obj.hostid + " to client");
-        txtLogger.textContent += "Bound HostID " + obj.hostid + ' to client ' + obj.clientid + '\n';
-        txtLogger.scrollTop = txtLogger.scrollHeight;
-
-        if(typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].destroyed) {
-            vm.connections[obj.hostid].signal(obj.webRtcId);
-            vm.connections[obj.hostid].boundClient = obj.clientid;
-        }
-
-        vm.outputConnections(vm.connections);
-    });
-
-
-    vm.server.signal.on('initclient', function (obj) {
-        //Use the remote host id so that the client is overridden if it re-signals
-        var id=obj.hostid;
-
-        console.log("New connection peer object on id " + id);
-        vm.connections[id] = new Peer({
-            initiator: false
-        });
-
-        //Bind to the host
-        vm.connections[id].signal(obj.webRtcId);
-
-        txtLogger.textContent += "Bound client " + vm.connections[id]._id + " to host " +  id + '\n';
-        txtLogger.scrollTop = txtLogger.scrollHeight;
-
-        //Recieve it's connection details
-        vm.connections[id].on('signal', function (webRtcId) {
-            console.log("Sending client ("+ vm.connections[id]._id +") connection to host..." + obj.hostid);
-            txtLogger.textContent += "Bound to " + obj.hostid + '\n';
-            txtLogger.scrollTop = txtLogger.scrollHeight;
-
-            vm.server.signal.emit('bindconnection', {webRtcId:webRtcId, hostid: obj.hostid, clientid: vm.connections[id]._id});
-            vm.outputConnections(vm.connections);
-        });
-
-        vm.connections[id].on('data', function(data) {
-            document.getElementById('messages').textContent += data + '\n';
-        });
-
-        vm.connections[id].on('connect', function() {
-            txtLogger.textContent += "Client " + vm.connections[id]._id + ' connected to host ' + id + '\n';
-            txtLogger.scrollTop = txtLogger.scrollHeight;
-
-            //Set the opened connection
-            vm.connections[id] = this;
-            vm.outputConnections(vm.connections);
-        });
-
-        vm.connections[id].on('close', function() {
-            if(typeof(vm.connections[id]) != 'undefined') {
-                console.log("Graceful close connection " + vm.connections[id]._id + " -> " + id);
-                vm.connections[id].destroy();
-            }
-            console.log("Close id" + id);
-            delete vm.connections[id];
-            vm.outputConnections(vm.connections);
-
-        });
-
-        vm.connections[id].on('error', function(err) {
-            if(typeof(vm.connections[id]) != 'undefined') {
-                console.log("Lost connection... Killing client " + vm.connections[id]._id + " -> " + id);
-                vm.connections[id].destroy();
-            }
-            console.log("Error id" + id);
-            delete vm.connections[id];
-            vm.outputConnections(vm.connections);
-        });
-
-        vm.outputConnections(vm.connections);
-    });
-
 }
 }
 
@@ -242,11 +248,23 @@ class User {
         this.transport = axios.create({
             withCredentials: true
         });
-        console.log("Try and get the user");
+
         //Get this chat database record
         return this.transport.get('/api/1.0/users/whoami').then(response => {
-            console.log("Got the user");
-            console.log(response);
+            return response.data;
+        }).catch(error => {
+            if (error.response.status === 401) {
+                //Prop up an anon user
+                return {
+                    success: false,
+                    message: '',
+                    data: {
+                        id: null,
+                        name: 'Anon Bird',
+                        token: null
+                    }
+                }
+            }
         });
     }
 

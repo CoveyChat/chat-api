@@ -23,8 +23,6 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
-        echo $user->createToken('bevychat')->accessToken;
         return view('home');
     }
 }

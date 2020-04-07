@@ -2033,6 +2033,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       message: '',
       connections: [],
       chatId: null,
+      user: null,
       server: {
         ip: 'localhost',
         port: 1337,
@@ -2098,130 +2099,137 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       }
 
       vm.$refs.networkGraph.update(networkChartData);
+    },
+    init: function init(user) {
+      var vm = this;
+      vm.user = user;
+
+      var Peer = __webpack_require__(/*! simple-peer */ "./node_modules/simple-peer/index.js");
+
+      var io = __webpack_require__(/*! socket.io-client */ "./node_modules/socket.io-client/lib/index.js");
+
+      vm.chatId = location.pathname.replace('/chat/', '');
+      vm.server.signal = io.connect('http://' + vm.server.ip + ':' + vm.server.port);
+      var txtLogger = document.getElementById('logger');
+      vm.server.signal.on('disconnect', function () {
+        alert("Server Died!");
+        vm.connections = [];
+      });
+      vm.server.signal.on('connect', function () {
+        vm.server.signal.emit('join', vm.chatId);
+        console.log("Connected to signal server");
+      });
+      vm.server.signal.on('inithosts', function (numHosts) {
+        console.log("init (" + numHosts + ") hosts");
+
+        for (var i = 0; i < numHosts; i++) {
+          console.log("CREATE HOST");
+          var host = new Peer({
+            initiator: true
+          });
+          host.on('data', function (data) {
+            document.getElementById('messages').textContent += data + '\n';
+          });
+          host.on('signal', function (webRtcId) {
+            vm.connections[this._id] = this;
+            txtLogger.textContent += "Signal HostID " + this._id + '\n';
+            txtLogger.scrollTop = txtLogger.scrollHeight;
+            vm.server.signal.emit('bindtohost', {
+              webRtcId: webRtcId,
+              hostid: this._id
+            });
+            vm.outputConnections(vm.connections);
+          }).on('close', function () {
+            console.log("Destroy connection " + this._id);
+            this.destroy();
+            delete vm.connections[this._id];
+            vm.outputConnections(vm.connections);
+          });
+          host.on('error', function (err) {
+            console.log("Lost connection... Killing host " + this._id);
+            this.destroy();
+            delete vm.connections[this._id];
+            vm.outputConnections(vm.connections);
+          });
+        }
+      });
+      vm.server.signal.on('bindtoclient', function (obj) {
+        console.log("Bound HostID " + obj.hostid + " to client");
+        txtLogger.textContent += "Bound HostID " + obj.hostid + ' to client ' + obj.clientid + '\n';
+        txtLogger.scrollTop = txtLogger.scrollHeight;
+
+        if (typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].destroyed) {
+          vm.connections[obj.hostid].signal(obj.webRtcId);
+          vm.connections[obj.hostid].boundClient = obj.clientid;
+        }
+
+        vm.outputConnections(vm.connections);
+      });
+      vm.server.signal.on('initclient', function (obj) {
+        //Use the remote host id so that the client is overridden if it re-signals
+        var id = obj.hostid;
+        console.log("New connection peer object on id " + id);
+        vm.connections[id] = new Peer({
+          initiator: false
+        }); //Bind to the host
+
+        vm.connections[id].signal(obj.webRtcId);
+        txtLogger.textContent += "Bound client " + vm.connections[id]._id + " to host " + id + '\n';
+        txtLogger.scrollTop = txtLogger.scrollHeight; //Recieve it's connection details
+
+        vm.connections[id].on('signal', function (webRtcId) {
+          console.log("Sending client (" + vm.connections[id]._id + ") connection to host..." + obj.hostid);
+          txtLogger.textContent += "Bound to " + obj.hostid + '\n';
+          txtLogger.scrollTop = txtLogger.scrollHeight;
+          vm.server.signal.emit('bindconnection', {
+            webRtcId: webRtcId,
+            hostid: obj.hostid,
+            clientid: vm.connections[id]._id
+          });
+          vm.outputConnections(vm.connections);
+        });
+        vm.connections[id].on('data', function (data) {
+          document.getElementById('messages').textContent += data + '\n';
+        });
+        vm.connections[id].on('connect', function () {
+          txtLogger.textContent += "Client " + vm.connections[id]._id + ' connected to host ' + id + '\n';
+          txtLogger.scrollTop = txtLogger.scrollHeight; //Set the opened connection
+
+          vm.connections[id] = this;
+          vm.outputConnections(vm.connections);
+        });
+        vm.connections[id].on('close', function () {
+          if (typeof vm.connections[id] != 'undefined') {
+            console.log("Graceful close connection " + vm.connections[id]._id + " -> " + id);
+            vm.connections[id].destroy();
+          }
+
+          console.log("Close id" + id);
+          delete vm.connections[id];
+          vm.outputConnections(vm.connections);
+        });
+        vm.connections[id].on('error', function (err) {
+          if (typeof vm.connections[id] != 'undefined') {
+            console.log("Lost connection... Killing client " + vm.connections[id]._id + " -> " + id);
+            vm.connections[id].destroy();
+          }
+
+          console.log("Error id" + id);
+          delete vm.connections[id];
+          vm.outputConnections(vm.connections);
+        });
+        vm.outputConnections(vm.connections);
+      });
     }
   },
   mounted: function mounted() {
-    console.log('Component mounted.');
-    var user = new User(); //View model reference for inside scoped functions
+    console.log('Component mounted.'); //View model reference for inside scoped functions
 
     var vm = this;
-    vm.$refs.networkGraph.init();
-
-    var Peer = __webpack_require__(/*! simple-peer */ "./node_modules/simple-peer/index.js");
-
-    var io = __webpack_require__(/*! socket.io-client */ "./node_modules/socket.io-client/lib/index.js");
-
-    vm.chatId = location.pathname.replace('/chat/', '');
-    vm.server.signal = io.connect('http://' + vm.server.ip + ':' + vm.server.port);
-    var txtLogger = document.getElementById('logger');
-    vm.server.signal.on('disconnect', function () {
-      alert("Server Died!");
-      vm.connections = [];
-    });
-    vm.server.signal.on('connect', function () {
-      vm.server.signal.emit('join', vm.chatId);
-      console.log("Connected to signal server");
-    });
-    vm.server.signal.on('inithosts', function (numHosts) {
-      console.log("init (" + numHosts + ") hosts");
-
-      for (var i = 0; i < numHosts; i++) {
-        console.log("CREATE HOST");
-        var host = new Peer({
-          initiator: true
-        });
-        host.on('data', function (data) {
-          document.getElementById('messages').textContent += data + '\n';
-        });
-        host.on('signal', function (webRtcId) {
-          vm.connections[this._id] = this;
-          txtLogger.textContent += "Signal HostID " + this._id + '\n';
-          txtLogger.scrollTop = txtLogger.scrollHeight;
-          vm.server.signal.emit('bindtohost', {
-            webRtcId: webRtcId,
-            hostid: this._id
-          });
-          vm.outputConnections(vm.connections);
-        }).on('close', function () {
-          console.log("Destroy connection " + this._id);
-          this.destroy();
-          delete vm.connections[this._id];
-          vm.outputConnections(vm.connections);
-        });
-        host.on('error', function (err) {
-          console.log("Lost connection... Killing host " + this._id);
-          this.destroy();
-          delete vm.connections[this._id];
-          vm.outputConnections(vm.connections);
-        });
-      }
-    });
-    vm.server.signal.on('bindtoclient', function (obj) {
-      console.log("Bound HostID " + obj.hostid + " to client");
-      txtLogger.textContent += "Bound HostID " + obj.hostid + ' to client ' + obj.clientid + '\n';
-      txtLogger.scrollTop = txtLogger.scrollHeight;
-
-      if (typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].destroyed) {
-        vm.connections[obj.hostid].signal(obj.webRtcId);
-        vm.connections[obj.hostid].boundClient = obj.clientid;
-      }
-
-      vm.outputConnections(vm.connections);
-    });
-    vm.server.signal.on('initclient', function (obj) {
-      //Use the remote host id so that the client is overridden if it re-signals
-      var id = obj.hostid;
-      console.log("New connection peer object on id " + id);
-      vm.connections[id] = new Peer({
-        initiator: false
-      }); //Bind to the host
-
-      vm.connections[id].signal(obj.webRtcId);
-      txtLogger.textContent += "Bound client " + vm.connections[id]._id + " to host " + id + '\n';
-      txtLogger.scrollTop = txtLogger.scrollHeight; //Recieve it's connection details
-
-      vm.connections[id].on('signal', function (webRtcId) {
-        console.log("Sending client (" + vm.connections[id]._id + ") connection to host..." + obj.hostid);
-        txtLogger.textContent += "Bound to " + obj.hostid + '\n';
-        txtLogger.scrollTop = txtLogger.scrollHeight;
-        vm.server.signal.emit('bindconnection', {
-          webRtcId: webRtcId,
-          hostid: obj.hostid,
-          clientid: vm.connections[id]._id
-        });
-        vm.outputConnections(vm.connections);
-      });
-      vm.connections[id].on('data', function (data) {
-        document.getElementById('messages').textContent += data + '\n';
-      });
-      vm.connections[id].on('connect', function () {
-        txtLogger.textContent += "Client " + vm.connections[id]._id + ' connected to host ' + id + '\n';
-        txtLogger.scrollTop = txtLogger.scrollHeight; //Set the opened connection
-
-        vm.connections[id] = this;
-        vm.outputConnections(vm.connections);
-      });
-      vm.connections[id].on('close', function () {
-        if (typeof vm.connections[id] != 'undefined') {
-          console.log("Graceful close connection " + vm.connections[id]._id + " -> " + id);
-          vm.connections[id].destroy();
-        }
-
-        console.log("Close id" + id);
-        delete vm.connections[id];
-        vm.outputConnections(vm.connections);
-      });
-      vm.connections[id].on('error', function (err) {
-        if (typeof vm.connections[id] != 'undefined') {
-          console.log("Lost connection... Killing client " + vm.connections[id]._id + " -> " + id);
-          vm.connections[id].destroy();
-        }
-
-        console.log("Error id" + id);
-        delete vm.connections[id];
-        vm.outputConnections(vm.connections);
-      });
-      vm.outputConnections(vm.connections);
+    var user = new User();
+    user.then(function (response) {
+      vm.init(response.data);
+      vm.$refs.networkGraph.init();
     });
   }
 });
@@ -2232,12 +2240,23 @@ function User() {
 
   this.transport = axios.create({
     withCredentials: true
-  });
-  console.log("Try and get the user"); //Get this chat database record
+  }); //Get this chat database record
 
   return this.transport.get('/api/1.0/users/whoami').then(function (response) {
-    console.log("Got the user");
-    console.log(response);
+    return response.data;
+  })["catch"](function (error) {
+    if (error.response.status === 401) {
+      //Prop up an anon user
+      return {
+        success: false,
+        message: '',
+        data: {
+          id: null,
+          name: 'Anon Bird',
+          token: null
+        }
+      };
+    }
   });
 };
 
@@ -2277,39 +2296,6 @@ var Message = /*#__PURE__*/function () {
 
   return Message;
 }();
-
-/***/ }),
-
-/***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ExampleComponent.vue?vue&type=script&lang=js&":
-/*!***************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/ExampleComponent.vue?vue&type=script&lang=js& ***!
-  \***************************************************************************************************************************************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-/* harmony default export */ __webpack_exports__["default"] = ({
-  mounted: function mounted() {
-    console.log('Component mounted.');
-  }
-});
 
 /***/ }),
 
@@ -54765,53 +54751,6 @@ render._withStripped = true
 
 /***/ }),
 
-/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ExampleComponent.vue?vue&type=template&id=299e239e&":
-/*!*******************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/ExampleComponent.vue?vue&type=template&id=299e239e& ***!
-  \*******************************************************************************************************************************************************************************************************************/
-/*! exports provided: render, staticRenderFns */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "render", function() { return render; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return staticRenderFns; });
-var render = function() {
-  var _vm = this
-  var _h = _vm.$createElement
-  var _c = _vm._self._c || _h
-  return _vm._m(0)
-}
-var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "container" }, [
-      _c("div", { staticClass: "row justify-content-center" }, [
-        _c("div", { staticClass: "col-md-8" }, [
-          _c("div", { staticClass: "card" }, [
-            _c("div", { staticClass: "card-header" }, [
-              _vm._v("Example Component")
-            ]),
-            _vm._v(" "),
-            _c("div", { staticClass: "card-body" }, [
-              _vm._v(
-                "\n                    I'm an example component.\n                "
-              )
-            ])
-          ])
-        ])
-      ])
-    ])
-  }
-]
-render._withStripped = true
-
-
-
-/***/ }),
-
 /***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/NetworkGraphComponent.vue?vue&type=template&id=2114b942&":
 /*!************************************************************************************************************************************************************************************************************************!*\
   !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/NetworkGraphComponent.vue?vue&type=template&id=2114b942& ***!
@@ -67082,7 +67021,6 @@ module.exports = yeast;
 
 var map = {
 	"./components/ChatComponent.vue": "./resources/js/components/ChatComponent.vue",
-	"./components/ExampleComponent.vue": "./resources/js/components/ExampleComponent.vue",
 	"./components/NetworkGraphComponent.vue": "./resources/js/components/NetworkGraphComponent.vue"
 };
 
@@ -67258,75 +67196,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ChatComponent_vue_vue_type_template_id_80d584ac___WEBPACK_IMPORTED_MODULE_0__["render"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ChatComponent_vue_vue_type_template_id_80d584ac___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
-
-
-
-/***/ }),
-
-/***/ "./resources/js/components/ExampleComponent.vue":
-/*!******************************************************!*\
-  !*** ./resources/js/components/ExampleComponent.vue ***!
-  \******************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _ExampleComponent_vue_vue_type_template_id_299e239e___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ExampleComponent.vue?vue&type=template&id=299e239e& */ "./resources/js/components/ExampleComponent.vue?vue&type=template&id=299e239e&");
-/* harmony import */ var _ExampleComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ExampleComponent.vue?vue&type=script&lang=js& */ "./resources/js/components/ExampleComponent.vue?vue&type=script&lang=js&");
-/* empty/unused harmony star reexport *//* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
-
-
-
-
-
-/* normalize component */
-
-var component = Object(_node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__["default"])(
-  _ExampleComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__["default"],
-  _ExampleComponent_vue_vue_type_template_id_299e239e___WEBPACK_IMPORTED_MODULE_0__["render"],
-  _ExampleComponent_vue_vue_type_template_id_299e239e___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
-  false,
-  null,
-  null,
-  null
-  
-)
-
-/* hot reload */
-if (false) { var api; }
-component.options.__file = "resources/js/components/ExampleComponent.vue"
-/* harmony default export */ __webpack_exports__["default"] = (component.exports);
-
-/***/ }),
-
-/***/ "./resources/js/components/ExampleComponent.vue?vue&type=script&lang=js&":
-/*!*******************************************************************************!*\
-  !*** ./resources/js/components/ExampleComponent.vue?vue&type=script&lang=js& ***!
-  \*******************************************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_ExampleComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib??ref--4-0!../../../node_modules/vue-loader/lib??vue-loader-options!./ExampleComponent.vue?vue&type=script&lang=js& */ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ExampleComponent.vue?vue&type=script&lang=js&");
-/* empty/unused harmony star reexport */ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_ExampleComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__["default"]); 
-
-/***/ }),
-
-/***/ "./resources/js/components/ExampleComponent.vue?vue&type=template&id=299e239e&":
-/*!*************************************************************************************!*\
-  !*** ./resources/js/components/ExampleComponent.vue?vue&type=template&id=299e239e& ***!
-  \*************************************************************************************/
-/*! exports provided: render, staticRenderFns */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ExampleComponent_vue_vue_type_template_id_299e239e___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./ExampleComponent.vue?vue&type=template&id=299e239e& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ExampleComponent.vue?vue&type=template&id=299e239e&");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ExampleComponent_vue_vue_type_template_id_299e239e___WEBPACK_IMPORTED_MODULE_0__["render"]; });
-
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ExampleComponent_vue_vue_type_template_id_299e239e___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
 
 
 

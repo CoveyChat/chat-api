@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
-
+Route::middleware('auth:web')->get('/bridge/usertoken', 'Api\AuthController@get');
 
 Route::get('oauth/{provider}', 'Auth\LoginController@redirectToProvider');
 Route::get('oauth/{provider}/callback', 'Auth\LoginController@handleProviderCallback');
@@ -31,7 +31,7 @@ Route::post('/chat', 'Chat\ChatController@create')->name('chat_create');
 Route::get('/chat/{chat}', 'Chat\ChatController@launch')->name('chat_launch');
 
 
-Route::group(['prefix' => 'myuser'], function() {
+Route::group(['prefix' => 'bridge'], function() {
     Route::get('whoami', 'Api\UserController@whoami');
 });
 

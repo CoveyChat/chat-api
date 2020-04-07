@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::group(['namespace' => 'Api', 'prefix' => '1.0'], function () use ($router) {
+
     Route::group(['prefix' => 'chats'], function() {
         Route::get('{chat}', 'ChatController@get');
         Route::patch('{chat}', 'ChatController@update');
