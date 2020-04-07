@@ -4,11 +4,11 @@
     <network-graph-component ref="networkGraph"></network-graph-component>
 
     <strong>Log</strong><br />
-    <textarea id="logger" readonly class="form-control" rows=2></textarea>
+    <textarea id="logger" readonly class="form-control" rows=1></textarea>
     <hr />
 
     <strong>Peer Connections</strong><br />
-    <textarea id="connections" readonly class="form-control" rows=5></textarea>
+    <textarea id="connections" readonly class="form-control" rows=1></textarea>
     <hr />
 
     <label>Message</label><br />
@@ -52,7 +52,7 @@ export default {
             console.log('Called message sender');
             if(this.message != '' && Object.keys(this.connections).length > 0) {
                 if(Message.send(this.connections, this.message)) {
-                    document.getElementById('messages').textContent += this.message + '\n';
+                    document.getElementById('messages').textContent += "Me: " + this.message + '\n';
                     this.message = '';
                 } else {
                     alert("Something went wrong!");
@@ -69,16 +69,20 @@ export default {
 
             for(var id in cons) {
                 var host = cons[id];
-                if(id == host._id && typeof host.boundClient != 'undefined') {
+                var name = typeof host.user != 'undefined' ? host.user.name : 'X';
+
+                //This is the host connection and it's actually bound to someone
+                if(typeof host != 'undefined' && id == host._id && typeof host.boundClient != 'undefined') {
                     //When you have the host connection
-                    networkChartData.nodes.push({id: host.boundClient, name: "C"}); //C For client
+                    networkChartData.nodes.push({id: host.boundClient, name: name, status: 'client'}); //C For client
                     //networkChartData.nodes.push({id: host.boundClient, name: host.boundClient.substring(0,2)});
                     networkChartData.links.push({source: host.boundClient, target: 'me'});
 
                     txtConnections.textContent += id + " <- " + host.boundClient + "\n";
-                } else {
+                } else if(typeof host != 'undefined') {
+
                     //When you're a client of a host
-                    networkChartData.nodes.push({id: id, name: "H"}); //H for host
+                    networkChartData.nodes.push({id: id, name: name, status: 'host'}); //H for host
                     //networkChartData.nodes.push({id: id, name: id.substring(0,2)});
                     networkChartData.links.push({source: 'me', target: id});
 
@@ -108,8 +112,10 @@ export default {
             });
 
             vm.server.signal.on('connect', function () {
-                vm.server.signal.emit('join', vm.chatId);
-                console.log("Connected to signal server");
+                console.log("Connected to signal server. Sending auth...");
+                //Pass to the server that we want to join this chat room with this user
+                //It will use the user to annouce to other connections who you are
+                vm.server.signal.emit('join', {chatId: vm.chatId, user: vm.user});
             });
 
             vm.server.signal.on('inithosts', function (numHosts) {
@@ -121,7 +127,7 @@ export default {
                         initiator: true
                     })
                     host.on('data', function(data) {
-                        document.getElementById('messages').textContent += data + '\n';
+                        document.getElementById('messages').textContent += host.user.name + ": " + data + '\n';
                     });
 
                     host.on('signal', function (webRtcId) {
@@ -158,6 +164,7 @@ export default {
 
                 if(typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].destroyed) {
                     vm.connections[obj.hostid].signal(obj.webRtcId);
+                    vm.connections[obj.hostid].user = obj.user;
                     vm.connections[obj.hostid].boundClient = obj.clientid;
                 }
 
@@ -173,6 +180,8 @@ export default {
                 vm.connections[id] = new Peer({
                     initiator: false
                 });
+
+                vm.connections[id].user = obj.user;
 
                 //Bind to the host
                 vm.connections[id].signal(obj.webRtcId);
@@ -191,11 +200,11 @@ export default {
                 });
 
                 vm.connections[id].on('data', function(data) {
-                    document.getElementById('messages').textContent += data + '\n';
+                    document.getElementById('messages').textContent += vm.connections[id].user.name + ": " + data + '\n';
                 });
 
                 vm.connections[id].on('connect', function() {
-                    txtLogger.textContent += "Client " + vm.connections[id]._id + ' connected to host ' + id + '\n';
+                    txtLogger.textContent += "Client " + vm.connections[id]._id + ' successfully connected to host ' + id + '\n';
                     txtLogger.scrollTop = txtLogger.scrollHeight;
 
                     //Set the opened connection
@@ -245,12 +254,17 @@ mounted() {
 class User {
     //Gets the current authenticated user
     constructor() {
+        var name, email, avatar;
+        var self = this;
         this.transport = axios.create({
             withCredentials: true
         });
 
         //Get this chat database record
         return this.transport.get('/api/1.0/users/whoami').then(response => {
+            console.log(response.data);
+            self.name = response.data.data.name;
+            self.email = response.data.data.name;
             return response.data;
         }).catch(error => {
             if (error.response.status === 401) {
@@ -267,7 +281,6 @@ class User {
             }
         });
     }
-
 }
 
 class Message {

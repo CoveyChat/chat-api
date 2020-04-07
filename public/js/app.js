@@ -2047,7 +2047,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
 
       if (this.message != '' && Object.keys(this.connections).length > 0) {
         if (Message.send(this.connections, this.message)) {
-          document.getElementById('messages').textContent += this.message + '\n';
+          document.getElementById('messages').textContent += "Me: " + this.message + '\n';
           this.message = '';
         } else {
           alert("Something went wrong!");
@@ -2068,12 +2068,14 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
 
       for (var id in cons) {
         var host = cons[id];
+        var name = typeof host.user != 'undefined' ? host.user.name : 'X'; //This is the host connection and it's actually bound to someone
 
-        if (id == host._id && typeof host.boundClient != 'undefined') {
+        if (typeof host != 'undefined' && id == host._id && typeof host.boundClient != 'undefined') {
           //When you have the host connection
           networkChartData.nodes.push({
             id: host.boundClient,
-            name: "C"
+            name: name,
+            status: 'client'
           }); //C For client
           //networkChartData.nodes.push({id: host.boundClient, name: host.boundClient.substring(0,2)});
 
@@ -2082,11 +2084,12 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
             target: 'me'
           });
           txtConnections.textContent += id + " <- " + host.boundClient + "\n";
-        } else {
+        } else if (typeof host != 'undefined') {
           //When you're a client of a host
           networkChartData.nodes.push({
             id: id,
-            name: "H"
+            name: name,
+            status: 'host'
           }); //H for host
           //networkChartData.nodes.push({id: id, name: id.substring(0,2)});
 
@@ -2116,8 +2119,13 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
         vm.connections = [];
       });
       vm.server.signal.on('connect', function () {
-        vm.server.signal.emit('join', vm.chatId);
-        console.log("Connected to signal server");
+        console.log("Connected to signal server. Sending auth..."); //Pass to the server that we want to join this chat room with this user
+        //It will use the user to annouce to other connections who you are
+
+        vm.server.signal.emit('join', {
+          chatId: vm.chatId,
+          user: vm.user
+        });
       });
       vm.server.signal.on('inithosts', function (numHosts) {
         console.log("init (" + numHosts + ") hosts");
@@ -2128,7 +2136,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
             initiator: true
           });
           host.on('data', function (data) {
-            document.getElementById('messages').textContent += data + '\n';
+            document.getElementById('messages').textContent += host.user.name + ": " + data + '\n';
           });
           host.on('signal', function (webRtcId) {
             vm.connections[this._id] = this;
@@ -2160,6 +2168,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
 
         if (typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].destroyed) {
           vm.connections[obj.hostid].signal(obj.webRtcId);
+          vm.connections[obj.hostid].user = obj.user;
           vm.connections[obj.hostid].boundClient = obj.clientid;
         }
 
@@ -2171,7 +2180,8 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
         console.log("New connection peer object on id " + id);
         vm.connections[id] = new Peer({
           initiator: false
-        }); //Bind to the host
+        });
+        vm.connections[id].user = obj.user; //Bind to the host
 
         vm.connections[id].signal(obj.webRtcId);
         txtLogger.textContent += "Bound client " + vm.connections[id]._id + " to host " + id + '\n';
@@ -2189,10 +2199,10 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
           vm.outputConnections(vm.connections);
         });
         vm.connections[id].on('data', function (data) {
-          document.getElementById('messages').textContent += data + '\n';
+          document.getElementById('messages').textContent += vm.connections[id].user.name + ": " + data + '\n';
         });
         vm.connections[id].on('connect', function () {
-          txtLogger.textContent += "Client " + vm.connections[id]._id + ' connected to host ' + id + '\n';
+          txtLogger.textContent += "Client " + vm.connections[id]._id + ' successfully connected to host ' + id + '\n';
           txtLogger.scrollTop = txtLogger.scrollHeight; //Set the opened connection
 
           vm.connections[id] = this;
@@ -2238,11 +2248,16 @@ var User = //Gets the current authenticated user
 function User() {
   _classCallCheck(this, User);
 
+  var name, email, avatar;
+  var self = this;
   this.transport = axios.create({
     withCredentials: true
   }); //Get this chat database record
 
   return this.transport.get('/api/1.0/users/whoami').then(function (response) {
+    console.log(response.data);
+    self.name = response.data.data.name;
+    self.email = response.data.data.name;
     return response.data;
   })["catch"](function (error) {
     if (error.response.status === 401) {
@@ -2367,13 +2382,14 @@ __webpack_require__.r(__webpack_exports__);
       };
       vm.width = 600;
       vm.height = 300;
+      vm.tooltip = d3.select("body").append("div").style("position", "absolute").style("font-size", "16px").style("z-index", "10").style("visibility", "hidden").style("background", "#fff").style("border-radius", "5px").style("padding", "5px").text("---");
       var svg = d3.select("#active-network-chart").append("svg").attr("width", vm.width).attr("height", vm.height).attr("viewBox", [-vm.width / 2, -vm.height / 2, vm.width, vm.height]);
       vm.simulation = d3.forceSimulation().force("charge", d3.forceManyBody().strength(-400)).force("link", d3.forceLink().id(function (d) {
         return d.id;
       }).distance(75)).force("x", d3.forceX()).force("y", d3.forceY()).on("tick", vm.tick);
-      vm.link = svg.append("g").attr("stroke", "#000").attr("stroke-width", 1.5).selectAll("line");
+      vm.link = svg.append("g").attr("stroke", "#ccc").attr("stroke-width", 1.5).selectAll("line");
       vm.node = svg.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5).selectAll("circle");
-      vm.label = svg.append("g").attr("class", "labels").selectAll("text");
+      vm.label = svg.append("g").attr("class", "labels").style("cursor", "default").selectAll("text");
       vm.update(vm.connections);
     },
     update: function update(data) {
@@ -2394,7 +2410,7 @@ __webpack_require__.r(__webpack_exports__);
       }).join(function (enter) {
         return enter.append("circle").attr("r", 20).attr("fill", function (d) {
           return vm.color(d.id);
-        }).on("mouseover", vm.onHover);
+        }).on("mouseover", vm.onHover).on("mousemove", vm.onMove).on("mouseout", vm.onOut);
       });
       vm.link = vm.link.data(data.links, function (d) {
         return [d.source, d.target];
@@ -2402,16 +2418,37 @@ __webpack_require__.r(__webpack_exports__);
       vm.label = vm.label.data(data.nodes, function (d) {
         return d.name;
       }).join(function (enter) {
-        return enter.append("text").attr("class", "label").text(function (d) {
-          return d.name;
-        });
+        return enter.append("text").attr("class", "label").html(function (d) {
+          d.truncated = d.name.toLowerCase() != 'me';
+          return !d.truncated ? d.name : d.name.substr(0, 1);
+        }).on("mouseover", vm.onHover).on("mousemove", vm.onMove).on("mouseout", vm.onOut);
       });
       vm.simulation.nodes(data.nodes);
       vm.simulation.force("link").links(data.links);
       vm.simulation.alpha(1).restart();
     },
-    onHover: function onHover(node, index) {//console.log(node);
+    onHover: function onHover(node, index) {
+      var vm = this;
+
+      if (node.id == 'me') {
+        return vm.tooltip.style("visibility", "hidden");
+      }
+
+      return vm.tooltip.style("visibility", "visible"); //console.log(node);
       //console.log(index);
+    },
+    onMove: function onMove(node, index) {
+      var vm = this;
+
+      if (node.id == 'me') {
+        return vm.tooltip.style("visibility", "hidden");
+      }
+
+      return vm.tooltip.style("top", d3.event.pageY - 50 + "px").style("left", d3.event.pageX - node.name.length * 8 / 2 + "px").text(node.name);
+    },
+    onOut: function onOut(node, index) {
+      var vm = this;
+      return vm.tooltip.style("visibility", "hidden");
     },
     tick: function tick() {
       var vm = this;
@@ -2430,7 +2467,7 @@ __webpack_require__.r(__webpack_exports__);
         return d.target.y;
       });
       vm.label.attr("x", function (d) {
-        return d.x - 10;
+        return d.x - 10 + (d.truncated ? 5 : 0);
       }).attr("y", function (d) {
         return d.y + 5;
       }).style("font-size", "15px").style("font-weight", "bold").style("fill", "#fff");
@@ -54670,7 +54707,7 @@ var render = function() {
       _vm._v(" "),
       _c("textarea", {
         staticClass: "form-control",
-        attrs: { id: "logger", readonly: "", rows: "2" }
+        attrs: { id: "logger", readonly: "", rows: "1" }
       }),
       _vm._v(" "),
       _c("hr"),
@@ -54680,7 +54717,7 @@ var render = function() {
       _vm._v(" "),
       _c("textarea", {
         staticClass: "form-control",
-        attrs: { id: "connections", readonly: "", rows: "5" }
+        attrs: { id: "connections", readonly: "", rows: "1" }
       }),
       _vm._v(" "),
       _c("hr"),

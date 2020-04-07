@@ -57,6 +57,17 @@
                 vm.width = 600;
                 vm.height = 300;
 
+                vm.tooltip = d3.select("body")
+                    .append("div")
+                    .style("position", "absolute")
+                    .style("font-size", "16px")
+                    .style("z-index", "10")
+                    .style("visibility", "hidden")
+                    .style("background", "#fff")
+                    .style("border-radius", "5px")
+                    .style("padding", "5px")
+                    .text("---");
+
 
                 let svg = d3.select("#active-network-chart")
                     .append("svg")
@@ -72,7 +83,7 @@
                     .on("tick", vm.tick);
 
                 vm.link = svg.append("g")
-                    .attr("stroke", "#000")
+                    .attr("stroke", "#ccc")
                     .attr("stroke-width", 1.5)
                     .selectAll("line");
 
@@ -83,6 +94,7 @@
 
                 vm.label = svg.append("g")
                     .attr("class", "labels")
+                    .style("cursor", "default")
                     .selectAll("text")
 
 
@@ -106,6 +118,8 @@
                         .attr("r", 20)
                         .attr("fill", d => vm.color(d.id))
                         .on("mouseover", vm.onHover)
+                        .on("mousemove", vm.onMove)
+                        .on("mouseout", vm.onOut)
                     );
 
                 vm.link = vm.link
@@ -117,7 +131,11 @@
                     .data(data.nodes, d => d.name)
                     .join(enter => enter.append("text")
                         .attr("class", "label")
-                        .text(function(d) { return d.name; })
+                        .html(function(d) { d.truncated = d.name.toLowerCase() != 'me'; return !d.truncated ? d.name : d.name.substr(0,1); })
+                        .on("mouseover", vm.onHover)
+                        .on("mousemove", vm.onMove)
+                        .on("mouseout", vm.onOut)
+
                     );
 
                 vm.simulation.nodes(data.nodes);
@@ -126,8 +144,28 @@
 
             },
             onHover(node, index) {
+                var vm = this;
+                if(node.id == 'me') {
+                    return vm.tooltip.style("visibility", "hidden");
+                }
+                return vm.tooltip.style("visibility", "visible");
                 //console.log(node);
                 //console.log(index);
+            },
+            onMove(node, index) {
+                var vm = this;
+                if(node.id == 'me') {
+                    return vm.tooltip.style("visibility", "hidden");
+                }
+
+                return vm.tooltip
+                    .style("top", (d3.event.pageY - 50)+"px")
+                    .style("left",(d3.event.pageX - ((node.name.length * 8) / 2))+"px")
+                    .text(node.name);
+            },
+            onOut(node, index) {
+                var vm = this;
+                return vm.tooltip.style("visibility", "hidden");
             },
             tick() {
                 var vm = this;
@@ -141,7 +179,7 @@
                     .attr("y2", d => d.target.y);
 
                 vm.label
-                    .attr("x", function(d) { return d.x-10; })
+                    .attr("x", function(d) { return d.x-10 + (d.truncated ? 5 : 0); })
                     .attr("y", function (d) { return d.y+5; })
                     .style("font-size", "15px")
                     .style("font-weight", "bold")
