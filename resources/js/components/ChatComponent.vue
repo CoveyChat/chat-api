@@ -1,6 +1,8 @@
 <template>
 
   <div class="container">
+    <network-graph-component ref="networkGraph"></network-graph-component>
+
     <strong>Log</strong><br />
     <textarea id="logger" readonly class="form-control" rows=2></textarea>
     <hr />
@@ -57,16 +59,37 @@ export default {
             }
         },
         outputConnections (cons) {
+            var vm = this;
+
+            var networkChartData = {nodes:[{id: 'me', name: 'Me'}], links:[]};
+
             var txtConnections = document.getElementById('connections');
             txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
+
             for(var id in cons) {
-                if(id == cons[id]._id) {
-                    txtConnections.textContent += "Hosting " + id + "\n";
+                var host = cons[id];
+                if(id == host._id && typeof host.boundClient != 'undefined') {
+                    //When you have the host connection
+                    networkChartData.nodes.push({id: host.boundClient, name: "C"}); //C For client
+                    //networkChartData.nodes.push({id: host.boundClient, name: host.boundClient.substring(0,2)});
+                    networkChartData.links.push({source: host.boundClient, target: 'me'});
+
+                    txtConnections.textContent += id + " <- " + host.boundClient + "\n";
                 } else {
-                    txtConnections.textContent += cons[id]._id + " -> " + id + "\n";
+                    //When you're a client of a host
+                    networkChartData.nodes.push({id: id, name: "H"}); //H for host
+                    //networkChartData.nodes.push({id: id, name: id.substring(0,2)});
+                    networkChartData.links.push({source: 'me', target: id});
+
+                    txtConnections.textContent += host._id + " -> " + id + "\n";
                 }
 
             }
+            console.log("Sending to chart");
+            console.log(networkChartData);
+
+            vm.$refs.networkGraph.update(networkChartData);
+
         }
     },
 mounted() {
@@ -75,7 +98,8 @@ mounted() {
     //View model reference for inside scoped functions
     var vm = this;
 
-    //this.someFunction("TEST");
+    vm.$refs.networkGraph.init();
+
     var Peer = require('simple-peer');
     var io = require('socket.io-client');
 
@@ -141,6 +165,7 @@ mounted() {
 
         if(typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].destroyed) {
             vm.connections[obj.hostid].signal(obj.webRtcId);
+            vm.connections[obj.hostid].boundClient = obj.clientid;
         }
 
         vm.outputConnections(vm.connections);
