@@ -18,9 +18,9 @@
         <textarea id="logger" readonly class="form-control" rows=1></textarea>
         <hr />-->
 
-        <strong>Peer Connections</strong><br />
+        <!--<strong>Peer Connections</strong><br />
         <textarea id="connections" readonly class="form-control" rows=5></textarea>
-        <hr />
+        <hr />-->
 
         <div class="input-group">
             <input type="text" v-model="message" class="form-control" id="message" v-on:keyup.enter="sendMessage" />
@@ -132,45 +132,48 @@ export default {
 
             var networkChartData = {nodes:[{id: 'me', name: 'Me'}], links:[]};
 
-            var txtConnections = document.getElementById('connections');
-            txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
-console.log(cons);
+            //var txtConnections = document.getElementById('connections');
+            //txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
+
             for(var id in cons) {
                 var peer = cons[id];
                 var name = typeof peer.user != 'undefined' ? peer.user.name : 'X';
 
                 //This is the host connection and it's actually bound to someone
-                if(typeof peer != 'undefined' && peer.initiator) {
+                if(typeof peer != 'undefined' && peer.initiator && peer.clientid != null) {
                     //When you have the host connection
                     networkChartData.nodes.push({id: peer.clientid, name: name, status: 'client'}); //C For client
                     //networkChartData.nodes.push({id: host.clientid, name: host.clientid.substring(0,2)});
                     networkChartData.links.push({source: peer.clientid, target: 'me'});
 
-                    txtConnections.textContent += peer.id + " <--- " + peer.clientid + "\n";
-                } else if(typeof peer != 'undefined') {
+                    //txtConnections.textContent += peer.id + " <--- " + peer.clientid + "\n";
+                } else if(typeof peer != 'undefined' && peer.hostid != null) {
 
                     //When you're a client of a host
                     networkChartData.nodes.push({id: peer.hostid, name: name, status: 'host'}); //H for host
                     //networkChartData.nodes.push({id: id, name: id.substring(0,2)});
                     networkChartData.links.push({source: 'me', target: peer.hostid});
 
-                    txtConnections.textContent += peer.id + " ---> " + peer.hostid + "\n";
+                    //txtConnections.textContent += peer.id + " ---> " + peer.hostid + "\n";
                 }
 
             }
+
             vm.$refs.networkGraph.update(networkChartData);
 
         },
+        /**
+         * When a peer opens a stream, show the new connection
+         */
         onPeerStream(stream) {
-            console.log("ON PEER STREAM!!");
             var vm = this;
             var videoContainer = vm.$el.querySelector("#videos");
-
 
             // got remote video stream, now let's show it in a video tag
             var video = document.createElement('video');
             //video.muted = true;
             video.controls = true;
+            video.poster = "https://bevy.chat/img/logo_color.png";
             videoContainer.appendChild(video);
 
             if ('srcObject' in video) {
@@ -184,22 +187,17 @@ console.log(cons);
             video.onloadedmetadata = function (e) {
 				video.play();
 			};
-
-            console.log(stream);
-
-
-
-
-
-
         },
+        /**
+         * Fires when a new stream object has opened
+         * Aka the user clicked the video button
+         */
         onLocalStream(stream) {
             var vm = this;
-            console.log("On local stream!");
-            console.log(stream.getTracks());
+
             if(!vm.stream.enabled) {
                 console.log("++++LOCAL STREAM ENABLED");
-                /*var localVideoContainer = vm.$el.querySelector("#localVideoContainer");
+                var localVideoContainer = vm.$el.querySelector("#localVideoContainer");
                 var video = document.createElement('video');
                 video.className = 'local-stream';
                 video.muted = true;
@@ -212,14 +210,10 @@ console.log(cons);
                 }
 
                 video.play();
-                vm.stream.local = video;*/
+                vm.stream.local = video;
                 console.log("Set stream vars and tell everyone to retry");
                 vm.stream.enabled = true;
                 vm.stream.connection = stream;
-
-                //vm.server.signal.emit('initstreams');
-
-
 
                 //New Local stream! Send it off  to all the peers
                 for(var id in vm.connections) {
@@ -230,14 +224,17 @@ console.log(cons);
                         console.log(vm.connections[id]);
                         continue;
                     }
-                    console.log("+++++++++++++++++++Sending stream to " + id);
-                    console.log(vm.stream.connection);
-                    console.log(vm.stream.connection.getTracks());
 
-                    console.log(vm.connections[id]);
+                    vm.connections[id].addStream(vm.stream.connection);
+
+                    //console.log("+++++++++++++++++++Sending stream to " + id);
+                    //console.log(vm.stream.connection);
+                    //console.log(vm.stream.connection.getTracks());
+
+                    //console.log(vm.connections[id]);
                     //vm.connections[id].send("CONNECT VIA " + id + " DAMNIT");
                     //vm.connections[id].removeStream(vm.stream.connection);
-                    vm.connections[id].connection.addStream(vm.stream.connection);
+                    //vm.connections[id].connection.addStream(vm.stream.connection);
                     //var tracks = vm.stream.connection.getTracks();
                     //vm.connections[id].addTrack(tracks[0], stream);
                 }
@@ -245,27 +242,25 @@ console.log(cons);
         },
         sendStream(id) {
             var vm = this;
-            if(vm.connections[id].connection == null
+
+            if(typeof vm.connections[id] == 'undefined'
+                || vm.connections[id].connection == null
                 || !vm.connections[id].connection.connected
                 || vm.connections[id].connection.destroyed) {
-                console.log("BAD CONNECTION");
-                console.log(vm.connections[id].connection);
+                console.log("Cannot send stream! BAD CONNECTION TO " + id);
+                console.log(vm.connections[id]);
                 return false;
             }
 
             //client.send("Sending stream to " + client._id);
-            console.log("+++++++++++++++Sending stream to " + id)
-            console.log(vm.stream.connection);
-            console.log(vm.connections[id].connection);
+            console.log("+Sending stream to " + id)
             //console.log(vm.stream.connection.getTracks());
             //console.log(client.streams);
             //client.removeStream(vm.stream.connection);
-            console.log("HEEEEEEEEEEEEEEEEE");
-            if(vm.stream.enabled && typeof vm.connections[id].isStreaming == 'undefined' || !vm.connections[id].isStreaming) {
-                console.log("ASDDASASDASDASDASDASD");
-                console.log("++++++++++++++++++APPLYING STREAM");
-                vm.connections[id].connection.addStream(vm.stream.connection);
-                vm.connections[id].isStreaming = true;
+
+            if(vm.stream.enabled && !vm.connections[id].isStreaming) {
+                console.log("+APPLYING STREAM");
+                vm.connections[id].addStream(vm.stream.connection);
             }
 
         },
@@ -282,19 +277,20 @@ console.log(cons);
                     continue;
                 }
                 console.log("-----------------Remove stream from " + id);
-                vm.connections[id].connection.removeStream(vm.stream.connection);
+                vm.connections[id].removeStream(vm.stream.connection);
             }
-/*
+
+            //Also remove it from the UI
             var localStream = vm.stream.local.srcObject;
             var tracks = localStream.getTracks();
 
             tracks.forEach(function(track) {
                 track.stop();
-            });*/
+            });
 
             vm.stream.connection = null;
-            //vm.stream.local.srcObject = null;
-            //vm.$el.querySelector("#localVideoContainer").innerHTML = "";
+            vm.stream.local.srcObject = null;
+            vm.$el.querySelector("#localVideoContainer").innerHTML = "";
         },
         init(user) {
             var vm = this;
@@ -321,22 +317,10 @@ console.log(cons);
                 vm.server.signal.emit('join', {chatId: vm.chatId, user: vm.user});
             });
 
-            vm.server.signal.on('initstreams', function () {
-                //console.log("-----------REINIT STREAMS IGNROED");
-                //console.log(vm.connections);
-                /*for(var id in vm.connections) {
-                    //vm.connections[id].on('stream', function(stream) {console.log("qqq111HOST ON STREAM")});
-                    //vm.connections[id].on('track', function(track, stream) {console.log("qqq111HOST ON TRACK")});
-                    console.log(vm.connections[id]);
-                    //Rebind any lost streams
-                    if(vm.stream.enabled) {
-                        console.log("Sending stream to " + id)
-                        vm.sendStream(id);
-                    }
-                }*/
-
-            });
-
+            /**
+             * Fires when a new client connects. The new client create a new host peer
+             * for every client in the mesh that it needs to connec tto
+             */
             vm.server.signal.on('inithosts', function (numHosts) {
                 console.log("init (" + numHosts + ") hosts");
 
@@ -347,30 +331,29 @@ console.log(cons);
 
                     vm.connections[peer.id].connection.on('connect', function() {
                         vm.outputConnections(vm.connections);
+                        if(vm.stream.enabled) {
+                            console.log("Try and send a stream to " + peer.id);
+                            vm.sendStream(peer.id);
+                        }
                     });
 
-                    vm.connections[peer.id].connection.on('close', function() {delete vm.connections[id];});
-                    vm.connections[peer.id].connection.on('error', function() {delete vm.connections[id];});
+                    vm.connections[peer.id].connection.on('close', function() {delete vm.connections[peer.id];});
+                    vm.connections[peer.id].connection.on('error', function() {delete vm.connections[peer.id];});
 
                     vm.connections[peer.id].connection.on('data', function(data) {
                         vm.recieveMessage(vm.connections[peer.id].user, data);
                     });
 
                     vm.connections[peer.id].connection.on('stream', function(stream) {
-                        console.log(stream);
-                        console.log("111111111111111HOST ON STREAM");
+                        vm.onPeerStream(stream);
                     });
-                    vm.connections[peer.id].connection.on('track', function(track, stream) {console.log("11111111111111111111111HOST ON TRACK");});
                 }
             });
 
-
+            /**
+             * Fires when the client has generated a WebRTC token and it needs to get back to the host
+             */
             vm.server.signal.on('sendtohost', function (obj) {
-                console.log(obj);
-                console.log("CONNECTIONS:");
-                console.log(vm.connections);
-                console.log("Bound HostID " + obj.hostid + " to client " + obj.clientid);
-
                 //Prevent signals to bad hosts that have closed
                 if(typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].connection.destroyed) {
                     console.log("host - binding returned client info");
@@ -383,7 +366,10 @@ console.log(cons);
                 }
             });
 
-
+            /**
+             * Fires when a host is looking for clients to connect to
+             * If there's no open client for this match host one will be created
+             */
             vm.server.signal.on('initclient', function (obj) {
                 console.log("Got request to init a client for host " + obj.hostid);
                 var id=obj.hostid;
@@ -399,6 +385,10 @@ console.log(cons);
 
                     vm.connections[id].connection.on('connect', function() {
                         vm.outputConnections(vm.connections);
+                        if(vm.stream.enabled) {
+                            console.log("Try and send a client stream to " + id);
+                            vm.sendStream(id);
+                        }
                     });
 
                     vm.connections[id].connection.on('close', function() {delete vm.connections[id];});
@@ -408,11 +398,7 @@ console.log(cons);
                         vm.recieveMessage(vm.connections[id].user, data);
                     });
 
-                    vm.connections[id].connection.on('stream', stream => {
-                            console.log(stream);
-                            console.log("22222222222222222222CLIENT ON STREAM");
-                    });
-                    vm.connections[id].connection.on('track', function(track, stream) {console.log("22222222222222222222CLIENT ON TRACK")});
+                    vm.connections[id].connection.on('stream', stream => {vm.onPeerStream(stream); });
                 }
                 //Use the remote host id so that the client is overridden if it re-signals
 
@@ -454,6 +440,8 @@ class PeerConnection {
         self.hostid = initiator ? self.id : null;
         self.clientid = initiator ? null : self.id;
 
+        self.isStreaming = false;
+
         self.connection.on('connect', function() {
             console.log("~~~~~Connected!~~~~~");
         });
@@ -484,6 +472,28 @@ class PeerConnection {
 
         return this;
     }
+
+    addStream(stream) {
+        if(this.isStreaming) {
+            console.log("ALREADY STREAMING");
+        } else {
+            console.log(this.connection);
+            this.connection.addStream(stream);
+            this.isStreaming = true;
+        }
+
+    }
+
+    removeStream(stream) {
+        if(!this.isStreaming) {
+            console.log("NOT STREAMING");
+        } else {
+            this.connection.removeStream(stream);
+            this.isStreaming = false;
+        }
+
+    }
+
     setHostId(id) {
         this.hostid = id;
     }
