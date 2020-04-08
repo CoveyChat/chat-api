@@ -24,7 +24,7 @@
 <script>
     export default {
         mounted() {
-            console.log("Network Graph Mounted");
+            //console.log("Network Graph Mounted");
         },
         data: function () {
             return {

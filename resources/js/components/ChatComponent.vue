@@ -16,11 +16,11 @@
     <!--
         <strong>Log</strong><br />
         <textarea id="logger" readonly class="form-control" rows=1></textarea>
-        <hr />
+        <hr />-->
 
         <strong>Peer Connections</strong><br />
-        <textarea id="connections" readonly class="form-control" rows=1></textarea>
-        <hr />-->
+        <textarea id="connections" readonly class="form-control" rows=5></textarea>
+        <hr />
 
         <div class="input-group">
             <input type="text" v-model="message" class="form-control" id="message" v-on:keyup.enter="sendMessage" />
@@ -83,11 +83,11 @@ export default {
         return {
             message: '',
             chatLog: [],
-            connections: [],
+            connections: {},
             chatId: null,
             user: null,
             stream: {enabled: false, connection: null, local:null},
-            server: {ip:'localhost', port:1337, signal: null}
+            server: {ip:'bevy.chat', port:1337, signal: null}
         }
     },
     methods: {
@@ -109,7 +109,7 @@ export default {
             var vm = this;
             console.log('Called message sender');
             if(vm.message != '' && Object.keys(vm.connections).length > 0) {
-                if(Message.send(vm.connections, vm.message)) {
+                if(Message.broadcast(vm.connections, vm.message)) {
                     //Write the message we just sent
                     vm.recieveMessage(vm.user, vm.message, true);
                     //document.getElementById('messages').textContent += "Me: " + this.message + '\n';
@@ -132,29 +132,29 @@ export default {
 
             var networkChartData = {nodes:[{id: 'me', name: 'Me'}], links:[]};
 
-            //var txtConnections = document.getElementById('connections');
-            //txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
-
+            var txtConnections = document.getElementById('connections');
+            txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
+console.log(cons);
             for(var id in cons) {
-                var host = cons[id];
-                var name = typeof host.user != 'undefined' ? host.user.name : 'X';
+                var peer = cons[id];
+                var name = typeof peer.user != 'undefined' ? peer.user.name : 'X';
 
                 //This is the host connection and it's actually bound to someone
-                if(typeof host != 'undefined' && id == host._id && typeof host.boundClient != 'undefined') {
+                if(typeof peer != 'undefined' && peer.initiator) {
                     //When you have the host connection
-                    networkChartData.nodes.push({id: host.boundClient, name: name, status: 'client'}); //C For client
-                    //networkChartData.nodes.push({id: host.boundClient, name: host.boundClient.substring(0,2)});
-                    networkChartData.links.push({source: host.boundClient, target: 'me'});
+                    networkChartData.nodes.push({id: peer.clientid, name: name, status: 'client'}); //C For client
+                    //networkChartData.nodes.push({id: host.clientid, name: host.clientid.substring(0,2)});
+                    networkChartData.links.push({source: peer.clientid, target: 'me'});
 
-                    //txtConnections.textContent += id + " <- " + host.boundClient + "\n";
-                } else if(typeof host != 'undefined') {
+                    txtConnections.textContent += peer.id + " <--- " + peer.clientid + "\n";
+                } else if(typeof peer != 'undefined') {
 
                     //When you're a client of a host
-                    networkChartData.nodes.push({id: id, name: name, status: 'host'}); //H for host
+                    networkChartData.nodes.push({id: peer.hostid, name: name, status: 'host'}); //H for host
                     //networkChartData.nodes.push({id: id, name: id.substring(0,2)});
-                    networkChartData.links.push({source: 'me', target: id});
+                    networkChartData.links.push({source: 'me', target: peer.hostid});
 
-                    //txtConnections.textContent += host._id + " -> " + id + "\n";
+                    txtConnections.textContent += peer.id + " ---> " + peer.hostid + "\n";
                 }
 
             }
@@ -195,50 +195,106 @@ export default {
         },
         onLocalStream(stream) {
             var vm = this;
-            vm.stream.enabled = true;
-            vm.stream.connection = stream;
+            console.log("On local stream!");
+            console.log(stream.getTracks());
+            if(!vm.stream.enabled) {
+                console.log("++++LOCAL STREAM ENABLED");
+                /*var localVideoContainer = vm.$el.querySelector("#localVideoContainer");
+                var video = document.createElement('video');
+                video.className = 'local-stream';
+                video.muted = true;
+                localVideoContainer.appendChild(video);
 
-            //Send this stream to all the peers
-            for(var id in vm.connections) {
-                vm.connections[id].addStream(vm.stream.connection);
+                if ('srcObject' in video) {
+                    video.srcObject = stream
+                } else {
+                    video.src = window.URL.createObjectURL(stream) // for older browsers
+                }
+
+                video.play();
+                vm.stream.local = video;*/
+                console.log("Set stream vars and tell everyone to retry");
+                vm.stream.enabled = true;
+                vm.stream.connection = stream;
+
+                //vm.server.signal.emit('initstreams');
+
+
+
+                //New Local stream! Send it off  to all the peers
+                for(var id in vm.connections) {
+                    if(vm.connections[id].connection == null
+                        || !vm.connections[id].connection.connected
+                        || vm.connections[id].connection.destroyed) {
+                        console.log("SKIP CONNECTION " + id);
+                        console.log(vm.connections[id]);
+                        continue;
+                    }
+                    console.log("+++++++++++++++++++Sending stream to " + id);
+                    console.log(vm.stream.connection);
+                    console.log(vm.stream.connection.getTracks());
+
+                    console.log(vm.connections[id]);
+                    //vm.connections[id].send("CONNECT VIA " + id + " DAMNIT");
+                    //vm.connections[id].removeStream(vm.stream.connection);
+                    vm.connections[id].connection.addStream(vm.stream.connection);
+                    //var tracks = vm.stream.connection.getTracks();
+                    //vm.connections[id].addTrack(tracks[0], stream);
+                }
             }
-            var localVideoContainer = vm.$el.querySelector("#localVideoContainer");
-            var video = document.createElement('video');
-            video.className = 'local-stream';
-            video.muted = true;
-            localVideoContainer.appendChild(video);
-
-            if ('srcObject' in video) {
-                video.srcObject = stream
-            } else {
-                video.src = window.URL.createObjectURL(stream) // for older browsers
+        },
+        sendStream(id) {
+            var vm = this;
+            if(vm.connections[id].connection == null
+                || !vm.connections[id].connection.connected
+                || vm.connections[id].connection.destroyed) {
+                console.log("BAD CONNECTION");
+                console.log(vm.connections[id].connection);
+                return false;
             }
 
-            video.play();
-            vm.stream.local = video;
+            //client.send("Sending stream to " + client._id);
+            console.log("+++++++++++++++Sending stream to " + id)
+            console.log(vm.stream.connection);
+            console.log(vm.connections[id].connection);
+            //console.log(vm.stream.connection.getTracks());
+            //console.log(client.streams);
+            //client.removeStream(vm.stream.connection);
+            console.log("HEEEEEEEEEEEEEEEEE");
+            if(vm.stream.enabled && typeof vm.connections[id].isStreaming == 'undefined' || !vm.connections[id].isStreaming) {
+                console.log("ASDDASASDASDASDASDASD");
+                console.log("++++++++++++++++++APPLYING STREAM");
+                vm.connections[id].connection.addStream(vm.stream.connection);
+                vm.connections[id].isStreaming = true;
+            }
+
         },
         stopLocalStream() {
             var vm = this;
+
+            if(!vm.stream.enabled) {return}
+
             vm.stream.enabled = false;
 
             //Send this stream to all the peers
             for(var id in vm.connections) {
-                if(vm.connections[id].streams.length == 0) {
+                if(!vm.connections[id].isStreaming) {
                     continue;
                 }
-                vm.connections[id].removeStream(vm.stream.connection);
+                console.log("-----------------Remove stream from " + id);
+                vm.connections[id].connection.removeStream(vm.stream.connection);
             }
-
+/*
             var localStream = vm.stream.local.srcObject;
             var tracks = localStream.getTracks();
 
             tracks.forEach(function(track) {
                 track.stop();
-            });
+            });*/
 
             vm.stream.connection = null;
-            vm.stream.local.srcObject = null;
-            vm.$el.querySelector("#localVideoContainer").innerHTML = "";
+            //vm.stream.local.srcObject = null;
+            //vm.$el.querySelector("#localVideoContainer").innerHTML = "";
         },
         init(user) {
             var vm = this;
@@ -249,7 +305,7 @@ export default {
 
 
             vm.chatId = location.pathname.replace('/chat/', '');
-            vm.server.signal = io.connect('http://' + vm.server.ip + ':' + vm.server.port);
+            vm.server.signal = io.connect('https://' + vm.server.ip + ':' + vm.server.port);
 
             //var txtLogger = document.getElementById('logger');
 
@@ -265,128 +321,106 @@ export default {
                 vm.server.signal.emit('join', {chatId: vm.chatId, user: vm.user});
             });
 
+            vm.server.signal.on('initstreams', function () {
+                //console.log("-----------REINIT STREAMS IGNROED");
+                //console.log(vm.connections);
+                /*for(var id in vm.connections) {
+                    //vm.connections[id].on('stream', function(stream) {console.log("qqq111HOST ON STREAM")});
+                    //vm.connections[id].on('track', function(track, stream) {console.log("qqq111HOST ON TRACK")});
+                    console.log(vm.connections[id]);
+                    //Rebind any lost streams
+                    if(vm.stream.enabled) {
+                        console.log("Sending stream to " + id)
+                        vm.sendStream(id);
+                    }
+                }*/
+
+            });
+
             vm.server.signal.on('inithosts', function (numHosts) {
                 console.log("init (" + numHosts + ") hosts");
 
                 for(var i=0;i<numHosts;i++) {
-                    console.log("CREATE HOST");
-                    var host = new Peer({
-                        initiator: true
-                    })
-                    host.on('data', function(data) {
-                        vm.recieveMessage(host.user, data);
-                        //document.getElementById('messages').textContent += host.user.name + ": " + data + '\n';
-                    });
 
-                    host.on('stream', vm.onPeerStream);
+                    var peer = new PeerConnection(vm.server.signal, true);
+                    vm.connections[peer.id] = peer;
 
-                    host.on('signal', function (webRtcId) {
-                        vm.connections[this._id] = this;
-
-                        //txtLogger.textContent += "Signal HostID " + this._id + '\n';
-                        //txtLogger.scrollTop = txtLogger.scrollHeight;
-
-                        vm.server.signal.emit('bindtohost', {webRtcId: webRtcId, hostid: this._id});
-                        vm.outputConnections(vm.connections);
-                    }).on('close', function() {
-                        console.log("Destroy connection " + this._id);
-                        this.destroy();
-                        delete vm.connections[this._id];
-
+                    vm.connections[peer.id].connection.on('connect', function() {
                         vm.outputConnections(vm.connections);
                     });
 
-                    host.on('error', function(err) {
-                        console.log("Lost connection... Killing host " + this._id);
-                        this.destroy();
-                        delete vm.connections[this._id];
+                    vm.connections[peer.id].connection.on('close', function() {delete vm.connections[id];});
+                    vm.connections[peer.id].connection.on('error', function() {delete vm.connections[id];});
 
-                        vm.outputConnections(vm.connections);
+                    vm.connections[peer.id].connection.on('data', function(data) {
+                        vm.recieveMessage(vm.connections[peer.id].user, data);
                     });
+
+                    vm.connections[peer.id].connection.on('stream', function(stream) {
+                        console.log(stream);
+                        console.log("111111111111111HOST ON STREAM");
+                    });
+                    vm.connections[peer.id].connection.on('track', function(track, stream) {console.log("11111111111111111111111HOST ON TRACK");});
                 }
             });
 
 
-            vm.server.signal.on('bindtoclient', function (obj) {
-                console.log("Bound HostID " + obj.hostid + " to client");
-                //txtLogger.textContent += "Bound HostID " + obj.hostid + ' to client ' + obj.clientid + '\n';
-                //txtLogger.scrollTop = txtLogger.scrollHeight;
+            vm.server.signal.on('sendtohost', function (obj) {
+                console.log(obj);
+                console.log("CONNECTIONS:");
+                console.log(vm.connections);
+                console.log("Bound HostID " + obj.hostid + " to client " + obj.clientid);
 
-                if(typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].destroyed) {
+                //Prevent signals to bad hosts that have closed
+                if(typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].connection.destroyed) {
+                    console.log("host - binding returned client info");
                     vm.connections[obj.hostid].signal(obj.webRtcId);
-                    vm.connections[obj.hostid].user = obj.user;
-                    vm.connections[obj.hostid].boundClient = obj.clientid;
+                    vm.connections[obj.hostid].setUser(obj.user);
+                    vm.connections[obj.hostid].setClientId(obj.clientid);
+                } else {
+                    console.log("UH OH");
+                    delete vm.connections[obj.hostid];
                 }
-
-                vm.outputConnections(vm.connections);
             });
 
 
             vm.server.signal.on('initclient', function (obj) {
-                //Use the remote host id so that the client is overridden if it re-signals
+                console.log("Got request to init a client for host " + obj.hostid);
                 var id=obj.hostid;
 
-                console.log("New connection peer object on id " + id);
-                vm.connections[id] = new Peer({
-                    initiator: false
-                });
+                //Key to the host id since it can possibly reqest to init a bunch of times during the handshake
+                if(typeof vm.connections[obj.hostid] == 'undefined') {
+                    console.log("Init a peer for host " + id);
+                    var peer = new PeerConnection(vm.server.signal, false);
 
-                vm.connections[id].user = obj.user;
+                    vm.connections[id] = peer;
+                    vm.connections[id].setHostId(obj.hostid);
+                    vm.connections[id].setUser(obj.user);
 
-                //Bind to the host
+                    vm.connections[id].connection.on('connect', function() {
+                        vm.outputConnections(vm.connections);
+                    });
+
+                    vm.connections[id].connection.on('close', function() {delete vm.connections[id];});
+                    vm.connections[id].connection.on('error', function() {delete vm.connections[id];});
+
+                    vm.connections[id].connection.on('data', function(data) {
+                        vm.recieveMessage(vm.connections[id].user, data);
+                    });
+
+                    vm.connections[id].connection.on('stream', stream => {
+                            console.log(stream);
+                            console.log("22222222222222222222CLIENT ON STREAM");
+                    });
+                    vm.connections[id].connection.on('track', function(track, stream) {console.log("22222222222222222222CLIENT ON TRACK")});
+                }
+                //Use the remote host id so that the client is overridden if it re-signals
+
+
+                console.log("Signal host (" + obj.hostid + ") connection to client");
                 vm.connections[id].signal(obj.webRtcId);
 
-                //txtLogger.textContent += "Bound client " + vm.connections[id]._id + " to host " +  id + '\n';
-                //txtLogger.scrollTop = txtLogger.scrollHeight;
 
-                //Recieve it's connection details
-                vm.connections[id].on('signal', function (webRtcId) {
-                    console.log("Sending client ("+ vm.connections[id]._id +") connection to host..." + obj.hostid);
-                    //txtLogger.textContent += "Bound to " + obj.hostid + '\n';
-                    //txtLogger.scrollTop = txtLogger.scrollHeight;
-
-                    vm.server.signal.emit('bindconnection', {webRtcId:webRtcId, hostid: obj.hostid, clientid: vm.connections[id]._id});
-                    vm.outputConnections(vm.connections);
-                });
-
-                vm.connections[id].on('data', function(data) {
-                    vm.recieveMessage(vm.connections[id].user, data);
-                    //document.getElementById('messages').textContent += vm.connections[id].user.name + ": " + data + '\n';
-                });
-
-                vm.connections[id].on('stream', vm.onPeerStream);
-
-                vm.connections[id].on('connect', function() {
-                    //txtLogger.textContent += "Client " + vm.connections[id]._id + ' successfully connected to host ' + id + '\n';
-                    //txtLogger.scrollTop = txtLogger.scrollHeight;
-
-                    //Set the opened connection
-                    vm.connections[id] = this;
-                    vm.outputConnections(vm.connections);
-                });
-
-                vm.connections[id].on('close', function() {
-                    if(typeof(vm.connections[id]) != 'undefined') {
-                        console.log("Graceful close connection " + vm.connections[id]._id + " -> " + id);
-                        vm.connections[id].destroy();
-                    }
-                    console.log("Close id" + id);
-                    delete vm.connections[id];
-                    vm.outputConnections(vm.connections);
-
-                });
-
-                vm.connections[id].on('error', function(err) {
-                    if(typeof(vm.connections[id]) != 'undefined') {
-                        console.log("Lost connection... Killing client " + vm.connections[id]._id + " -> " + id);
-                        vm.connections[id].destroy();
-                    }
-                    console.log("Error id" + id);
-                    delete vm.connections[id];
-                    vm.outputConnections(vm.connections);
-                });
-
-                vm.outputConnections(vm.connections);
             });
 
         }
@@ -404,6 +438,72 @@ mounted() {
 }
 }
 
+class PeerConnection {
+
+    constructor(server, initiator) {
+        var Peer = require('simple-peer');
+        var self = this;
+
+        self.connection = new Peer({initiator: initiator});
+        self.server = server;
+
+        self.id = self.connection._id;
+        self.user = {name: "derp", verified: false};
+
+        self.initiator = initiator;
+        self.hostid = initiator ? self.id : null;
+        self.clientid = initiator ? null : self.id;
+
+        self.connection.on('connect', function() {
+            console.log("~~~~~Connected!~~~~~");
+        });
+
+        self.connection.on('signal', function (webRtcId) {
+            if(self.connection.initiator) {
+                console.log('Got initiator signal, sending off to client');
+                self.server.emit('sendtoclient', {webRtcId: webRtcId, hostid: self.hostid, clientid: self.clientid});
+            } else {
+                console.log('Got client signal, sending off to host');
+
+                //Got a response from the initiator
+                self.server.emit('sendtohost', {webRtcId:webRtcId, hostid: self.hostid, clientid: self.clientid});
+            }
+
+
+        });
+
+        self.connection.on('close', function() {
+            console.log("Connection closed - " + self.id);
+            self.destroy();
+        });
+
+        self.connection.on('error', function(err) {
+            console.log("Connection error - " + self.id);
+            self.destroy();
+        });
+
+        return this;
+    }
+    setHostId(id) {
+        this.hostid = id;
+    }
+    setClientId(id) {
+        this.clientid = id;
+    }
+    setUser(user) {
+        this.user = user;
+    }
+
+    signal(webRtcId) {
+        this.connection.signal(webRtcId);
+    }
+
+    destroy() {
+        this.connection.destroy();
+        return null;
+    }
+}
+
 class User {
     //Gets the current authenticated user
     constructor() {
@@ -415,7 +515,7 @@ class User {
 
         //Get this chat database record
         return this.transport.get('/api/1.0/users/whoami').then(response => {
-            console.log(response.data);
+            //console.log(response.data);
             self.name = response.data.data.name;
             self.email = response.data.data.name;
             self.verified = true;
@@ -441,7 +541,7 @@ class User {
 class Message {
     constructor() {}
 
-    static send(connections, message) {
+    static broadcast(connections, message) {
         if(message == '' || Object.keys(connections).length == 0) {
             return false;
         }
@@ -449,18 +549,19 @@ class Message {
         console.log(Object.keys(connections).length + " open connections");
 
         for(var id in connections) {
-            if(connections[id] == null || !connections[id].connected || connections[id].destroyed) {
+            var conn = connections[id].connection;
+            if(conn == null || !conn.connected || conn.destroyed) {
                 console.log("Tried sending through bad connection id " + id);
                 console.log(connections);
-                console.log(connections[id]);
-                console.log("Connected " + connections[id].connected);
-                console.log("Destroyed " + connections[id].destroyed);
+                console.log(conn);
+                console.log("Connected " + conn.connected);
+                console.log("Destroyed " + conn.destroyed);
                 delete connections[id];
                 continue;
             }
 
             console.log("Sending to " + id);
-            connections[id].send(message);
+            conn.send(message);
         }
 
         //After deleting any bad connections, if there's any left that we sent to then return true
