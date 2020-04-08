@@ -1,49 +1,75 @@
 <template>
 
-  <div class="container">
-    <network-graph-component ref="networkGraph"></network-graph-component>
+    <div class="container">
+        <button class="btn btn-primary float-right" type="button"  id="videoToggle" v-on:click="toggleVideo">
+            <span class="sr-only" v-if="!stream.enabled">Start Video</span>
+            <i class="fas fa-video" v-if="!stream.enabled"></i>
 
-<!--
-    <strong>Log</strong><br />
-    <textarea id="logger" readonly class="form-control" rows=1></textarea>
-    <hr />
+            <span class="sr-only" v-if="stream.enabled">Stop Video</span>
+            <i class="fas fa-video-slash" v-if="stream.enabled"></i>
+        </button>
+        <div id="localVideoContainer"></div>
+        <network-graph-component ref="networkGraph"></network-graph-component>
 
-    <strong>Peer Connections</strong><br />
-    <textarea id="connections" readonly class="form-control" rows=1></textarea>
-    <hr />-->
 
-    <div class="input-group">
-        <input type="text" v-model="message" class="form-control" id="message" v-on:keyup.enter="sendMessage" />
+        <div id='videos'></div>
+    <!--
+        <strong>Log</strong><br />
+        <textarea id="logger" readonly class="form-control" rows=1></textarea>
+        <hr />
 
-        <span class="input-group-btn">
-                <button class="btn btn-primary" type="button"  id="send" v-on:click="sendMessage">
-                    <span class="sr-only">Send Message</span>
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-        </span>
-    </div>
+        <strong>Peer Connections</strong><br />
+        <textarea id="connections" readonly class="form-control" rows=1></textarea>
+        <hr />-->
 
-    <br />
+        <div class="input-group">
+            <input type="text" v-model="message" class="form-control" id="message" v-on:keyup.enter="sendMessage" />
 
-    <div id="messages">
-        <div v-for="item in chatLog" :key="item.index">
-            <p class="text-muted p-0 mb-0"
-                v-bind:class="{ 'text-right': item.self, 'text-left': !item.self }"
-                v-if="item.index == 0 || (item.index > 0 && chatLog[item.index-1].user.name != item.user.name)">
-                {{item.user.name}}
-            </p>
-            <p class="card p-3 m-1"
-                v-bind:class="{ 'text-right alert-info ml-6': item.self, 'mr-6': !item.self }">
-                {{item.message}}
-            </p>
+            <span class="input-group-btn">
+                    <button class="btn btn-primary" type="button"  id="send" v-on:click="sendMessage">
+                        <span class="sr-only">Send Message</span>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+            </span>
         </div>
+
+        <br />
+
+        <div id="messages" class="overflow-auto">
+            <div v-for="item in chatLog" :key="item.index">
+                <p class="text-muted p-0 mb-0"
+                    v-bind:class="{ 'text-right': item.self, 'text-left': !item.self }"
+                    v-if="item.index == 0 || (item.index > 0 && chatLog[item.index-1].user.name != item.user.name)">
+                    {{item.user.name}}
+                    <i class="fas fa-lock" v-if="item.user.verified"></i>
+                </p>
+                <p class="card p-3 m-1"
+                    v-bind:class="{ 'text-right alert-info ml-6': item.self, 'mr-6': !item.self }">
+                    {{item.message}}
+                </p>
+            </div>
+        </div>
+
     </div>
-
-
-
-    <div id='videos'></div>
-  </div>
 </template>
+
+<style scoped>
+    #messages {
+        max-height:25vh;
+    }
+    #localVideoContainer {
+        width:155px;
+        float:right;
+    }
+    #localVideoContainer >>> video {
+        width:200px;
+    }
+    #videoToggle {
+        float:right;
+        position: relative;
+        z-index:1;
+    }
+</style>
 
 <script>
 
@@ -60,10 +86,25 @@ export default {
             connections: [],
             chatId: null,
             user: null,
+            stream: {enabled: false, connection: null, local:null},
             server: {ip:'localhost', port:1337, signal: null}
         }
     },
     methods: {
+        toggleVideo(e) {
+            var vm = this;
+            if(!vm.stream.enabled) {
+                navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true
+                }).then(vm.onLocalStream).catch((e) => {
+                    console.log("Local Stream Error!");
+                    console.log(e);
+                });
+            } else {
+                vm.stopLocalStream();
+            }
+        },
         sendMessage (e) {
             var vm = this;
             console.log('Called message sender');
@@ -82,6 +123,9 @@ export default {
             var vm = this;
             //document.getElementById('messages').textContent += vm.connections[id].user.name + ": " + data + '\n'
             vm.chatLog.push({index: vm.chatLog.length, message: data, user: user, self: self});
+
+            var messageContainer = vm.$el.querySelector("#messages");
+            messageContainer.scrollTop = messageContainer.scrollHeight;
         },
         outputConnections (cons) {
             var vm = this;
@@ -116,6 +160,85 @@ export default {
             }
             vm.$refs.networkGraph.update(networkChartData);
 
+        },
+        onPeerStream(stream) {
+            console.log("ON PEER STREAM!!");
+            var vm = this;
+            var videoContainer = vm.$el.querySelector("#videos");
+
+
+            // got remote video stream, now let's show it in a video tag
+            var video = document.createElement('video');
+            //video.muted = true;
+            video.controls = true;
+            videoContainer.appendChild(video);
+
+            if ('srcObject' in video) {
+                video.srcObject = stream
+            } else {
+                video.src = window.URL.createObjectURL(stream) // for older browsers
+            }
+            //await new Promise(resolve => video.onloadedmetadata = resolve);
+            video.addEventListener("ended", () => console.log("inactive!"));
+
+            video.onloadedmetadata = function (e) {
+				video.play();
+			};
+
+            console.log(stream);
+
+
+
+
+
+
+        },
+        onLocalStream(stream) {
+            var vm = this;
+            vm.stream.enabled = true;
+            vm.stream.connection = stream;
+
+            //Send this stream to all the peers
+            for(var id in vm.connections) {
+                vm.connections[id].addStream(vm.stream.connection);
+            }
+            var localVideoContainer = vm.$el.querySelector("#localVideoContainer");
+            var video = document.createElement('video');
+            video.className = 'local-stream';
+            video.muted = true;
+            localVideoContainer.appendChild(video);
+
+            if ('srcObject' in video) {
+                video.srcObject = stream
+            } else {
+                video.src = window.URL.createObjectURL(stream) // for older browsers
+            }
+
+            video.play();
+            vm.stream.local = video;
+        },
+        stopLocalStream() {
+            var vm = this;
+            vm.stream.enabled = false;
+
+            //Send this stream to all the peers
+            for(var id in vm.connections) {
+                if(vm.connections[id].streams.length == 0) {
+                    continue;
+                }
+                vm.connections[id].removeStream(vm.stream.connection);
+            }
+
+            var localStream = vm.stream.local.srcObject;
+            var tracks = localStream.getTracks();
+
+            tracks.forEach(function(track) {
+                track.stop();
+            });
+
+            vm.stream.connection = null;
+            vm.stream.local.srcObject = null;
+            vm.$el.querySelector("#localVideoContainer").innerHTML = "";
         },
         init(user) {
             var vm = this;
@@ -154,6 +277,8 @@ export default {
                         vm.recieveMessage(host.user, data);
                         //document.getElementById('messages').textContent += host.user.name + ": " + data + '\n';
                     });
+
+                    host.on('stream', vm.onPeerStream);
 
                     host.on('signal', function (webRtcId) {
                         vm.connections[this._id] = this;
@@ -229,6 +354,8 @@ export default {
                     //document.getElementById('messages').textContent += vm.connections[id].user.name + ": " + data + '\n';
                 });
 
+                vm.connections[id].on('stream', vm.onPeerStream);
+
                 vm.connections[id].on('connect', function() {
                     //txtLogger.textContent += "Client " + vm.connections[id]._id + ' successfully connected to host ' + id + '\n';
                     //txtLogger.scrollTop = txtLogger.scrollHeight;
@@ -291,6 +418,7 @@ class User {
             console.log(response.data);
             self.name = response.data.data.name;
             self.email = response.data.data.name;
+            self.verified = true;
             return response.data;
         }).catch(error => {
             if (error.response.status === 401) {
@@ -301,7 +429,8 @@ class User {
                     data: {
                         id: null,
                         name: 'Anon Bird',
-                        token: null
+                        token: null,
+                        verified: false
                     }
                 }
             }
@@ -346,7 +475,3 @@ class Message {
 
 
 </script>
-
-<style>
-
-</style>
