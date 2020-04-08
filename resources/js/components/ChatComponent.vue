@@ -434,7 +434,7 @@ class PeerConnection {
         self.server = server;
 
         self.id = self.connection._id;
-        self.user = {name: "derp", verified: false};
+        self.user = {name: "anonymous", verified: false};
 
         self.initiator = initiator;
         self.hostid = initiator ? self.id : null;
@@ -538,7 +538,7 @@ class User {
                     message: '',
                     data: {
                         id: null,
-                        name: 'Anon Bird',
+                        name: 'anonymous',
                         token: null,
                         verified: false
                     }

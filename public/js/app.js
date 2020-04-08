@@ -2176,8 +2176,6 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
         }
       }
 
-      console.log("CHART DATA");
-      console.log(JSON.stringify(networkChartData));
       vm.$refs.networkGraph.update(networkChartData);
     },
 
@@ -2444,7 +2442,7 @@ var PeerConnection = /*#__PURE__*/function () {
     self.server = server;
     self.id = self.connection._id;
     self.user = {
-      name: "derp",
+      name: "anonymous",
       verified: false
     };
     self.initiator = initiator;
@@ -2559,7 +2557,7 @@ function User() {
         message: '',
         data: {
           id: null,
-          name: 'Anon Bird',
+          name: 'anonymous',
           token: null,
           verified: false
         }
@@ -2674,8 +2672,8 @@ __webpack_require__.r(__webpack_exports__);
         bottom: 30,
         left: 40
       };
-      vm.width = 600;
-      vm.height = 300;
+      vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
+      vm.height = 200;
       vm.tooltip = d3.select("body").append("div").style("position", "absolute").style("font-size", "16px").style("z-index", "10").style("visibility", "hidden").style("background", "#fff").style("border-radius", "5px").style("padding", "5px").text("---");
       var svg = d3.select("#active-network-chart").append("svg").attr("width", vm.width).attr("height", vm.height).attr("viewBox", [-vm.width / 2, -vm.height / 2, vm.width, vm.height]);
       vm.simulation = d3.forceSimulation().force("charge", d3.forceManyBody().strength(-400)).force("link", d3.forceLink().id(function (d) {

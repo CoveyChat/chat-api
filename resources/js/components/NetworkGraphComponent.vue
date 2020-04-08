@@ -54,8 +54,8 @@
 
                 // set the dimensions and margins of the graph
                 var margin = {top: 10, right: 30, bottom: 30, left: 40};
-                vm.width = 600;
-                vm.height = 300;
+                vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
+                vm.height = 200;
 
                 vm.tooltip = d3.select("body")
                     .append("div")
