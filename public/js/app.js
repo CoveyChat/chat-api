@@ -2673,12 +2673,13 @@ __webpack_require__.r(__webpack_exports__);
         left: 40
       };
       vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
-      vm.height = 200;
+      vm.height = 150;
       vm.tooltip = d3.select("body").append("div").style("position", "absolute").style("font-size", "16px").style("z-index", "10").style("visibility", "hidden").style("background", "#fff").style("border-radius", "5px").style("padding", "5px").text("---");
-      var svg = d3.select("#active-network-chart").append("svg").attr("width", vm.width).attr("height", vm.height).attr("viewBox", [-vm.width / 2, -vm.height / 2, vm.width, vm.height]);
+      var svg = d3.select("#active-network-chart").append("svg").attr("width", vm.width).attr("height", vm.height); //.attr("viewBox", [-vm.width / 2, -vm.height / 2, vm.width, vm.height]);
+
       vm.simulation = d3.forceSimulation().force("charge", d3.forceManyBody().strength(-400)).force("link", d3.forceLink().id(function (d) {
         return d.id;
-      }).distance(75)).force("x", d3.forceX()).force("y", d3.forceY()).on("tick", vm.tick);
+      }).distance(75)).force("x", d3.forceX(vm.width / 2)).force("y", d3.forceY(vm.height / 2)).on("tick", vm.tick);
       vm.link = svg.append("g").attr("stroke", "#ccc").attr("stroke-width", 1.5).selectAll("line");
       vm.node = svg.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5).selectAll("circle");
       vm.label = svg.append("g").attr("class", "labels").style("cursor", "default").selectAll("text");
@@ -2743,11 +2744,13 @@ __webpack_require__.r(__webpack_exports__);
       return vm.tooltip.style("visibility", "hidden");
     },
     tick: function tick() {
-      var vm = this;
+      var vm = this; //vm.node.attr("cx", d => d.x)
+      //    .attr("cy", d => d.y)
+
       vm.node.attr("cx", function (d) {
-        return d.x;
+        return d.x = Math.max(20, Math.min(vm.width - 20, d.x));
       }).attr("cy", function (d) {
-        return d.y;
+        return d.y = Math.max(20, Math.min(vm.height - 20, d.y));
       });
       vm.link.attr("x1", function (d) {
         return d.source.x;

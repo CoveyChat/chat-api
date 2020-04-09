@@ -55,7 +55,7 @@
                 // set the dimensions and margins of the graph
                 var margin = {top: 10, right: 30, bottom: 30, left: 40};
                 vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
-                vm.height = 200;
+                vm.height = 150;
 
                 vm.tooltip = d3.select("body")
                     .append("div")
@@ -73,13 +73,13 @@
                     .append("svg")
                     .attr("width", vm.width)
                     .attr("height", vm.height)
-                    .attr("viewBox", [-vm.width / 2, -vm.height / 2, vm.width, vm.height]);
+                    //.attr("viewBox", [-vm.width / 2, -vm.height / 2, vm.width, vm.height]);
 
                 vm.simulation = d3.forceSimulation()
                     .force("charge", d3.forceManyBody().strength(-400))
                     .force("link", d3.forceLink().id(d => d.id).distance(75))
-                    .force("x", d3.forceX())
-                    .force("y", d3.forceY())
+                    .force("x", d3.forceX(vm.width / 2))
+                    .force("y", d3.forceY(vm.height / 2))
                     .on("tick", vm.tick);
 
                 vm.link = svg.append("g")
@@ -170,8 +170,11 @@
             tick() {
                 var vm = this;
 
-                vm.node.attr("cx", d => d.x)
-                    .attr("cy", d => d.y)
+                //vm.node.attr("cx", d => d.x)
+                //    .attr("cy", d => d.y)
+
+                vm.node.attr("cx", function(d) {return d.x = Math.max(20, Math.min(vm.width - 20, d.x));})
+                    .attr("cy", function(d) {return d.y = Math.max(20, Math.min(vm.height - 20, d.y));});
 
                 vm.link.attr("x1", d => d.source.x)
                     .attr("y1", d => d.source.y)
