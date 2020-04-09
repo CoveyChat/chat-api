@@ -8,7 +8,7 @@
 <body>
     <div id="app">
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
-            <div class="container">
+            <div class="container-fluid">
                 <a class="navbar-brand" href="{{ url('/') }}">
                     <img src='{{URL::asset('img/logo.png')}}' alt='BevyChat Logo' height="30" class="d-inline-block align-top" />
                 </a>

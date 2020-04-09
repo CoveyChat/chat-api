@@ -1,6 +1,24 @@
 <template>
-
-    <div class="container">
+    <div class="chat-component-container">
+    <div id="user-prompt" v-if="!user.active" name="fade">
+        <div class="row">
+            <div class="offset-md-4 col-md-4 ">
+                <div class="card card-body p-5">
+                    <input type="text"
+                    class="form-control form-control-xl text-center"
+                    placeholder="Enter your name"
+                    v-model="ui.anonUsername"
+                    v-on:keyup.enter="setAnonUser" />
+                    <transition name="fade">
+                    <button class="btn btn-lg btn-outline-primary btn-block mt-3" v-on:click="setAnonUser" v-if="ui.anonUsername.length >= 1">
+                        Start Chatting
+                    </button>
+                    </transition>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="chat-container p-5"  v-if="user.active">
         <button class="btn btn-primary float-right" type="button"  id="videoToggle" v-on:click="toggleVideo">
             <span class="sr-only" v-if="!stream.enabled">Start Video</span>
             <i class="fas fa-video" v-if="!stream.enabled"></i>
@@ -33,23 +51,10 @@
             </span>
         </div>
 
-        <br />
+        <hr />
+        <message-log-component v-bind:chatLog="chatLog"></message-log-component>
 
-        <div id="messages" class="overflow-auto">
-            <div v-for="item in chatLog" :key="item.index">
-                <p class="text-muted p-0 mb-0"
-                    v-bind:class="{ 'text-right': item.self, 'text-left': !item.self }"
-                    v-if="item.index == 0 || (item.index > 0 && chatLog[item.index-1].user.name != item.user.name)">
-                    {{item.user.name}}
-                    <i class="fas fa-lock" v-if="item.user.verified"></i>
-                </p>
-                <p class="card p-3 m-1"
-                    v-bind:class="{ 'text-right alert-info ml-6': item.self, 'mr-6': !item.self }">
-                    {{item.message}}
-                </p>
-            </div>
-        </div>
-
+    </div>
     </div>
 </template>
 
@@ -69,6 +74,19 @@
         position: relative;
         z-index:1;
     }
+
+    #user-prompt {
+        margin-top:10%;
+    }
+    .form-control-xl {
+        font-size: 1.5em;
+    }
+    .fade-enter-active, .fade-leave-active {
+        transition: opacity .5s;
+    }
+    .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+        opacity: 0;
+    }
 </style>
 
 <script>
@@ -85,12 +103,22 @@ export default {
             chatLog: [],
             connections: {},
             chatId: null,
-            user: null,
+            user: {active: false},
             stream: {enabled: false, connection: null, local:null},
-            server: {ip:'bevy.chat', port:1337, signal: null}
+            server: {ip:'bevy.chat', port:1337, signal: null},
+            ui: {anonUsername: ''}
         }
     },
     methods: {
+        setAnonUser(e) {
+            var vm = this;
+            if(vm.ui.anonUsername != '') {
+                vm.user.name = vm.ui.anonUsername;
+                vm.user.active = true;
+
+                vm.init();
+            }
+        },
         toggleVideo(e) {
             var vm = this;
             if(!vm.stream.enabled) {
@@ -110,9 +138,8 @@ export default {
             console.log('Called message sender');
             if(vm.message != '' && Object.keys(vm.connections).length > 0) {
                 if(Message.broadcast(vm.connections, vm.message)) {
-                    //Write the message we just sent
-                    vm.recieveMessage(vm.user, vm.message, true);
-                    //document.getElementById('messages').textContent += "Me: " + this.message + '\n';
+                    //Write the message we just sent to ourself
+                    vm.recieveMessage(vm.user.getDataObject(), vm.message, true);
                     vm.message = '';
                 } else {
                     alert("Something went wrong!");
@@ -121,11 +148,12 @@ export default {
         },
         recieveMessage(user, data, self = false) {
             var vm = this;
-            //document.getElementById('messages').textContent += vm.connections[id].user.name + ": " + data + '\n'
+            console.log("Recieved from: ");
+            console.log(user);
             vm.chatLog.push({index: vm.chatLog.length, message: data, user: user, self: self});
 
-            var messageContainer = vm.$el.querySelector("#messages");
-            messageContainer.scrollTop = messageContainer.scrollHeight;
+            //var messageContainer = vm.$el.querySelector("#messages");
+            //messageContainer.scrollTop = messageContainer.scrollHeight - 100;
         },
         outputConnections (cons) {
             var vm = this;
@@ -292,13 +320,11 @@ export default {
             vm.stream.local.srcObject = null;
             vm.$el.querySelector("#localVideoContainer").innerHTML = "";
         },
-        init(user) {
+        init() {
             var vm = this;
-            vm.user = user;
 
             var Peer = require('simple-peer');
             var io = require('socket.io-client');
-
 
             vm.chatId = location.pathname.replace('/chat/', '');
             vm.server.signal = io.connect('https://' + vm.server.ip + ':' + vm.server.port);
@@ -306,7 +332,7 @@ export default {
             //var txtLogger = document.getElementById('logger');
 
             vm.server.signal.on('disconnect', function () {
-                alert("Server Died!");
+                alert("Uh oh! You disconnected!");
                 vm.connections = [];
             });
 
@@ -314,7 +340,7 @@ export default {
                 console.log("Connected to signal server. Sending auth...");
                 //Pass to the server that we want to join this chat room with this user
                 //It will use the user to annouce to other connections who you are
-                vm.server.signal.emit('join', {chatId: vm.chatId, user: vm.user});
+                vm.server.signal.emit('join', {chatId: vm.chatId, user: vm.user.getAuthObject()});
             });
 
             /**
@@ -416,10 +442,12 @@ mounted() {
     //View model reference for inside scoped functions
     var vm = this;
 
-    var user = new User();
-    user.then(function(response) {
-        vm.init(response.data);
-        vm.$refs.networkGraph.init();
+    vm.user = new User();
+    vm.user.auth().then(function(response) {
+        //Prompt for a name
+        if(response.success) {
+            vm.init();
+        }
     });
 }
 }
@@ -517,34 +545,59 @@ class PeerConnection {
 class User {
     //Gets the current authenticated user
     constructor() {
-        var name, email, avatar;
         var self = this;
+        var id, name, email, avatar, token, verified, active;
+
         this.transport = axios.create({
             withCredentials: true
         });
 
+        //Used to determine if the user object has been instantiated
+        self.active = false;
+    }
+
+    auth() {
+        var self = this;
+
         //Get this chat database record
         return this.transport.get('/api/1.0/users/whoami').then(response => {
             //console.log(response.data);
+            self.id = response.data.data.id;
             self.name = response.data.data.name;
-            self.email = response.data.data.name;
+            self.email = response.data.data.email;
+            self.token = response.data.data.token;
             self.verified = true;
+            self.active = true;
             return response.data;
         }).catch(error => {
             if (error.response.status === 401) {
-                //Prop up an anon user
+                //Prop up an empty user data object
                 return {
                     success: false,
                     message: '',
                     data: {
                         id: null,
-                        name: 'anonymous',
-                        token: null,
+                        name: self.name,
                         verified: false
                     }
                 }
             }
         });
+    }
+
+    getDataObject() {
+        return {
+            id: this.id,
+            name: this.name,
+            verified: this.verified
+        };
+    }
+
+    getAuthObject() {
+        return {
+            name: this.name,
+            token: this.token
+        };
     }
 }
 
@@ -556,7 +609,7 @@ class Message {
             return false;
         }
 
-        console.log(Object.keys(connections).length + " open connections");
+        console.log("Broadcasting to (" + Object.keys(connections).length + ") open connections");
 
         for(var id in connections) {
             var conn = connections[id].connection;
