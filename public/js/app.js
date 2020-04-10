@@ -2122,6 +2122,11 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 //
 //
 //
+//
+//
+//
+//
+//
 //Backfills for Mozilla / Safari
 navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 /* harmony default export */ __webpack_exports__["default"] = ({
@@ -2147,7 +2152,12 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       },
       ui: {
         anonUsername: '',
-        inFullscreen: false
+        inFullscreen: false,
+        sound: {
+          connect: null,
+          disconnect: null,
+          message: null
+        }
       }
     };
   },
@@ -2274,15 +2284,40 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     /**
      * When a peer opens a stream, show the new connection
      */
-    onPeerStream: function onPeerStream(stream) {
-      var vm = this;
+    onPeerStream: function onPeerStream(stream, peerid) {
+      var vm = this; //Check for duplicates incase buttons are spammed
+
+      for (var i = 0; i < vm.peerStreams.length; i++) {
+        //Duplicate stream! Ignore it
+        if (vm.peerStreams[i].id == stream.id) {
+          return;
+        }
+      }
+
+      stream.peerid = peerid;
       vm.peerStreams.push(stream);
+
+      stream.inactive = function (e) {
+        console.log("ON INACTIVE");
+        console.log(e);
+      };
+
+      stream.onended = function (e) {
+        console.log("ON ENDED");
+        console.log(e);
+      };
+
+      stream.addEventListener('ended', function (e) {
+        console.log("ON INACTIVE");
+        console.log(e);
+      });
       /**
        * Fires twice. Once when the audio is removed and once when the video is removed
        */
 
       stream.onremovetrack = function (e) {
-        //Find and remove this stream
+        console.log("ON REMOVE TRACK!"); //Find and remove this stream
+
         for (var i = 0; i < vm.peerStreams.length; i++) {
           //Already deleted. This event fires twice (once for video removal and once for audio removal)
           if (typeof vm.peerStreams[i] == 'undefined' || typeof e.srcElement == 'undefined') {
@@ -2307,7 +2342,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
 
       if (!vm.stream.enabled) {
         console.log("++++LOCAL STREAM ENABLED");
-        var localVideoContainer = vm.$el.querySelector("#localVideoContainer");
+        var localVideoContainer = vm.$el.querySelector("#local-video-container");
         var video = document.createElement('video');
         video.className = 'local-stream';
         video.muted = true;
@@ -2332,15 +2367,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
             continue;
           }
 
-          vm.connections[id].addStream(vm.stream.connection); //console.log("+++++++++++++++++++Sending stream to " + id);
-          //console.log(vm.stream.connection);
-          //console.log(vm.stream.connection.getTracks());
-          //console.log(vm.connections[id]);
-          //vm.connections[id].send("CONNECT VIA " + id + " DAMNIT");
-          //vm.connections[id].removeStream(vm.stream.connection);
-          //vm.connections[id].connection.addStream(vm.stream.connection);
-          //var tracks = vm.stream.connection.getTracks();
-          //vm.connections[id].addTrack(tracks[0], stream);
+          vm.connections[id].addStream(vm.stream.connection);
         }
       }
     },
@@ -2389,7 +2416,21 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       });
       vm.stream.connection = null;
       vm.stream.local.srcObject = null;
-      vm.$el.querySelector("#localVideoContainer").innerHTML = "";
+      vm.$el.querySelector("#local-video-container").innerHTML = "";
+    },
+    handlePeerDisconnect: function handlePeerDisconnect(id) {
+      var vm = this;
+      vm.ui.sound.disconnect.play();
+      delete vm.connections[id]; //Also remove anything they were streaming
+
+      for (var i = 0; i < vm.peerStreams.length; i++) {
+        //See if this is the video we want to delete
+        if (vm.peerStreams[i].peerid == id) {
+          console.log("Found a dead stream. Removing...");
+          vm.peerStreams.splice(i, 1);
+          break;
+        }
+      }
     },
     init: function init() {
       var vm = this;
@@ -2426,6 +2467,11 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
           var peer = new PeerConnection(vm.server.signal, true);
           vm.connections[peer.id] = peer;
           vm.connections[peer.id].connection.on('connect', function () {
+            if (vm.ui.sound.connect.waitUntil <= Date.now()) {
+              vm.ui.sound.connect.play();
+              vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
+            }
+
             vm.outputConnections(vm.connections);
 
             if (vm.stream.enabled) {
@@ -2434,16 +2480,17 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
             }
           });
           vm.connections[peer.id].connection.on('close', function () {
-            delete vm.connections[peer.id];
+            vm.handlePeerDisconnect(peer.id);
           });
           vm.connections[peer.id].connection.on('error', function () {
-            delete vm.connections[peer.id];
+            vm.handlePeerDisconnect(peer.id);
           });
           vm.connections[peer.id].connection.on('data', function (data) {
+            vm.ui.sound.message.play();
             vm.recieveMessage(vm.connections[peer.id].user, data);
           });
           vm.connections[peer.id].connection.on('stream', function (stream) {
-            vm.onPeerStream(stream);
+            vm.onPeerStream(stream, peer.id);
           });
         }
       });
@@ -2479,6 +2526,11 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
           vm.connections[id].setHostId(obj.hostid);
           vm.connections[id].setUser(obj.user);
           vm.connections[id].connection.on('connect', function () {
+            if (vm.ui.sound.connect.waitUntil <= Date.now()) {
+              vm.ui.sound.connect.play();
+              vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
+            }
+
             vm.outputConnections(vm.connections);
 
             if (vm.stream.enabled) {
@@ -2487,16 +2539,17 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
             }
           });
           vm.connections[id].connection.on('close', function () {
-            delete vm.connections[id];
+            vm.handlePeerDisconnect(id);
           });
           vm.connections[id].connection.on('error', function () {
-            delete vm.connections[id];
+            vm.handlePeerDisconnect(id);
           });
           vm.connections[id].connection.on('data', function (data) {
+            vm.ui.sound.message.play();
             vm.recieveMessage(vm.connections[id].user, data);
           });
           vm.connections[id].connection.on('stream', function (stream) {
-            vm.onPeerStream(stream);
+            vm.onPeerStream(stream, id);
           });
         } //Use the remote host id so that the client is overridden if it re-signals
 
@@ -2510,6 +2563,12 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     console.log('Component mounted.'); //View model reference for inside scoped functions
 
     var vm = this;
+    vm.ui.sound.connect = new Audio("/media/join.mp3");
+    vm.ui.sound.connect.waitUntil = Date.now();
+    vm.ui.sound.disconnect = new Audio("/media/leave.mp3");
+    vm.ui.sound.disconnect.waitUntil = Date.now();
+    vm.ui.sound.message = new Audio("/media/message.mp3");
+    vm.ui.sound.message.waitUntil = Date.now();
     vm.user = new User();
     vm.user.auth().then(function (response) {
       //Prompt for a name
@@ -9848,7 +9907,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n#localVideoContainer[data-v-80d584ac] {\n    width:200px;\n    float:right;\n    z-index: 1;\n}\n#localVideoContainer[data-v-80d584ac] video {\n    width:200px;\n    position:fixed;\n}\n.local-video-overlay[data-v-80d584ac] {\n    position:fixed !important;\n    top:10px  !important;\n    right:10px !important;\n    z-index:2147483646 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    z-index:2147483647 !important;\n}\nvideo[isFullscreen='true'][data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n#videoToggle[data-v-80d584ac] {\n    float:right;\n    position: relative;\n    margin-left: -38px;\n    width: 40px;\n    border-radius: 0px;\n    z-index:1;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.form-control-xl[data-v-80d584ac] {\n    font-size: 1.5em;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:20px;\n}\n#local-video-container[data-v-80d584ac], #local-video-container[data-v-80d584ac] video {\n    width:200px;\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac], #local-video-container.local-video-overlay[data-v-80d584ac] video, #btn-local-video-toggle.local-video-overlay[data-v-80d584ac] {\n    margin-top:0px;\n    top:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    margin-top:0px;\n    top:0px;\n    right:0px;\n    z-index:2147483647 !important;\n}\n\n/* Main Video Fullscreen */\nvideo[isFullscreen='true'][data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.form-control-xl[data-v-80d584ac] {\n    font-size: 1.5em;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -55408,14 +55467,14 @@ var render = function() {
       _vm.user.active
         ? _c(
             "div",
-            { staticClass: "chat-container p-5 flex-row" },
+            { staticClass: "chat-container pl-5 pr-5 flex-row" },
             [
               _c(
                 "button",
                 {
                   staticClass: "btn btn-primary float-right",
                   class: { "local-video-overlay": _vm.ui.inFullscreen },
-                  attrs: { type: "button", id: "videoToggle" },
+                  attrs: { type: "button", id: "btn-local-video-toggle" },
                   on: { click: _vm.toggleVideo }
                 },
                 [
@@ -55443,7 +55502,7 @@ var render = function() {
               _vm._v(" "),
               _c("div", {
                 class: { "local-video-overlay": _vm.ui.inFullscreen },
-                attrs: { id: "localVideoContainer" }
+                attrs: { id: "local-video-container" }
               }),
               _vm._v(" "),
               _c("network-graph-component", {

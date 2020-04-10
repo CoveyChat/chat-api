@@ -18,9 +18,9 @@
             </div>
         </div>
     </div>
-    <div class="chat-container p-5 flex-row"  v-if="user.active">
+    <div class="chat-container pl-5 pr-5 flex-row"  v-if="user.active">
         <button class="btn btn-primary float-right"
-            type="button"  id="videoToggle"
+            type="button"  id="btn-local-video-toggle"
             v-bind:class="{ 'local-video-overlay': ui.inFullscreen }"
             v-on:click="toggleVideo">
             <span class="sr-only" v-if="!stream.enabled">Start Video</span>
@@ -29,7 +29,7 @@
             <span class="sr-only" v-if="stream.enabled">Stop Video</span>
             <i class="fas fa-video-slash" v-if="stream.enabled"></i>
         </button>
-        <div id="localVideoContainer" v-bind:class="{ 'local-video-overlay': ui.inFullscreen }" ></div>
+        <div id="local-video-container" v-bind:class="{ 'local-video-overlay': ui.inFullscreen }" ></div>
         <network-graph-component ref="networkGraph" class="mb-3"></network-graph-component>
 
 
@@ -78,39 +78,44 @@
 </template>
 
 <style scoped>
-    #localVideoContainer {
-        width:200px;
-        float:right;
-        z-index: 1;
+    #btn-local-video-toggle {
+        right:10px;
+        border-radius: 2em !important;
+        width: 4em;
+        height: 4em;
+        position: fixed;
+        z-index:2147483647;
+        margin-top:20px;
     }
-    #localVideoContainer >>> video {
+
+    #local-video-container, #local-video-container >>> video {
         width:200px;
+        margin-top:20px;
         position:fixed;
+        right:2em;
+        border-radius:3px;
+        z-index: 2147483646;
     }
-    .local-video-overlay {
-        position:fixed !important;
-        top:10px  !important;
-        right:10px !important;
-        z-index:2147483646 !important;
+
+    /* When fullscreened, shift things around*/
+    #local-video-container.local-video-overlay, #local-video-container.local-video-overlay >>> video, #btn-local-video-toggle.local-video-overlay {
+        margin-top:0px;
+        top:0px;
+        right:0px;
     }
 
     button.local-video-overlay {
+        margin-top:0px;
+        top:0px;
+        right:0px;
         z-index:2147483647 !important;
     }
 
+    /* Main Video Fullscreen */
     video[isFullscreen='true'] {
         position:fixed !important;
         background: #000;
         z-index: 1;
-    }
-
-    #videoToggle {
-        float:right;
-        position: relative;
-        margin-left: -38px;
-        width: 40px;
-        border-radius: 0px;
-        z-index:1;
     }
 
     #user-prompt {
@@ -145,7 +150,7 @@ export default {
             stream: {enabled: false, connection: null, local:null},
             peerStreams: [],
             server: {ip:'bevy.chat', port:1337, signal: null},
-            ui: {anonUsername: '', inFullscreen: false}
+            ui: {anonUsername: '', inFullscreen: false, sound: {connect: null, disconnect: null, message: null}}
         }
     },
     methods: {
@@ -255,14 +260,40 @@ export default {
         /**
          * When a peer opens a stream, show the new connection
          */
-        onPeerStream(stream) {
+        onPeerStream(stream, peerid) {
             var vm = this;
+
+            //Check for duplicates incase buttons are spammed
+            for(var i=0; i < vm.peerStreams.length; i++) {
+                //Duplicate stream! Ignore it
+                if(vm.peerStreams[i].id == stream.id) {
+                    return;
+                }
+            }
+
+            stream.peerid = peerid;
             vm.peerStreams.push(stream);
+
+            stream.inactive = function(e) {
+                console.log("ON INACTIVE");
+                console.log(e);
+            };
+
+            stream.onended = function(e) {
+                console.log("ON ENDED");
+                console.log(e);
+            };
+
+            stream.addEventListener('ended', function(e) {
+                console.log("ON INACTIVE");
+                console.log(e);
+            });
 
             /**
              * Fires twice. Once when the audio is removed and once when the video is removed
              */
             stream.onremovetrack = function(e) {
+                console.log("ON REMOVE TRACK!");
                 //Find and remove this stream
                 for(var i=0; i<vm.peerStreams.length; i++) {
                     //Already deleted. This event fires twice (once for video removal and once for audio removal)
@@ -287,7 +318,7 @@ export default {
 
             if(!vm.stream.enabled) {
                 console.log("++++LOCAL STREAM ENABLED");
-                var localVideoContainer = vm.$el.querySelector("#localVideoContainer");
+                var localVideoContainer = vm.$el.querySelector("#local-video-container");
                 var video = document.createElement('video');
                 video.className = 'local-stream';
                 video.muted = true;
@@ -316,17 +347,6 @@ export default {
                     }
 
                     vm.connections[id].addStream(vm.stream.connection);
-
-                    //console.log("+++++++++++++++++++Sending stream to " + id);
-                    //console.log(vm.stream.connection);
-                    //console.log(vm.stream.connection.getTracks());
-
-                    //console.log(vm.connections[id]);
-                    //vm.connections[id].send("CONNECT VIA " + id + " DAMNIT");
-                    //vm.connections[id].removeStream(vm.stream.connection);
-                    //vm.connections[id].connection.addStream(vm.stream.connection);
-                    //var tracks = vm.stream.connection.getTracks();
-                    //vm.connections[id].addTrack(tracks[0], stream);
                 }
             }
         },
@@ -380,7 +400,22 @@ export default {
 
             vm.stream.connection = null;
             vm.stream.local.srcObject = null;
-            vm.$el.querySelector("#localVideoContainer").innerHTML = "";
+            vm.$el.querySelector("#local-video-container").innerHTML = "";
+        },
+        handlePeerDisconnect(id) {
+            var vm = this;
+            vm.ui.sound.disconnect.play();
+            delete vm.connections[id];
+
+            //Also remove anything they were streaming
+            for(var i=0; i<vm.peerStreams.length; i++) {
+                //See if this is the video we want to delete
+                if(vm.peerStreams[i].peerid == id) {
+                    console.log("Found a dead stream. Removing...");
+                    vm.peerStreams.splice(i, 1);
+                    break;
+                }
+            }
         },
         init() {
             var vm = this;
@@ -418,22 +453,29 @@ export default {
                     vm.connections[peer.id] = peer;
 
                     vm.connections[peer.id].connection.on('connect', function() {
+                        if(vm.ui.sound.connect.waitUntil <= Date.now()) {
+                            vm.ui.sound.connect.play();
+                            vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
+                        }
+
                         vm.outputConnections(vm.connections);
+
                         if(vm.stream.enabled) {
                             console.log("Try and send a stream to " + peer.id);
                             vm.sendStream(peer.id);
                         }
                     });
 
-                    vm.connections[peer.id].connection.on('close', function() {delete vm.connections[peer.id];});
-                    vm.connections[peer.id].connection.on('error', function() {delete vm.connections[peer.id];});
+                    vm.connections[peer.id].connection.on('close', function() {vm.handlePeerDisconnect(peer.id);});
+                    vm.connections[peer.id].connection.on('error', function() {vm.handlePeerDisconnect(peer.id);});
 
                     vm.connections[peer.id].connection.on('data', function(data) {
+                        vm.ui.sound.message.play();
                         vm.recieveMessage(vm.connections[peer.id].user, data);
                     });
 
                     vm.connections[peer.id].connection.on('stream', function(stream) {
-                        vm.onPeerStream(stream);
+                        vm.onPeerStream(stream, peer.id);
                     });
                 }
             });
@@ -472,6 +514,11 @@ export default {
                     vm.connections[id].setUser(obj.user);
 
                     vm.connections[id].connection.on('connect', function() {
+                        if(vm.ui.sound.connect.waitUntil <= Date.now()) {
+                            vm.ui.sound.connect.play();
+                            vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
+                        }
+
                         vm.outputConnections(vm.connections);
                         if(vm.stream.enabled) {
                             console.log("Try and send a client stream to " + id);
@@ -479,14 +526,15 @@ export default {
                         }
                     });
 
-                    vm.connections[id].connection.on('close', function() {delete vm.connections[id];});
-                    vm.connections[id].connection.on('error', function() {delete vm.connections[id];});
+                    vm.connections[id].connection.on('close', function() {vm.handlePeerDisconnect(id);});
+                    vm.connections[id].connection.on('error', function() {vm.handlePeerDisconnect(id);});
 
                     vm.connections[id].connection.on('data', function(data) {
+                        vm.ui.sound.message.play();
                         vm.recieveMessage(vm.connections[id].user, data);
                     });
 
-                    vm.connections[id].connection.on('stream', stream => {vm.onPeerStream(stream); });
+                    vm.connections[id].connection.on('stream', stream => {vm.onPeerStream(stream, id); });
                 }
                 //Use the remote host id so that the client is overridden if it re-signals
 
@@ -503,6 +551,15 @@ mounted() {
     console.log('Component mounted.');
     //View model reference for inside scoped functions
     var vm = this;
+
+    vm.ui.sound.connect = new Audio("/media/join.mp3");
+    vm.ui.sound.connect.waitUntil = Date.now();
+
+    vm.ui.sound.disconnect = new Audio("/media/leave.mp3");
+    vm.ui.sound.disconnect.waitUntil = Date.now();
+
+    vm.ui.sound.message = new Audio("/media/message.mp3");
+    vm.ui.sound.message.waitUntil = Date.now();
 
     vm.user = new User();
     vm.user.auth().then(function(response) {
