@@ -581,8 +581,7 @@ class PeerConnection {
             initiator: initiator,
             config: {
                 iceServers: [
-                    {urls: 'stun:stun.services.mozilla.com'},
-                    {urls: 'stun:stun.l.google.com:19302'},
+                    {urls: 'stun:bevy.chat'},
                     {urls: 'turn:bevy.chat', username: 'bevychat', credential: 'bevychatturntest'}
                 ]
             }
