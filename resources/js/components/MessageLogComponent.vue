@@ -1,5 +1,5 @@
 <template>
-    <div id="messages" ref="messages" class="overflow-auto">
+    <div id="messages" ref="messages" class="overflow-auto d-flex flex-grow-1 flex-column">
         <div v-for="item in chatLog" :key="item.index">
             <p class="text-muted p-0 mb-0"
                 v-bind:class="{ 'text-right': item.self, 'text-left': !item.self }"
@@ -17,7 +17,8 @@
 
 <style scoped>
     #messages {
-        max-height:25vh;
+        /*Not sure why this works but it does */
+        height: 0px;
     }
 </style>
 

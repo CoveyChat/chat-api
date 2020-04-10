@@ -16943,3 +16943,9 @@ readers do not read off random characters that represent icons */
   width: auto;
 }
 
+html,
+body,
+#app {
+  height: 100%;
+}
+

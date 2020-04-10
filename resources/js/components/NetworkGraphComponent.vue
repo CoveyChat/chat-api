@@ -60,7 +60,10 @@
 
                 vm.tooltip = d3.select("body")
                     .append("div")
+                    .attr("class", "network-node-tooltip")
                     .style("position", "absolute")
+                    .style("top", "0px")
+                    .style("left", "0px")
                     .style("font-size", "16px")
                     .style("z-index", "10")
                     .style("visibility", "hidden")

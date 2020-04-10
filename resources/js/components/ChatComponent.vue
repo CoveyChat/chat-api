@@ -1,6 +1,6 @@
 <template>
-    <div class="chat-component-container">
-    <div id="user-prompt" v-if="!user.active" name="fade">
+    <div class="d-flex flex-column w-100">
+    <div id="user-prompt" v-if="!user.active" name="fade" class="flex-row flex-grow-1">
         <div class="row">
             <div class="offset-md-4 col-md-4 ">
                 <div class="card card-body p-5">
@@ -18,19 +18,38 @@
             </div>
         </div>
     </div>
-    <div class="chat-container p-5"  v-if="user.active">
-        <button class="btn btn-primary float-right" type="button"  id="videoToggle" v-on:click="toggleVideo">
+    <div class="chat-container p-5 flex-row"  v-if="user.active">
+        <button class="btn btn-primary float-right"
+            type="button"  id="videoToggle"
+            v-bind:class="{ 'local-video-overlay': ui.inFullscreen }"
+            v-on:click="toggleVideo">
             <span class="sr-only" v-if="!stream.enabled">Start Video</span>
             <i class="fas fa-video" v-if="!stream.enabled"></i>
 
             <span class="sr-only" v-if="stream.enabled">Stop Video</span>
             <i class="fas fa-video-slash" v-if="stream.enabled"></i>
         </button>
-        <div id="localVideoContainer"></div>
-        <network-graph-component ref="networkGraph"></network-graph-component>
+        <div id="localVideoContainer" v-bind:class="{ 'local-video-overlay': ui.inFullscreen }" ></div>
+        <network-graph-component ref="networkGraph" class="mb-3"></network-graph-component>
 
 
-        <div id='videos'></div>
+        <div id='videos' class="container">
+            <div class="row justify-content-center">
+            <div v-for="stream in peerStreams" :key="stream.id" class="col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3">
+                <div class="">
+                <video :srcObject.prop="stream"
+                    v-on:webkitfullscreenchange="fullscreenVideo"
+                    v-on:mozfullscreenchange="fullscreenVideo"
+                    v-on:fullscreenchange="fullscreenVideo"
+                    poster = "https://bevy.chat/img/logo_color.png"
+                    controls="controls"
+                    autoplay="autoplay"
+                    class="embed-responsive-item"
+                ></video>
+                </div>
+            </div>
+            </div>
+        </div>
     <!--
         <strong>Log</strong><br />
         <textarea id="logger" readonly class="form-control" rows=1></textarea>
@@ -40,38 +59,57 @@
         <textarea id="connections" readonly class="form-control" rows=5></textarea>
         <hr />-->
 
-        <div class="input-group">
-            <input type="text" v-model="message" class="form-control" id="message" v-on:keyup.enter="sendMessage" />
-
-            <span class="input-group-btn">
-                    <button class="btn btn-primary" type="button"  id="send" v-on:click="sendMessage">
-                        <span class="sr-only">Send Message</span>
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-            </span>
-        </div>
-
-        <hr />
-        <message-log-component v-bind:chatLog="chatLog"></message-log-component>
-
     </div>
+    <message-log-component v-bind:chatLog="chatLog" v-if="user.active"></message-log-component>
+
+    <div class="flex-column" v-if="user.active">
+        <div class="input-group">
+            <input type="text" v-model="message" class="form-control" placeholder="Type a message" id="message" v-on:keyup.enter="sendMessage" />
+            <div class="input-group-btn">
+                <button class="btn btn-primary" type="button"  id="send" v-on:click="sendMessage">
+                    <span class="sr-only">Send Message</span>
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     </div>
 </template>
 
 <style scoped>
-    #messages {
-        max-height:25vh;
-    }
     #localVideoContainer {
-        width:155px;
+        width:200px;
         float:right;
+        z-index: 1;
     }
     #localVideoContainer >>> video {
         width:200px;
+        position:fixed;
     }
+    .local-video-overlay {
+        position:fixed !important;
+        top:10px  !important;
+        right:10px !important;
+        z-index:2147483646 !important;
+    }
+
+    button.local-video-overlay {
+        z-index:2147483647 !important;
+    }
+
+    video[isFullscreen='true'] {
+        position:fixed !important;
+        background: #000;
+        z-index: 1;
+    }
+
     #videoToggle {
         float:right;
         position: relative;
+        margin-left: -38px;
+        width: 40px;
+        border-radius: 0px;
         z-index:1;
     }
 
@@ -105,11 +143,35 @@ export default {
             chatId: null,
             user: {active: false},
             stream: {enabled: false, connection: null, local:null},
+            peerStreams: [],
             server: {ip:'bevy.chat', port:1337, signal: null},
-            ui: {anonUsername: ''}
+            ui: {anonUsername: '', inFullscreen: false}
         }
     },
     methods: {
+        fullscreenVideo(e) {
+            var vm = this;
+            //Don't actually fullscreen. Just make the video... Bigger
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+
+                console.log("IS FULLSCREEN?");
+                console.log(e.target.getAttribute('isFullscreen'));
+
+                //Going fullscreen
+                if(!vm.ui.inFullscreen) {
+                    vm.ui.inFullscreen = true;
+                    e.target.setAttribute('isFullscreen', true);
+                } else {
+                    vm.ui.inFullscreen = false;
+                    //Closing fullscreen
+                    e.target.setAttribute('isFullscreen', false);
+                }
+            }
+
+            console.log("FULLSCREEN REQUEST");
+            console.log(e);
+        },
         setAnonUser(e) {
             var vm = this;
             if(vm.ui.anonUsername != '') {
@@ -195,26 +257,26 @@ export default {
          */
         onPeerStream(stream) {
             var vm = this;
-            var videoContainer = vm.$el.querySelector("#videos");
+            vm.peerStreams.push(stream);
 
-            // got remote video stream, now let's show it in a video tag
-            var video = document.createElement('video');
-            //video.muted = true;
-            video.controls = true;
-            video.poster = "https://bevy.chat/img/logo_color.png";
-            videoContainer.appendChild(video);
+            /**
+             * Fires twice. Once when the audio is removed and once when the video is removed
+             */
+            stream.onremovetrack = function(e) {
+                //Find and remove this stream
+                for(var i=0; i<vm.peerStreams.length; i++) {
+                    //Already deleted. This event fires twice (once for video removal and once for audio removal)
+                    if(typeof vm.peerStreams[i] == 'undefined' || typeof e.srcElement == 'undefined') {
+                        continue;
+                    }
 
-            if ('srcObject' in video) {
-                video.srcObject = stream
-            } else {
-                video.src = window.URL.createObjectURL(stream) // for older browsers
-            }
-            //await new Promise(resolve => video.onloadedmetadata = resolve);
-            video.addEventListener("ended", () => console.log("inactive!"));
-
-            video.onloadedmetadata = function (e) {
-				video.play();
-			};
+                    //See if this is the video we want to delete
+                    if(vm.peerStreams[i].id == e.srcElement.id) {
+                        vm.peerStreams.splice(i, 1);
+                        break;
+                    }
+                }
+            };
         },
         /**
          * Fires when a new stream object has opened

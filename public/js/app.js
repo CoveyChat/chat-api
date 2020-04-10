@@ -2084,6 +2084,44 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //Backfills for Mozilla / Safari
 navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 /* harmony default export */ __webpack_exports__["default"] = ({
@@ -2101,17 +2139,40 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
         connection: null,
         local: null
       },
+      peerStreams: [],
       server: {
         ip: 'bevy.chat',
         port: 1337,
         signal: null
       },
       ui: {
-        anonUsername: ''
+        anonUsername: '',
+        inFullscreen: false
       }
     };
   },
   methods: {
+    fullscreenVideo: function fullscreenVideo(e) {
+      var vm = this; //Don't actually fullscreen. Just make the video... Bigger
+
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+        console.log("IS FULLSCREEN?");
+        console.log(e.target.getAttribute('isFullscreen')); //Going fullscreen
+
+        if (!vm.ui.inFullscreen) {
+          vm.ui.inFullscreen = true;
+          e.target.setAttribute('isFullscreen', true);
+        } else {
+          vm.ui.inFullscreen = false; //Closing fullscreen
+
+          e.target.setAttribute('isFullscreen', false);
+        }
+      }
+
+      console.log("FULLSCREEN REQUEST");
+      console.log(e);
+    },
     setAnonUser: function setAnonUser(e) {
       var vm = this;
 
@@ -2215,27 +2276,25 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
      */
     onPeerStream: function onPeerStream(stream) {
       var vm = this;
-      var videoContainer = vm.$el.querySelector("#videos"); // got remote video stream, now let's show it in a video tag
+      vm.peerStreams.push(stream);
+      /**
+       * Fires twice. Once when the audio is removed and once when the video is removed
+       */
 
-      var video = document.createElement('video'); //video.muted = true;
-
-      video.controls = true;
-      video.poster = "https://bevy.chat/img/logo_color.png";
-      videoContainer.appendChild(video);
-
-      if ('srcObject' in video) {
-        video.srcObject = stream;
-      } else {
-        video.src = window.URL.createObjectURL(stream); // for older browsers
-      } //await new Promise(resolve => video.onloadedmetadata = resolve);
+      stream.onremovetrack = function (e) {
+        //Find and remove this stream
+        for (var i = 0; i < vm.peerStreams.length; i++) {
+          //Already deleted. This event fires twice (once for video removal and once for audio removal)
+          if (typeof vm.peerStreams[i] == 'undefined' || typeof e.srcElement == 'undefined') {
+            continue;
+          } //See if this is the video we want to delete
 
 
-      video.addEventListener("ended", function () {
-        return console.log("inactive!");
-      });
-
-      video.onloadedmetadata = function (e) {
-        video.play();
+          if (vm.peerStreams[i].id == e.srcElement.id) {
+            vm.peerStreams.splice(i, 1);
+            break;
+          }
+        }
       };
     },
 
@@ -2703,6 +2762,7 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: {
     chatLog: Array
@@ -2834,7 +2894,7 @@ __webpack_require__.r(__webpack_exports__);
       };
       vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
       vm.height = 150;
-      vm.tooltip = d3.select("body").append("div").style("position", "absolute").style("font-size", "16px").style("z-index", "10").style("visibility", "hidden").style("background", "#fff").style("border-radius", "5px").style("padding", "5px").text("---");
+      vm.tooltip = d3.select("body").append("div").attr("class", "network-node-tooltip").style("position", "absolute").style("top", "0px").style("left", "0px").style("font-size", "16px").style("z-index", "10").style("visibility", "hidden").style("background", "#fff").style("border-radius", "5px").style("padding", "5px").text("---");
       var svg = d3.select("#active-network-chart").append("svg").attr("width", vm.width).attr("height", vm.height); //.attr("viewBox", [-vm.width / 2, -vm.height / 2, vm.width, vm.height]);
 
       vm.simulation = d3.forceSimulation().force("charge", d3.forceManyBody().strength(-400)).force("link", d3.forceLink().id(function (d) {
@@ -9777,7 +9837,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n#messages[data-v-80d584ac] {\n    max-height:25vh;\n}\n#localVideoContainer[data-v-80d584ac] {\n    width:155px;\n    float:right;\n}\n#localVideoContainer[data-v-80d584ac] video {\n    width:200px;\n}\n#videoToggle[data-v-80d584ac] {\n    float:right;\n    position: relative;\n    z-index:1;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.form-control-xl[data-v-80d584ac] {\n    font-size: 1.5em;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n#localVideoContainer[data-v-80d584ac] {\n    width:200px;\n    float:right;\n    z-index: 1;\n}\n#localVideoContainer[data-v-80d584ac] video {\n    width:200px;\n    position:fixed;\n}\n.local-video-overlay[data-v-80d584ac] {\n    position:fixed !important;\n    top:10px  !important;\n    right:10px !important;\n    z-index:2147483646 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    z-index:2147483647 !important;\n}\nvideo[isFullscreen='true'][data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n#videoToggle[data-v-80d584ac] {\n    float:right;\n    position: relative;\n    margin-left: -38px;\n    width: 40px;\n    border-radius: 0px;\n    z-index:1;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.form-control-xl[data-v-80d584ac] {\n    font-size: 1.5em;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -9796,7 +9856,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n#messages[data-v-1e09f4b6] {\n    max-height:25vh;\n}\n", ""]);
+exports.push([module.i, "\n#messages[data-v-1e09f4b6] {\n    /*Not sure why this works but it does */\n    height: 0px;\n}\n", ""]);
 
 // exports
 
@@ -55249,118 +55309,183 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c("div", { staticClass: "chat-component-container" }, [
-    !_vm.user.active
-      ? _c("div", { attrs: { id: "user-prompt", name: "fade" } }, [
-          _c("div", { staticClass: "row" }, [
-            _c("div", { staticClass: "offset-md-4 col-md-4 " }, [
-              _c(
-                "div",
-                { staticClass: "card card-body p-5" },
-                [
-                  _c("input", {
-                    directives: [
-                      {
-                        name: "model",
-                        rawName: "v-model",
-                        value: _vm.ui.anonUsername,
-                        expression: "ui.anonUsername"
-                      }
-                    ],
-                    staticClass: "form-control form-control-xl text-center",
-                    attrs: { type: "text", placeholder: "Enter your name" },
-                    domProps: { value: _vm.ui.anonUsername },
-                    on: {
-                      keyup: function($event) {
-                        if (
-                          !$event.type.indexOf("key") &&
-                          _vm._k(
-                            $event.keyCode,
-                            "enter",
-                            13,
-                            $event.key,
-                            "Enter"
-                          )
-                        ) {
-                          return null
-                        }
-                        return _vm.setAnonUser($event)
-                      },
-                      input: function($event) {
-                        if ($event.target.composing) {
-                          return
-                        }
-                        _vm.$set(_vm.ui, "anonUsername", $event.target.value)
-                      }
-                    }
-                  }),
-                  _vm._v(" "),
-                  _c("transition", { attrs: { name: "fade" } }, [
-                    _vm.ui.anonUsername.length >= 1
-                      ? _c(
-                          "button",
+  return _c(
+    "div",
+    { staticClass: "d-flex flex-column w-100" },
+    [
+      !_vm.user.active
+        ? _c(
+            "div",
+            {
+              staticClass: "flex-row flex-grow-1",
+              attrs: { id: "user-prompt", name: "fade" }
+            },
+            [
+              _c("div", { staticClass: "row" }, [
+                _c("div", { staticClass: "offset-md-4 col-md-4 " }, [
+                  _c(
+                    "div",
+                    { staticClass: "card card-body p-5" },
+                    [
+                      _c("input", {
+                        directives: [
                           {
-                            staticClass:
-                              "btn btn-lg btn-outline-primary btn-block mt-3",
-                            on: { click: _vm.setAnonUser }
+                            name: "model",
+                            rawName: "v-model",
+                            value: _vm.ui.anonUsername,
+                            expression: "ui.anonUsername"
+                          }
+                        ],
+                        staticClass: "form-control form-control-xl text-center",
+                        attrs: { type: "text", placeholder: "Enter your name" },
+                        domProps: { value: _vm.ui.anonUsername },
+                        on: {
+                          keyup: function($event) {
+                            if (
+                              !$event.type.indexOf("key") &&
+                              _vm._k(
+                                $event.keyCode,
+                                "enter",
+                                13,
+                                $event.key,
+                                "Enter"
+                              )
+                            ) {
+                              return null
+                            }
+                            return _vm.setAnonUser($event)
                           },
-                          [
-                            _vm._v(
-                              "\n                    Start Chatting\n                "
+                          input: function($event) {
+                            if ($event.target.composing) {
+                              return
+                            }
+                            _vm.$set(
+                              _vm.ui,
+                              "anonUsername",
+                              $event.target.value
                             )
-                          ]
-                        )
-                      : _vm._e()
-                  ])
-                ],
-                1
-              )
-            ])
-          ])
-        ])
-      : _vm._e(),
-    _vm._v(" "),
-    _vm.user.active
-      ? _c(
-          "div",
-          { staticClass: "chat-container p-5" },
-          [
-            _c(
-              "button",
-              {
-                staticClass: "btn btn-primary float-right",
-                attrs: { type: "button", id: "videoToggle" },
-                on: { click: _vm.toggleVideo }
-              },
-              [
-                !_vm.stream.enabled
-                  ? _c("span", { staticClass: "sr-only" }, [
-                      _vm._v("Start Video")
-                    ])
-                  : _vm._e(),
-                _vm._v(" "),
-                !_vm.stream.enabled
-                  ? _c("i", { staticClass: "fas fa-video" })
-                  : _vm._e(),
-                _vm._v(" "),
-                _vm.stream.enabled
-                  ? _c("span", { staticClass: "sr-only" }, [
-                      _vm._v("Stop Video")
-                    ])
-                  : _vm._e(),
-                _vm._v(" "),
-                _vm.stream.enabled
-                  ? _c("i", { staticClass: "fas fa-video-slash" })
-                  : _vm._e()
-              ]
-            ),
-            _vm._v(" "),
-            _c("div", { attrs: { id: "localVideoContainer" } }),
-            _vm._v(" "),
-            _c("network-graph-component", { ref: "networkGraph" }),
-            _vm._v(" "),
-            _c("div", { attrs: { id: "videos" } }),
-            _vm._v(" "),
+                          }
+                        }
+                      }),
+                      _vm._v(" "),
+                      _c("transition", { attrs: { name: "fade" } }, [
+                        _vm.ui.anonUsername.length >= 1
+                          ? _c(
+                              "button",
+                              {
+                                staticClass:
+                                  "btn btn-lg btn-outline-primary btn-block mt-3",
+                                on: { click: _vm.setAnonUser }
+                              },
+                              [
+                                _vm._v(
+                                  "\n                    Start Chatting\n                "
+                                )
+                              ]
+                            )
+                          : _vm._e()
+                      ])
+                    ],
+                    1
+                  )
+                ])
+              ])
+            ]
+          )
+        : _vm._e(),
+      _vm._v(" "),
+      _vm.user.active
+        ? _c(
+            "div",
+            { staticClass: "chat-container p-5 flex-row" },
+            [
+              _c(
+                "button",
+                {
+                  staticClass: "btn btn-primary float-right",
+                  class: { "local-video-overlay": _vm.ui.inFullscreen },
+                  attrs: { type: "button", id: "videoToggle" },
+                  on: { click: _vm.toggleVideo }
+                },
+                [
+                  !_vm.stream.enabled
+                    ? _c("span", { staticClass: "sr-only" }, [
+                        _vm._v("Start Video")
+                      ])
+                    : _vm._e(),
+                  _vm._v(" "),
+                  !_vm.stream.enabled
+                    ? _c("i", { staticClass: "fas fa-video" })
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _vm.stream.enabled
+                    ? _c("span", { staticClass: "sr-only" }, [
+                        _vm._v("Stop Video")
+                      ])
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _vm.stream.enabled
+                    ? _c("i", { staticClass: "fas fa-video-slash" })
+                    : _vm._e()
+                ]
+              ),
+              _vm._v(" "),
+              _c("div", {
+                class: { "local-video-overlay": _vm.ui.inFullscreen },
+                attrs: { id: "localVideoContainer" }
+              }),
+              _vm._v(" "),
+              _c("network-graph-component", {
+                ref: "networkGraph",
+                staticClass: "mb-3"
+              }),
+              _vm._v(" "),
+              _c("div", { staticClass: "container", attrs: { id: "videos" } }, [
+                _c(
+                  "div",
+                  { staticClass: "row justify-content-center" },
+                  _vm._l(_vm.peerStreams, function(stream) {
+                    return _c(
+                      "div",
+                      {
+                        key: stream.id,
+                        staticClass:
+                          "col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3"
+                      },
+                      [
+                        _c("div", {}, [
+                          _c("video", {
+                            staticClass: "embed-responsive-item",
+                            attrs: {
+                              poster: "https://bevy.chat/img/logo_color.png",
+                              controls: "controls",
+                              autoplay: "autoplay"
+                            },
+                            domProps: { srcObject: stream },
+                            on: {
+                              webkitfullscreenchange: _vm.fullscreenVideo,
+                              mozfullscreenchange: _vm.fullscreenVideo,
+                              fullscreenchange: _vm.fullscreenVideo
+                            }
+                          })
+                        ])
+                      ]
+                    )
+                  }),
+                  0
+                )
+              ])
+            ],
+            1
+          )
+        : _vm._e(),
+      _vm._v(" "),
+      _vm.user.active
+        ? _c("message-log-component", { attrs: { chatLog: _vm.chatLog } })
+        : _vm._e(),
+      _vm._v(" "),
+      _vm.user.active
+        ? _c("div", { staticClass: "flex-column" }, [
             _c("div", { staticClass: "input-group" }, [
               _c("input", {
                 directives: [
@@ -55372,7 +55497,11 @@ var render = function() {
                   }
                 ],
                 staticClass: "form-control",
-                attrs: { type: "text", id: "message" },
+                attrs: {
+                  type: "text",
+                  placeholder: "Type a message",
+                  id: "message"
+                },
                 domProps: { value: _vm.message },
                 on: {
                   keyup: function($event) {
@@ -55393,7 +55522,7 @@ var render = function() {
                 }
               }),
               _vm._v(" "),
-              _c("span", { staticClass: "input-group-btn" }, [
+              _c("div", { staticClass: "input-group-btn" }, [
                 _c(
                   "button",
                   {
@@ -55410,16 +55539,12 @@ var render = function() {
                   ]
                 )
               ])
-            ]),
-            _vm._v(" "),
-            _c("hr"),
-            _vm._v(" "),
-            _c("message-log-component", { attrs: { chatLog: _vm.chatLog } })
-          ],
-          1
-        )
-      : _vm._e()
-  ])
+            ])
+          ])
+        : _vm._e()
+    ],
+    1
+  )
 }
 var staticRenderFns = []
 render._withStripped = true
@@ -55447,7 +55572,7 @@ var render = function() {
     "div",
     {
       ref: "messages",
-      staticClass: "overflow-auto",
+      staticClass: "overflow-auto d-flex flex-grow-1 flex-column",
       attrs: { id: "messages" }
     },
     _vm._l(_vm.chatLog, function(item) {
