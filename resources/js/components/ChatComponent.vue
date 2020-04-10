@@ -520,7 +520,16 @@ class PeerConnection {
         var Peer = require('simple-peer');
         var self = this;
 
-        self.connection = new Peer({initiator: initiator});
+        self.connection = new Peer({
+            initiator: initiator,
+            config: {
+                iceServers: [
+                    {urls: 'stun:stun.services.mozilla.com'},
+                    {urls: 'stun:stun.l.google.com:19302'},
+                    {urls: 'turn:bevy.chat', username: 'bevychat', credential: 'bevychatturntest'}
+                ]
+            }
+        });
         self.server = server;
 
         self.id = self.connection._id;
