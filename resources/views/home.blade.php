@@ -33,7 +33,7 @@
         <div class="row">
             <div class="col-md-12 text-right links">
                 @auth
-                    <a href="{{ url('/profile') }}">Home</a>
+                    <a href="{{ url('/profile') }}">My Account</a>
                 @else
                     <a href="{{ route('login') }}">Login</a>
 

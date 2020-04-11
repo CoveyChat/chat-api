@@ -13,12 +13,13 @@
                             {{ session('status') }}
                         </div>
                     @endif
+                    <a class="btn btn-outline-primary float-right" href="{{ route('chat_create') }}"><i class="fas fa-plus"></i> {{ __('Create Chat') }}</a>
 
+                    <h1>My Chats</h1>
+                    <hr />
                     @if(count($chats) == 0)
-                        You haven't created any chats yet
-
+                        <p>You haven't created any chats yet</p>
                     @else
-                        <h1>My Chats</h1>
                         @foreach($chats as $chat)
                             <h2>
                                 <a href="{{env('APP_URL')}}/chat/{{$chat->id}}">
