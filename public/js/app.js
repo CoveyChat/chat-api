@@ -2222,6 +2222,42 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //Backfills for Mozilla / Safari
 navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 /* harmony default export */ __webpack_exports__["default"] = ({
@@ -2237,6 +2273,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       stream: {
         videoenabled: false,
         audioenabled: true,
+        screenshareenabled: false,
         connection: null,
         local: null,
         localsize: 'lg'
@@ -2259,6 +2296,35 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     };
   },
   methods: {
+    toggleScreenshare: function toggleScreenshare(e) {
+      var vm = this;
+      var options = options = {
+        video: {
+          cursor: "always"
+        }
+      };
+
+      if (vm.stream.videoenabled && !vm.stream.screenshareenabled) {
+        navigator.mediaDevices.getDisplayMedia(options).then(function (stream) {
+          vm.stopLocalStream();
+          vm.stream.videoenabled = false;
+          vm.stream.screenshareenabled = true;
+          vm.stream.connection = stream;
+          vm.onLocalStream(stream);
+        })["catch"](function (e) {
+          vm.stream.screenshareenabled = false;
+          console.log("Local Screenshare Stream Error!");
+          console.log(e); //vm.toggleVideo({'message': "toggling back to local video from screenshare"});
+        });
+      } else if (vm.stream.screenshareenabled) {
+        console.log("Turning screenshare off");
+        vm.stopLocalStream();
+        vm.stream.screenshareenabled = false;
+        vm.toggleVideo({
+          'message': "toggling back to local video from screenshare"
+        });
+      }
+    },
     adjustLocalVideoSize: function adjustLocalVideoSize(e) {
       var vm = this;
 
@@ -2310,16 +2376,27 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     toggleVideo: function toggleVideo(e) {
       var vm = this;
 
+      if (!vm.stream.videoenabled && vm.stream.screenshareenabled) {
+        vm.stopLocalStream();
+        vm.stream.screenshareenabled = false;
+      }
+
       if (!vm.stream.videoenabled) {
+        console.log("TURNING VIDEO ON");
         navigator.mediaDevices.getUserMedia({
           video: true,
           audio: true
-        }).then(vm.onLocalStream)["catch"](function (e) {
+        }).then(function (stream) {
+          vm.stream.videoenabled = true;
+          vm.stream.screenshareenabled = false;
+          vm.onLocalStream(stream);
+        })["catch"](function (e) {
           console.log("Local Stream Error!");
           console.log(e);
         });
       } else {
         vm.stopLocalStream();
+        vm.stream.videoenabled = false;
       }
     },
     sendMessage: function sendMessage(e) {
@@ -2455,35 +2532,31 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
      */
     onLocalStream: function onLocalStream(stream) {
       var vm = this;
+      console.log("++++LOCAL STREAM ENABLED");
+      /*var localVideoContainer = vm.$el.querySelector("#local-video-container");
+      var video = document.createElement('video');
+      video.className = 'local-stream';
+      video.muted = true;
+      localVideoContainer.appendChild(video);
+       if ('srcObject' in video) {
+          video.srcObject = stream
+      } else {
+          video.src = window.URL.createObjectURL(stream) // for older browsers
+      }
+       video.play();
+      vm.stream.local = video;*/
 
-      if (!vm.stream.videoenabled) {
-        console.log("++++LOCAL STREAM ENABLED");
-        /*var localVideoContainer = vm.$el.querySelector("#local-video-container");
-        var video = document.createElement('video');
-        video.className = 'local-stream';
-        video.muted = true;
-        localVideoContainer.appendChild(video);
-         if ('srcObject' in video) {
-            video.srcObject = stream
-        } else {
-            video.src = window.URL.createObjectURL(stream) // for older browsers
+      console.log("Set stream vars and tell everyone to retry");
+      vm.stream.connection = stream; //New Local stream! Send it off  to all the peers
+
+      for (var id in vm.connections) {
+        if (vm.connections[id].connection == null || !vm.connections[id].connection.connected || vm.connections[id].connection.destroyed) {
+          console.log("SKIP CONNECTION " + id);
+          console.log(vm.connections[id]);
+          continue;
         }
-         video.play();
-        vm.stream.local = video;*/
 
-        console.log("Set stream vars and tell everyone to retry");
-        vm.stream.videoenabled = true;
-        vm.stream.connection = stream; //New Local stream! Send it off  to all the peers
-
-        for (var id in vm.connections) {
-          if (vm.connections[id].connection == null || !vm.connections[id].connection.connected || vm.connections[id].connection.destroyed) {
-            console.log("SKIP CONNECTION " + id);
-            console.log(vm.connections[id]);
-            continue;
-          }
-
-          vm.connections[id].addStream(vm.stream.connection);
-        }
+        vm.connections[id].addStream(vm.stream.connection);
       }
     },
     sendStream: function sendStream(id) {
@@ -2508,11 +2581,10 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     stopLocalStream: function stopLocalStream() {
       var vm = this;
 
-      if (!vm.stream.videoenabled) {
+      if (!vm.stream.videoenabled && !vm.stream.screenshareenabled) {
         return;
-      }
+      } //Remove this stream to all the peers so they don't need to do the timeout removal
 
-      vm.stream.videoenabled = false; //Remove this stream to all the peers so they don't need to do the timeout removal
 
       for (var id in vm.connections) {
         if (!vm.connections[id].isStreaming) {
@@ -2602,6 +2674,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
             vm.recieveMessage(vm.connections[peer.id].user, data);
           });
           vm.connections[peer.id].connection.on('stream', function (stream) {
+            console.log("ON PEER STREAM");
             vm.onPeerStream(stream, peer.id);
           });
         }
@@ -10147,7 +10220,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:20px;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac], #local-video-container[data-v-80d584ac] video {\n\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n    position: absolute;\n    z-index: 2;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac], #local-video-container.local-video-overlay[data-v-80d584ac] video, #btn-local-video-toggle.local-video-overlay[data-v-80d584ac] {\n    margin-top:0px;\n    top:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    margin-top:0px;\n    top:0px;\n    right:0px;\n    z-index:2147483647 !important;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    top:6em !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\n\n/* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:20px;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:12em;\n}\n\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac], #local-video-container[data-v-80d584ac] video {\n\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n    position: absolute;\n    z-index: 2;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac], #local-video-container.local-video-overlay[data-v-80d584ac] video, #btn-local-video-toggle.local-video-overlay[data-v-80d584ac] {\n    margin-top:0px;\n    top:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    margin-top:0px;\n    top:0px;\n    right:0px;\n    z-index:2147483647 !important;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    top:6em !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\n\n/* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -55842,7 +55915,7 @@ var render = function() {
                 ]
               ),
               _vm._v(" "),
-              _vm.stream.videoenabled
+              _vm.stream.videoenabled || _vm.stream.screenshareenabled
                 ? _c(
                     "button",
                     {
@@ -55879,6 +55952,50 @@ var render = function() {
                   )
                 : _vm._e(),
               _vm._v(" "),
+              _vm.stream.videoenabled || _vm.stream.screenshareenabled
+                ? _c(
+                    "button",
+                    {
+                      staticClass: "btn float-right",
+                      class: {
+                        "btn-success": _vm.stream.screenshareenabled,
+                        "btn-outline-success": !_vm.stream.screenshareenabled,
+                        "local-screenshare-overlay": _vm.ui.inFullscreen
+                      },
+                      attrs: {
+                        type: "button",
+                        id: "btn-local-screenshare-toggle"
+                      },
+                      on: { click: _vm.toggleScreenshare }
+                    },
+                    [
+                      !_vm.stream.screenshareenabled
+                        ? _c("span", { staticClass: "sr-only" }, [
+                            _vm._v("Enable Screenshare")
+                          ])
+                        : _vm._e(),
+                      _vm._v(" "),
+                      !_vm.stream.screenshareenabled
+                        ? _c("i", { staticClass: "fas fa-desktop" })
+                        : _vm._e(),
+                      _vm._v(" "),
+                      !_vm.stream.screenshareenabled
+                        ? _c("i", { staticClass: "fas fa-slash" })
+                        : _vm._e(),
+                      _vm._v(" "),
+                      _vm.stream.screenshareenabled
+                        ? _c("span", { staticClass: "sr-only" }, [
+                            _vm._v("Stop Sharing")
+                          ])
+                        : _vm._e(),
+                      _vm._v(" "),
+                      _vm.stream.screenshareenabled
+                        ? _c("i", { staticClass: "fas fa-desktop" })
+                        : _vm._e()
+                    ]
+                  )
+                : _vm._e(),
+              _vm._v(" "),
               _c(
                 "div",
                 {
@@ -55891,7 +56008,7 @@ var render = function() {
                   attrs: { id: "local-video-container" }
                 },
                 [
-                  _vm.stream.videoenabled
+                  _vm.stream.videoenabled || _vm.stream.screenshareenabled
                     ? _c(
                         "video",
                         _vm._b(

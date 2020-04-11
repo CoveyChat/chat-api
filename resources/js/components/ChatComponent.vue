@@ -46,13 +46,32 @@
                 'btn-outline-danger': !stream.audioenabled,
                 'local-audio-overlay': ui.inFullscreen
             }"
-            v-if="stream.videoenabled"
+            v-if="stream.videoenabled || stream.screenshareenabled"
             v-on:click="toggleAudio">
             <span class="sr-only" v-if="!stream.audioenabled">Enable Audio</span>
             <i class="fas fa-microphone-slash" v-if="!stream.audioenabled"></i>
 
             <span class="sr-only" v-if="stream.audioenabled">Mute Video</span>
             <i class="fas fa-microphone" v-if="stream.audioenabled"></i>
+        </button>
+
+        <!--Local Screenshare Button-->
+        <button class="btn float-right"
+            type="button"
+            id="btn-local-screenshare-toggle"
+            v-bind:class="{
+                'btn-success': stream.screenshareenabled,
+                'btn-outline-success': !stream.screenshareenabled,
+                'local-screenshare-overlay': ui.inFullscreen
+            }"
+            v-if="stream.videoenabled || stream.screenshareenabled"
+            v-on:click="toggleScreenshare">
+            <span class="sr-only" v-if="!stream.screenshareenabled">Enable Screenshare</span>
+            <i class="fas fa-desktop" v-if="!stream.screenshareenabled"></i>
+            <i class="fas fa-slash" v-if="!stream.screenshareenabled"></i>
+
+            <span class="sr-only" v-if="stream.screenshareenabled">Stop Sharing</span>
+            <i class="fas fa-desktop" v-if="stream.screenshareenabled"></i>
         </button>
 
         <div id="local-video-container"
@@ -71,7 +90,7 @@
                     muted="muted"
                     class="local-stream"
                     v-bind="stream.local"
-                    v-if="stream.videoenabled"
+                    v-if="stream.videoenabled || stream.screenshareenabled"
                 ></video>
 
 
@@ -151,6 +170,23 @@
         z-index:2147483647;
         margin-top:6em;
     }
+
+    #btn-local-screenshare-toggle {
+        right:10px;
+        border-radius: 2em !important;
+        width: 4em;
+        height: 4em;
+        position: fixed;
+        z-index:2147483647;
+        margin-top:12em;
+    }
+
+    /**Adjust the slash since font awesome doesn't offer a video slash option */
+    #btn-local-screenshare-toggle >>> .fa-slash {
+        display:block;
+        margin-top:-20px;
+    }
+
     #local-video-container.local-video-sm,
     #local-video-container.local-video-sm >>> video {
         margin-right:25px;
@@ -242,13 +278,38 @@ export default {
             connections: {},
             chatId: null,
             user: {active: false},
-            stream: {videoenabled: false, audioenabled:true, connection: null, local:null, localsize:'lg'},
+            stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'lg'},
             peerStreams: [],
             server: {ip:'bevy.chat', port:1337, signal: null},
             ui: {anonUsername: '', inFullscreen: false, sound: {connect: null, disconnect: null, message: null}}
         }
     },
     methods: {
+        toggleScreenshare(e) {
+            var vm = this;
+            var options = options = {video: {cursor: "always"}};
+
+            if(vm.stream.videoenabled && !vm.stream.screenshareenabled) {
+                navigator.mediaDevices.getDisplayMedia(options).then(function(stream) {
+                    vm.stopLocalStream();
+                    vm.stream.videoenabled = false;
+                    vm.stream.screenshareenabled = true;
+                    vm.stream.connection = stream;
+                    vm.onLocalStream(stream);
+
+                }).catch((e) => {
+                    vm.stream.screenshareenabled = false;
+                    console.log("Local Screenshare Stream Error!");
+                    console.log(e);
+                    //vm.toggleVideo({'message': "toggling back to local video from screenshare"});
+                });
+            } else if(vm.stream.screenshareenabled) {
+                console.log("Turning screenshare off");
+                vm.stopLocalStream();
+                vm.stream.screenshareenabled = false;
+                vm.toggleVideo({'message': "toggling back to local video from screenshare"});
+            }
+        },
         adjustLocalVideoSize(e) {
             var vm = this;
             if(vm.stream.localsize == 'lg') {
@@ -294,16 +355,28 @@ export default {
         },
         toggleVideo(e) {
             var vm = this;
+
+            if(!vm.stream.videoenabled && vm.stream.screenshareenabled) {
+                vm.stopLocalStream();
+                vm.stream.screenshareenabled = false;
+            }
+
             if(!vm.stream.videoenabled) {
+                console.log("TURNING VIDEO ON");
                 navigator.mediaDevices.getUserMedia({
                     video: true,
                     audio: true
-                }).then(vm.onLocalStream).catch((e) => {
+                }).then(function(stream) {
+                    vm.stream.videoenabled = true;
+                    vm.stream.screenshareenabled = false;
+                    vm.onLocalStream(stream);
+                }).catch((e) => {
                     console.log("Local Stream Error!");
                     console.log(e);
                 });
             } else {
                 vm.stopLocalStream();
+                vm.stream.videoenabled = false;
             }
         },
         sendMessage (e) {
@@ -425,39 +498,37 @@ export default {
         onLocalStream(stream) {
             var vm = this;
 
-            if(!vm.stream.videoenabled) {
-                console.log("++++LOCAL STREAM ENABLED");
-                /*var localVideoContainer = vm.$el.querySelector("#local-video-container");
-                var video = document.createElement('video');
-                video.className = 'local-stream';
-                video.muted = true;
-                localVideoContainer.appendChild(video);
+            console.log("++++LOCAL STREAM ENABLED");
+            /*var localVideoContainer = vm.$el.querySelector("#local-video-container");
+            var video = document.createElement('video');
+            video.className = 'local-stream';
+            video.muted = true;
+            localVideoContainer.appendChild(video);
 
-                if ('srcObject' in video) {
-                    video.srcObject = stream
-                } else {
-                    video.src = window.URL.createObjectURL(stream) // for older browsers
-                }
-
-                video.play();
-                vm.stream.local = video;*/
-                console.log("Set stream vars and tell everyone to retry");
-                vm.stream.videoenabled = true;
-                vm.stream.connection = stream;
-
-                //New Local stream! Send it off  to all the peers
-                for(var id in vm.connections) {
-                    if(vm.connections[id].connection == null
-                        || !vm.connections[id].connection.connected
-                        || vm.connections[id].connection.destroyed) {
-                        console.log("SKIP CONNECTION " + id);
-                        console.log(vm.connections[id]);
-                        continue;
-                    }
-
-                    vm.connections[id].addStream(vm.stream.connection);
-                }
+            if ('srcObject' in video) {
+                video.srcObject = stream
+            } else {
+                video.src = window.URL.createObjectURL(stream) // for older browsers
             }
+
+            video.play();
+            vm.stream.local = video;*/
+            console.log("Set stream vars and tell everyone to retry");
+            vm.stream.connection = stream;
+
+            //New Local stream! Send it off  to all the peers
+            for(var id in vm.connections) {
+                if(vm.connections[id].connection == null
+                    || !vm.connections[id].connection.connected
+                    || vm.connections[id].connection.destroyed) {
+                    console.log("SKIP CONNECTION " + id);
+                    console.log(vm.connections[id]);
+                    continue;
+                }
+
+                vm.connections[id].addStream(vm.stream.connection);
+            }
+
         },
         sendStream(id) {
             var vm = this;
@@ -486,9 +557,7 @@ export default {
         stopLocalStream() {
             var vm = this;
 
-            if(!vm.stream.videoenabled) {return}
-
-            vm.stream.videoenabled = false;
+            if(!vm.stream.videoenabled && !vm.stream.screenshareenabled) {return}
 
             //Remove this stream to all the peers so they don't need to do the timeout removal
             for(var id in vm.connections) {
@@ -581,6 +650,7 @@ export default {
                     });
 
                     vm.connections[peer.id].connection.on('stream', function(stream) {
+                        console.log("ON PEER STREAM");
                         vm.onPeerStream(stream, peer.id);
                     });
                 }
