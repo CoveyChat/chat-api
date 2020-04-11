@@ -121,9 +121,6 @@
     #user-prompt {
         margin-top:10%;
     }
-    .form-control-xl {
-        font-size: 1.5em;
-    }
     .fade-enter-active, .fade-leave-active {
         transition: opacity .5s;
     }

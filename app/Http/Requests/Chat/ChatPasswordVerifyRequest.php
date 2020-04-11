@@ -4,7 +4,7 @@ namespace App\Http\Requests\Chat;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ChatCreateRequest extends FormRequest
+class ChatPasswordVerifyRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,9 +24,7 @@ class ChatCreateRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'=> 'string',
-            'description'=> 'string|nullable',
-            'password'=> 'string|nullable',
+            'password'=> 'string',
         ];
     }
 }

@@ -13,22 +13,22 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', function () {return view('home');});
+
 Route::middleware('auth:web')->get('/bridge/usertoken', 'Api\AuthController@get');
 
 Route::get('oauth/{provider}', 'Auth\LoginController@redirectToProvider');
 Route::get('oauth/{provider}/callback', 'Auth\LoginController@handleProviderCallback');
 
 
-Route::get('/home', 'HomeController@index')->name('home');
-Route::get('/terms', 'HomeController@index')->name('home');
-Route::get('/privacy', 'HomeController@index')->name('home');
+Route::get('/profile', 'ProfileController@index')->name('profile');
+Route::get('/terms', 'ProfileController@index')->name('home');
+Route::get('/privacy', 'ProfileController@index')->name('home');
 
 Route::get('/chat', 'Chat\ChatController@index');
 Route::post('/chat', 'Chat\ChatController@create')->name('chat_create');
 Route::get('/chat/{chat}', 'Chat\ChatController@launch')->name('chat_launch');
+Route::post('/chat/{chat}', 'Chat\ChatController@verifyLaunchPassword');
 
 
 Route::group(['prefix' => 'bridge'], function() {

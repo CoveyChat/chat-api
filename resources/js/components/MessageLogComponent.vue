@@ -69,13 +69,6 @@ mounted() {
     //View model reference for inside scoped functions
     var vm = this;
 
-    // Get a reference to the div you want to auto-scroll.
-    //var messages = vm.$el.querySelector("#messages");
-    // Create an observer and pass it a callback.
-    //var observer = new MutationObserver(vm.scrollToBottom);
-    // Tell it to look for new children that will change the height.
-    //var config = {childList: true};
-    //observer.observe(messages, config);
 },
 updated() {
     var vm = this;

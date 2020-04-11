@@ -15,10 +15,11 @@ class CreateChatApp extends Migration
     {
         Schema::create('chats', function (Blueprint $table) {
             $table->uuid('id');
+            $table->bigInteger('created_by')->nullable();
             $table->string('name');
             $table->string('description')->nullable();
             $table->string('password')->nullable();
-            $table->text('host')->nullable();
+
             $table->timestamps();
             $table->primary('id');
         });
