@@ -2265,6 +2265,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 //
 //
 //
+//
+//
 //Backfills for Mozilla / Safari
 navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 /* harmony default export */ __webpack_exports__["default"] = ({
@@ -2303,6 +2305,9 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     };
   },
   methods: {
+    setDefaultVolume: function setDefaultVolume(e) {
+      e.target.volume = .5;
+    },
     toggleScreenshare: function toggleScreenshare(e) {
       var vm = this;
       var options = options = {
@@ -56084,13 +56089,15 @@ var render = function() {
                           attrs: {
                             poster: "https://bevy.chat/img/logo_color.png",
                             autoplay: "autoplay",
-                            controls: "controls"
+                            controls: "controls",
+                            volume: "1"
                           },
                           domProps: { srcObject: stream },
                           on: {
                             webkitfullscreenchange: _vm.fullscreenVideo,
                             mozfullscreenchange: _vm.fullscreenVideo,
-                            fullscreenchange: _vm.fullscreenVideo
+                            fullscreenchange: _vm.fullscreenVideo,
+                            play: _vm.setDefaultVolume
                           }
                         })
                       ]

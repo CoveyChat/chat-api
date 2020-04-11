@@ -111,9 +111,11 @@
                     v-on:webkitfullscreenchange="fullscreenVideo"
                     v-on:mozfullscreenchange="fullscreenVideo"
                     v-on:fullscreenchange="fullscreenVideo"
+                    v-on:play="setDefaultVolume"
                     poster = "https://bevy.chat/img/logo_color.png"
                     autoplay="autoplay"
                     controls="controls"
+                    volume="1"
                     class="embed-responsive-item"
                     v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }"
                 ></video>
@@ -292,6 +294,9 @@ export default {
         }
     },
     methods: {
+        setDefaultVolume(e) {
+            e.target.volume = 1;
+        },
         toggleScreenshare(e) {
             var vm = this;
             var options = options = {video: {cursor: "always"}};
