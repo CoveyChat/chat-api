@@ -55,14 +55,17 @@
             <i class="fas fa-microphone" v-if="stream.audioenabled"></i>
         </button>
 
-        <div id="local-video-container" v-bind:class="{ 'local-video-overlay': ui.inFullscreen }">
-
-
+        <div id="local-video-container"
+            v-bind:class="{
+                        'local-video-overlay': ui.inFullscreen,
+                        'local-video-sm': stream.localsize =='sm',
+                        'local-video-md': stream.localsize =='md',
+                        'local-video-lg': stream.localsize =='lg'
+                    }"
+            >
 
             <video :srcObject.prop="stream.connection"
-                    v-on:webkitfullscreenchange="fullscreenVideo"
-                    v-on:mozfullscreenchange="fullscreenVideo"
-                    v-on:fullscreenchange="fullscreenVideo"
+                    v-on:click="adjustLocalVideoSize"
                     poster = "https://bevy.chat/img/logo_color.png"
                     autoplay="autoplay"
                     muted="muted"
@@ -148,9 +151,21 @@
         z-index:2147483647;
         margin-top:6em;
     }
-
-    #local-video-container, #local-video-container >>> video {
+    #local-video-container.local-video-sm,
+    #local-video-container.local-video-sm >>> video {
+        margin-right:25px;
+        width:100px;
+    }
+    #local-video-container.local-video-md,
+    #local-video-container.local-video-md >>> video {
         width:200px;
+    }
+    #local-video-container.local-video-lg,
+    #local-video-container.local-video-lg >>> video {
+        width:300px;
+    }
+    #local-video-container, #local-video-container >>> video {
+
         margin-top:20px;
         position:fixed;
         right:2em;
@@ -227,13 +242,23 @@ export default {
             connections: {},
             chatId: null,
             user: {active: false},
-            stream: {videoenabled: false, audioenabled:true, connection: null, local:null},
+            stream: {videoenabled: false, audioenabled:true, connection: null, local:null, localsize:'lg'},
             peerStreams: [],
             server: {ip:'bevy.chat', port:1337, signal: null},
             ui: {anonUsername: '', inFullscreen: false, sound: {connect: null, disconnect: null, message: null}}
         }
     },
     methods: {
+        adjustLocalVideoSize(e) {
+            var vm = this;
+            if(vm.stream.localsize == 'lg') {
+                vm.stream.localsize = 'md'
+            } else if(vm.stream.localsize == 'md') {
+                vm.stream.localsize = 'sm'
+            } else if(vm.stream.localsize == 'sm') {
+                vm.stream.localsize = 'lg'
+            }
+        },
         fullscreenVideo(e) {
             var vm = this;
             //Don't actually fullscreen. Just make the video... Bigger
