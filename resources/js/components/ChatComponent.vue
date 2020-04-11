@@ -21,12 +21,11 @@
     <div class="chat-container pl-5 pr-5 flex-row"  v-if="user.active">
         <!--Local Video Button-->
         <button
-            class="btn float-right"
+            class="btn btn-primary float-right"
             type="button"
             id="btn-local-video-toggle"
             v-bind:class="{
-                'btn-primary': stream.videoenabled,
-                'btn-outline-primary': !stream.videoenabled,
+                'btn-off': !stream.videoenabled,
                 'local-video-overlay': ui.inFullscreen
             }"
             v-on:click="toggleVideo">
@@ -38,12 +37,11 @@
         </button>
 
         <!--Local Audio Button-->
-        <button class="btn float-right"
+        <button class="btn btn-danger float-right"
             type="button"
             id="btn-local-audio-toggle"
             v-bind:class="{
-                'btn-danger': stream.audioenabled,
-                'btn-outline-danger': !stream.audioenabled,
+                'btn-off': !stream.audioenabled,
                 'local-audio-overlay': ui.inFullscreen
             }"
             v-if="stream.videoenabled || stream.screenshareenabled"
@@ -56,12 +54,11 @@
         </button>
 
         <!--Local Screenshare Button-->
-        <button class="btn float-right"
+        <button class="btn btn-success float-right"
             type="button"
             id="btn-local-screenshare-toggle"
             v-bind:class="{
-                'btn-success': stream.screenshareenabled,
-                'btn-outline-success': !stream.screenshareenabled,
+                'btn-off': !stream.screenshareenabled,
                 'local-screenshare-overlay': ui.inFullscreen
             }"
             v-if="stream.videoenabled || stream.screenshareenabled"
@@ -158,7 +155,7 @@
         height: 4em;
         position: fixed;
         z-index:2147483647;
-        margin-top:20px;
+        margin-top:1em;
     }
 
     #btn-local-audio-toggle {
@@ -178,9 +175,12 @@
         height: 4em;
         position: fixed;
         z-index:2147483647;
-        margin-top:12em;
+        margin-top:11em;
     }
 
+    .btn-off {
+        opacity: 0.75;
+    }
     /**Adjust the slash since font awesome doesn't offer a video slash option */
     #btn-local-screenshare-toggle >>> .fa-slash {
         display:block;
@@ -222,24 +222,31 @@
         padding-left: 5px;
     }
     /* When fullscreened, shift things around*/
-    #local-video-container.local-video-overlay, #local-video-container.local-video-overlay >>> video, #btn-local-video-toggle.local-video-overlay {
+    #local-video-container.local-video-overlay,
+    #local-video-container.local-video-overlay >>> video,
+    #btn-local-video-toggle.local-video-overlay {
         margin-top:0px;
         top:0px;
         right:0px;
     }
 
-    button.local-video-overlay {
-        margin-top:0px;
-        top:0px;
-        right:0px;
+    button.local-video-overlay,
+    button.local-audio-overlay,
+    button.local-screenshare-overlay {
+        margin-top:0px !important;
+        right:0px !important;
         z-index:2147483647 !important;
+    }
+    button.local-video-overlay {
+        top:0px;
     }
 
     button.local-audio-overlay {
-        margin-top:0px !important;
-        top:6em !important;
-        right:0px !important;
-        z-index:2147483647 !important;
+        top:5em !important;
+    }
+
+    button.local-screenshare-overlay {
+        top:10em !important;
     }
 
     /* Main Video Fullscreen */
@@ -345,10 +352,10 @@ export default {
         },
         toggleAudio(e) {
             var vm = this;
-            if(vm.stream.videoenabled && vm.stream.audioenabled) {
+            if((vm.stream.videoenabled || vm.stream.screenshareenabled) && vm.stream.audioenabled) {
                 vm.stream.connection.getAudioTracks().forEach(function(track){track.enabled = false;});
                 vm.stream.audioenabled = false;
-            } else if(vm.stream.videoenabled && !vm.stream.audioenabled) {
+            } else if((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.stream.audioenabled) {
                 vm.stream.connection.getAudioTracks().forEach(function(track){track.enabled = true;});
                 vm.stream.audioenabled = true;
             }

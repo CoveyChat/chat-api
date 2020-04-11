@@ -2258,6 +2258,13 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
 //Backfills for Mozilla / Safari
 navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 /* harmony default export */ __webpack_exports__["default"] = ({
@@ -2361,12 +2368,12 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     toggleAudio: function toggleAudio(e) {
       var vm = this;
 
-      if (vm.stream.videoenabled && vm.stream.audioenabled) {
+      if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && vm.stream.audioenabled) {
         vm.stream.connection.getAudioTracks().forEach(function (track) {
           track.enabled = false;
         });
         vm.stream.audioenabled = false;
-      } else if (vm.stream.videoenabled && !vm.stream.audioenabled) {
+      } else if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.stream.audioenabled) {
         vm.stream.connection.getAudioTracks().forEach(function (track) {
           track.enabled = true;
         });
@@ -10220,7 +10227,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:20px;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:12em;\n}\n\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac], #local-video-container[data-v-80d584ac] video {\n\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n    position: absolute;\n    z-index: 2;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac], #local-video-container.local-video-overlay[data-v-80d584ac] video, #btn-local-video-toggle.local-video-overlay[data-v-80d584ac] {\n    margin-top:0px;\n    top:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    margin-top:0px;\n    top:0px;\n    right:0px;\n    z-index:2147483647 !important;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    top:6em !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\n\n/* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:11em;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac], #local-video-container[data-v-80d584ac] video {\n\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n    position: absolute;\n    z-index: 2;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video,\n#btn-local-video-toggle.local-video-overlay[data-v-80d584ac] {\n    margin-top:0px;\n    top:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\nbutton.local-audio-overlay[data-v-80d584ac],\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    top:10em !important;\n}\n\n/* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -55883,10 +55890,9 @@ var render = function() {
               _c(
                 "button",
                 {
-                  staticClass: "btn float-right",
+                  staticClass: "btn btn-primary float-right",
                   class: {
-                    "btn-primary": _vm.stream.videoenabled,
-                    "btn-outline-primary": !_vm.stream.videoenabled,
+                    "btn-off": !_vm.stream.videoenabled,
                     "local-video-overlay": _vm.ui.inFullscreen
                   },
                   attrs: { type: "button", id: "btn-local-video-toggle" },
@@ -55919,10 +55925,9 @@ var render = function() {
                 ? _c(
                     "button",
                     {
-                      staticClass: "btn float-right",
+                      staticClass: "btn btn-danger float-right",
                       class: {
-                        "btn-danger": _vm.stream.audioenabled,
-                        "btn-outline-danger": !_vm.stream.audioenabled,
+                        "btn-off": !_vm.stream.audioenabled,
                         "local-audio-overlay": _vm.ui.inFullscreen
                       },
                       attrs: { type: "button", id: "btn-local-audio-toggle" },
@@ -55956,10 +55961,9 @@ var render = function() {
                 ? _c(
                     "button",
                     {
-                      staticClass: "btn float-right",
+                      staticClass: "btn btn-success float-right",
                       class: {
-                        "btn-success": _vm.stream.screenshareenabled,
-                        "btn-outline-success": !_vm.stream.screenshareenabled,
+                        "btn-off": !_vm.stream.screenshareenabled,
                         "local-screenshare-overlay": _vm.ui.inFullscreen
                       },
                       attrs: {
