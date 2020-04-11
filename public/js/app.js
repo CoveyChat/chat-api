@@ -2124,6 +2124,89 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //Backfills for Mozilla / Safari
 navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 /* harmony default export */ __webpack_exports__["default"] = ({
@@ -2137,7 +2220,8 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
         active: false
       },
       stream: {
-        enabled: false,
+        videoenabled: false,
+        audioenabled: true,
         connection: null,
         local: null
       },
@@ -2163,22 +2247,14 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       var vm = this; //Don't actually fullscreen. Just make the video... Bigger
 
       if (document.fullscreenElement) {
-        document.exitFullscreen();
-        console.log("IS FULLSCREEN?");
-        console.log(e.target.getAttribute('isFullscreen')); //Going fullscreen
+        document.exitFullscreen(); //Going fullscreen
 
         if (!vm.ui.inFullscreen) {
           vm.ui.inFullscreen = true;
-          e.target.setAttribute('isFullscreen', true);
         } else {
-          vm.ui.inFullscreen = false; //Closing fullscreen
-
-          e.target.setAttribute('isFullscreen', false);
+          vm.ui.inFullscreen = false;
         }
       }
-
-      console.log("FULLSCREEN REQUEST");
-      console.log(e);
     },
     setAnonUser: function setAnonUser(e) {
       var vm = this;
@@ -2189,10 +2265,25 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
         vm.init();
       }
     },
+    toggleAudio: function toggleAudio(e) {
+      var vm = this;
+
+      if (vm.stream.videoenabled && vm.stream.audioenabled) {
+        vm.stream.connection.getAudioTracks().forEach(function (track) {
+          track.enabled = false;
+        });
+        vm.stream.audioenabled = false;
+      } else if (vm.stream.videoenabled && !vm.stream.audioenabled) {
+        vm.stream.connection.getAudioTracks().forEach(function (track) {
+          track.enabled = true;
+        });
+        vm.stream.audioenabled = true;
+      }
+    },
     toggleVideo: function toggleVideo(e) {
       var vm = this;
 
-      if (!vm.stream.enabled) {
+      if (!vm.stream.videoenabled) {
         navigator.mediaDevices.getUserMedia({
           video: true,
           audio: true
@@ -2231,7 +2322,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       }); //var messageContainer = vm.$el.querySelector("#messages");
       //messageContainer.scrollTop = messageContainer.scrollHeight - 100;
     },
-    outputConnections: function outputConnections(cons) {
+    outputConnections: function outputConnections() {
       var vm = this;
       var networkChartData = {
         nodes: [{
@@ -2242,8 +2333,8 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       }; //var txtConnections = document.getElementById('connections');
       //txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
 
-      for (var id in cons) {
-        var peer = cons[id];
+      for (var id in vm.connections) {
+        var peer = vm.connections[id];
         var name = typeof peer.user != 'undefined' ? peer.user.name : 'X'; //This is the host connection and it's actually bound to someone
 
         if (typeof peer != 'undefined' && peer.initiator && peer.clientid != null) {
@@ -2292,6 +2383,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       }
 
       stream.peerid = peerid;
+      stream.peeruser = vm.connections[peerid].user;
       vm.peerStreams.push(stream);
 
       stream.inactive = function (e) {
@@ -2337,24 +2429,23 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     onLocalStream: function onLocalStream(stream) {
       var vm = this;
 
-      if (!vm.stream.enabled) {
+      if (!vm.stream.videoenabled) {
         console.log("++++LOCAL STREAM ENABLED");
-        var localVideoContainer = vm.$el.querySelector("#local-video-container");
+        /*var localVideoContainer = vm.$el.querySelector("#local-video-container");
         var video = document.createElement('video');
         video.className = 'local-stream';
         video.muted = true;
         localVideoContainer.appendChild(video);
-
-        if ('srcObject' in video) {
-          video.srcObject = stream;
+         if ('srcObject' in video) {
+            video.srcObject = stream
         } else {
-          video.src = window.URL.createObjectURL(stream); // for older browsers
+            video.src = window.URL.createObjectURL(stream) // for older browsers
         }
+         video.play();
+        vm.stream.local = video;*/
 
-        video.play();
-        vm.stream.local = video;
         console.log("Set stream vars and tell everyone to retry");
-        vm.stream.enabled = true;
+        vm.stream.videoenabled = true;
         vm.stream.connection = stream; //New Local stream! Send it off  to all the peers
 
         for (var id in vm.connections) {
@@ -2382,7 +2473,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       //console.log(client.streams);
       //client.removeStream(vm.stream.connection);
 
-      if (vm.stream.enabled && !vm.connections[id].isStreaming) {
+      if (vm.stream.videoenabled && !vm.connections[id].isStreaming) {
         console.log("+APPLYING STREAM");
         vm.connections[id].addStream(vm.stream.connection);
       }
@@ -2390,35 +2481,32 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     stopLocalStream: function stopLocalStream() {
       var vm = this;
 
-      if (!vm.stream.enabled) {
+      if (!vm.stream.videoenabled) {
         return;
       }
 
-      vm.stream.enabled = false; //Send this stream to all the peers
+      vm.stream.videoenabled = false; //Remove this stream to all the peers so they don't need to do the timeout removal
 
       for (var id in vm.connections) {
         if (!vm.connections[id].isStreaming) {
           continue;
         }
 
-        console.log("-----------------Remove stream from " + id);
         vm.connections[id].removeStream(vm.stream.connection);
-      } //Also remove it from the UI
+      } //Also remove it from the UI / Kill the feed
 
 
-      var localStream = vm.stream.local.srcObject;
-      var tracks = localStream.getTracks();
+      var tracks = vm.stream.connection.getTracks();
       tracks.forEach(function (track) {
         track.stop();
       });
       vm.stream.connection = null;
-      vm.stream.local.srcObject = null;
-      vm.$el.querySelector("#local-video-container").innerHTML = "";
     },
     handlePeerDisconnect: function handlePeerDisconnect(id) {
       var vm = this;
       vm.ui.sound.disconnect.play();
-      delete vm.connections[id]; //Also remove anything they were streaming
+      delete vm.connections[id];
+      vm.outputConnections(); //Also remove anything they were streaming
 
       for (var i = 0; i < vm.peerStreams.length; i++) {
         //See if this is the video we want to delete
@@ -2469,9 +2557,9 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
               vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
             }
 
-            vm.outputConnections(vm.connections);
+            vm.outputConnections();
 
-            if (vm.stream.enabled) {
+            if (vm.stream.videoenabled) {
               console.log("Try and send a stream to " + peer.id);
               vm.sendStream(peer.id);
             }
@@ -2528,9 +2616,9 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
               vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
             }
 
-            vm.outputConnections(vm.connections);
+            vm.outputConnections();
 
-            if (vm.stream.enabled) {
+            if (vm.stream.videoenabled) {
               console.log("Try and send a client stream to " + id);
               vm.sendStream(id);
             }
@@ -2861,6 +2949,71 @@ __webpack_require__.r(__webpack_exports__);
     console.log('Copy Component mounted.'); //View model reference for inside scoped functions
 
     var vm = this;
+  }
+});
+
+/***/ }),
+
+/***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/DragComponent.vue?vue&type=script&lang=js&":
+/*!************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/DragComponent.vue?vue&type=script&lang=js& ***!
+  \************************************************************************************************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+/* harmony default export */ __webpack_exports__["default"] = ({
+  data: function data() {
+    return {
+      positions: {
+        clientX: undefined,
+        clientY: undefined,
+        movementX: 0,
+        movementY: 0
+      }
+    };
+  },
+  methods: {
+    dragMouseDown: function dragMouseDown(event) {
+      event.preventDefault(); // get the mouse cursor position at startup:
+
+      this.positions.clientX = event.clientX;
+      this.positions.clientY = event.clientY;
+      document.onmousemove = this.elementDrag;
+      document.onmouseup = this.closeDragElement;
+    },
+    elementDrag: function elementDrag(event) {
+      event.preventDefault();
+      this.positions.movementX = this.positions.clientX - event.clientX;
+      this.positions.movementY = this.positions.clientY - event.clientY;
+      this.positions.clientX = event.clientX;
+      this.positions.clientY = event.clientY;
+      console.log("ON DRAG"); // set the element's new position:
+
+      this.$refs.draggableContainer.style.top = this.$refs.draggableContainer.offsetTop - this.positions.movementY + 'px';
+      this.$refs.draggableContainer.style.left = this.$refs.draggableContainer.offsetLeft - this.positions.movementX + 'px';
+    },
+    closeDragElement: function closeDragElement() {
+      document.onmouseup = null;
+      document.onmousemove = null;
+    }
+  },
+  mounted: function mounted() {
+    console.log('Dragable Component mounted.');
   }
 });
 
@@ -9967,7 +10120,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:20px;\n}\n#local-video-container[data-v-80d584ac], #local-video-container[data-v-80d584ac] video {\n    width:200px;\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac], #local-video-container.local-video-overlay[data-v-80d584ac] video, #btn-local-video-toggle.local-video-overlay[data-v-80d584ac] {\n    margin-top:0px;\n    top:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    margin-top:0px;\n    top:0px;\n    right:0px;\n    z-index:2147483647 !important;\n}\n\n/* Main Video Fullscreen */\nvideo[isFullscreen='true'][data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:20px;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#local-video-container[data-v-80d584ac], #local-video-container[data-v-80d584ac] video {\n    width:200px;\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n    position: absolute;\n    z-index: 2;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac], #local-video-container.local-video-overlay[data-v-80d584ac] video, #btn-local-video-toggle.local-video-overlay[data-v-80d584ac] {\n    margin-top:0px;\n    top:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    margin-top:0px;\n    top:0px;\n    right:0px;\n    z-index:2147483647 !important;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    top:6em !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\n\n/* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -9987,6 +10140,25 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 // module
 exports.push([module.i, "\n.fade-enter-active[data-v-d07b0ea6], .fade-leave-active[data-v-d07b0ea6] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-d07b0ea6], .fade-leave-to[data-v-d07b0ea6] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n.slide-fade-enter-active[data-v-d07b0ea6] {\n    transition: all .3s ease;\n}\n.slide-fade-leave-active[data-v-d07b0ea6] {\n    transition: all .8s cubic-bezier(1.0, 0.5, 0.8, 1.0);\n}\n.slide-fade-enter[data-v-d07b0ea6], .slide-fade-leave-to[data-v-d07b0ea6]\n    /* .slide-fade-leave-active below version 2.1.8 */ {\n    transform: translateX(10px);\n    opacity: 0;\n}\n", ""]);
+
+// exports
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/DragComponent.vue?vue&type=style&index=0&id=67ae894e&scoped=true&lang=css&":
+/*!*******************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader??ref--6-1!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/DragComponent.vue?vue&type=style&index=0&id=67ae894e&scoped=true&lang=css& ***!
+  \*******************************************************************************************************************************************************************************************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loader/lib/css-base.js */ "./node_modules/css-loader/lib/css-base.js")(false);
+// imports
+
+
+// module
+exports.push([module.i, "\n#draggable-container[data-v-67ae894e] {\n    position: absolute;\n    z-index: 9;\n}\n", ""]);
 
 // exports
 
@@ -54726,6 +54898,36 @@ if(false) {}
 
 /***/ }),
 
+/***/ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/DragComponent.vue?vue&type=style&index=0&id=67ae894e&scoped=true&lang=css&":
+/*!***********************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/style-loader!./node_modules/css-loader??ref--6-1!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/DragComponent.vue?vue&type=style&index=0&id=67ae894e&scoped=true&lang=css& ***!
+  \***********************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+var content = __webpack_require__(/*! !../../../node_modules/css-loader??ref--6-1!../../../node_modules/vue-loader/lib/loaders/stylePostLoader.js!../../../node_modules/postcss-loader/src??ref--6-2!../../../node_modules/vue-loader/lib??vue-loader-options!./DragComponent.vue?vue&type=style&index=0&id=67ae894e&scoped=true&lang=css& */ "./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/DragComponent.vue?vue&type=style&index=0&id=67ae894e&scoped=true&lang=css&");
+
+if(typeof content === 'string') content = [[module.i, content, '']];
+
+var transform;
+var insertInto;
+
+
+
+var options = {"hmr":true}
+
+options.transform = transform
+options.insertInto = undefined;
+
+var update = __webpack_require__(/*! ../../../node_modules/style-loader/lib/addStyles.js */ "./node_modules/style-loader/lib/addStyles.js")(content, options);
+
+if(content.locals) module.exports = content.locals;
+
+if(false) {}
+
+/***/ }),
+
 /***/ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/MessageLogComponent.vue?vue&type=style&index=0&id=1e09f4b6&scoped=true&lang=css&":
 /*!*****************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** ./node_modules/style-loader!./node_modules/css-loader??ref--6-1!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/MessageLogComponent.vue?vue&type=style&index=0&id=1e09f4b6&scoped=true&lang=css& ***!
@@ -55581,38 +55783,111 @@ var render = function() {
               _c(
                 "button",
                 {
-                  staticClass: "btn btn-primary float-right",
-                  class: { "local-video-overlay": _vm.ui.inFullscreen },
+                  staticClass: "btn float-right",
+                  class: {
+                    "btn-primary": _vm.stream.videoenabled,
+                    "btn-outline-primary": !_vm.stream.videoenabled,
+                    "local-video-overlay": _vm.ui.inFullscreen
+                  },
                   attrs: { type: "button", id: "btn-local-video-toggle" },
                   on: { click: _vm.toggleVideo }
                 },
                 [
-                  !_vm.stream.enabled
+                  !_vm.stream.videoenabled
                     ? _c("span", { staticClass: "sr-only" }, [
                         _vm._v("Start Video")
                       ])
                     : _vm._e(),
                   _vm._v(" "),
-                  !_vm.stream.enabled
-                    ? _c("i", { staticClass: "fas fa-video" })
+                  !_vm.stream.videoenabled
+                    ? _c("i", { staticClass: "fas fa-video-slash" })
                     : _vm._e(),
                   _vm._v(" "),
-                  _vm.stream.enabled
+                  _vm.stream.videoenabled
                     ? _c("span", { staticClass: "sr-only" }, [
                         _vm._v("Stop Video")
                       ])
                     : _vm._e(),
                   _vm._v(" "),
-                  _vm.stream.enabled
-                    ? _c("i", { staticClass: "fas fa-video-slash" })
+                  _vm.stream.videoenabled
+                    ? _c("i", { staticClass: "fas fa-video" })
                     : _vm._e()
                 ]
               ),
               _vm._v(" "),
-              _c("div", {
-                class: { "local-video-overlay": _vm.ui.inFullscreen },
-                attrs: { id: "local-video-container" }
-              }),
+              _vm.stream.videoenabled
+                ? _c(
+                    "button",
+                    {
+                      staticClass: "btn float-right",
+                      class: {
+                        "btn-danger": _vm.stream.audioenabled,
+                        "btn-outline-danger": !_vm.stream.audioenabled,
+                        "local-audio-overlay": _vm.ui.inFullscreen
+                      },
+                      attrs: { type: "button", id: "btn-local-audio-toggle" },
+                      on: { click: _vm.toggleAudio }
+                    },
+                    [
+                      !_vm.stream.audioenabled
+                        ? _c("span", { staticClass: "sr-only" }, [
+                            _vm._v("Enable Audio")
+                          ])
+                        : _vm._e(),
+                      _vm._v(" "),
+                      !_vm.stream.audioenabled
+                        ? _c("i", { staticClass: "fas fa-microphone-slash" })
+                        : _vm._e(),
+                      _vm._v(" "),
+                      _vm.stream.audioenabled
+                        ? _c("span", { staticClass: "sr-only" }, [
+                            _vm._v("Mute Video")
+                          ])
+                        : _vm._e(),
+                      _vm._v(" "),
+                      _vm.stream.audioenabled
+                        ? _c("i", { staticClass: "fas fa-microphone" })
+                        : _vm._e()
+                    ]
+                  )
+                : _vm._e(),
+              _vm._v(" "),
+              _c(
+                "div",
+                {
+                  class: { "local-video-overlay": _vm.ui.inFullscreen },
+                  attrs: { id: "local-video-container" }
+                },
+                [
+                  _vm.stream.videoenabled
+                    ? _c(
+                        "video",
+                        _vm._b(
+                          {
+                            staticClass: "local-stream",
+                            attrs: {
+                              poster: "https://bevy.chat/img/logo_color.png",
+                              autoplay: "autoplay",
+                              muted: "muted"
+                            },
+                            domProps: {
+                              srcObject: _vm.stream.connection,
+                              muted: true
+                            },
+                            on: {
+                              webkitfullscreenchange: _vm.fullscreenVideo,
+                              mozfullscreenchange: _vm.fullscreenVideo,
+                              fullscreenchange: _vm.fullscreenVideo
+                            }
+                          },
+                          "video",
+                          _vm.stream.local,
+                          false
+                        )
+                      )
+                    : _vm._e()
+                ]
+              ),
               _vm._v(" "),
               _c("network-graph-component", {
                 ref: "networkGraph",
@@ -55632,22 +55907,43 @@ var render = function() {
                           "col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3"
                       },
                       [
-                        _c("div", {}, [
-                          _c("video", {
-                            staticClass: "embed-responsive-item",
-                            attrs: {
-                              poster: "https://bevy.chat/img/logo_color.png",
-                              controls: "controls",
-                              autoplay: "autoplay"
-                            },
-                            domProps: { srcObject: stream },
-                            on: {
-                              webkitfullscreenchange: _vm.fullscreenVideo,
-                              mozfullscreenchange: _vm.fullscreenVideo,
-                              fullscreenchange: _vm.fullscreenVideo
+                        _c(
+                          "div",
+                          {
+                            staticClass: "peer-video-details",
+                            class: {
+                              "peer-video-fullscreen": _vm.ui.inFullscreen
                             }
-                          })
-                        ])
+                          },
+                          [
+                            _vm._v(
+                              "\n                " +
+                                _vm._s(stream.peeruser.name) +
+                                "\n                "
+                            ),
+                            stream.peeruser.verified
+                              ? _c("i", { staticClass: "fas fa-lock" })
+                              : _vm._e()
+                          ]
+                        ),
+                        _vm._v(" "),
+                        _c("video", {
+                          staticClass: "embed-responsive-item",
+                          class: {
+                            "peer-video-fullscreen": _vm.ui.inFullscreen
+                          },
+                          attrs: {
+                            poster: "https://bevy.chat/img/logo_color.png",
+                            autoplay: "autoplay",
+                            controls: "controls"
+                          },
+                          domProps: { srcObject: stream },
+                          on: {
+                            webkitfullscreenchange: _vm.fullscreenVideo,
+                            mozfullscreenchange: _vm.fullscreenVideo,
+                            fullscreenchange: _vm.fullscreenVideo
+                          }
+                        })
                       ]
                     )
                   }),
@@ -55778,6 +56074,39 @@ var render = function() {
       ])
     ],
     1
+  )
+}
+var staticRenderFns = []
+render._withStripped = true
+
+
+
+/***/ }),
+
+/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/DragComponent.vue?vue&type=template&id=67ae894e&scoped=true&":
+/*!****************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/DragComponent.vue?vue&type=template&id=67ae894e&scoped=true& ***!
+  \****************************************************************************************************************************************************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "render", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return staticRenderFns; });
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c(
+    "div",
+    {
+      ref: "draggableContainer",
+      attrs: { id: "draggable-container" },
+      on: { mousedown: _vm.dragMouseDown }
+    },
+    [_vm._t("dragelement")],
+    2
   )
 }
 var staticRenderFns = []
@@ -68125,6 +68454,7 @@ module.exports = yeast;
 var map = {
 	"./components/ChatComponent.vue": "./resources/js/components/ChatComponent.vue",
 	"./components/CopyComponent.vue": "./resources/js/components/CopyComponent.vue",
+	"./components/DragComponent.vue": "./resources/js/components/DragComponent.vue",
 	"./components/MessageLogComponent.vue": "./resources/js/components/MessageLogComponent.vue",
 	"./components/NetworkGraphComponent.vue": "./resources/js/components/NetworkGraphComponent.vue"
 };
@@ -68406,6 +68736,93 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_CopyComponent_vue_vue_type_template_id_d07b0ea6_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_CopyComponent_vue_vue_type_template_id_d07b0ea6_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
+
+
+
+/***/ }),
+
+/***/ "./resources/js/components/DragComponent.vue":
+/*!***************************************************!*\
+  !*** ./resources/js/components/DragComponent.vue ***!
+  \***************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _DragComponent_vue_vue_type_template_id_67ae894e_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./DragComponent.vue?vue&type=template&id=67ae894e&scoped=true& */ "./resources/js/components/DragComponent.vue?vue&type=template&id=67ae894e&scoped=true&");
+/* harmony import */ var _DragComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./DragComponent.vue?vue&type=script&lang=js& */ "./resources/js/components/DragComponent.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport *//* harmony import */ var _DragComponent_vue_vue_type_style_index_0_id_67ae894e_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./DragComponent.vue?vue&type=style&index=0&id=67ae894e&scoped=true&lang=css& */ "./resources/js/components/DragComponent.vue?vue&type=style&index=0&id=67ae894e&scoped=true&lang=css&");
+/* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
+
+
+
+
+
+
+/* normalize component */
+
+var component = Object(_node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_3__["default"])(
+  _DragComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__["default"],
+  _DragComponent_vue_vue_type_template_id_67ae894e_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"],
+  _DragComponent_vue_vue_type_template_id_67ae894e_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
+  false,
+  null,
+  "67ae894e",
+  null
+  
+)
+
+/* hot reload */
+if (false) { var api; }
+component.options.__file = "resources/js/components/DragComponent.vue"
+/* harmony default export */ __webpack_exports__["default"] = (component.exports);
+
+/***/ }),
+
+/***/ "./resources/js/components/DragComponent.vue?vue&type=script&lang=js&":
+/*!****************************************************************************!*\
+  !*** ./resources/js/components/DragComponent.vue?vue&type=script&lang=js& ***!
+  \****************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_DragComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib??ref--4-0!../../../node_modules/vue-loader/lib??vue-loader-options!./DragComponent.vue?vue&type=script&lang=js& */ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/DragComponent.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport */ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_DragComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__["default"]); 
+
+/***/ }),
+
+/***/ "./resources/js/components/DragComponent.vue?vue&type=style&index=0&id=67ae894e&scoped=true&lang=css&":
+/*!************************************************************************************************************!*\
+  !*** ./resources/js/components/DragComponent.vue?vue&type=style&index=0&id=67ae894e&scoped=true&lang=css& ***!
+  \************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_DragComponent_vue_vue_type_style_index_0_id_67ae894e_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/style-loader!../../../node_modules/css-loader??ref--6-1!../../../node_modules/vue-loader/lib/loaders/stylePostLoader.js!../../../node_modules/postcss-loader/src??ref--6-2!../../../node_modules/vue-loader/lib??vue-loader-options!./DragComponent.vue?vue&type=style&index=0&id=67ae894e&scoped=true&lang=css& */ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/DragComponent.vue?vue&type=style&index=0&id=67ae894e&scoped=true&lang=css&");
+/* harmony import */ var _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_DragComponent_vue_vue_type_style_index_0_id_67ae894e_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_DragComponent_vue_vue_type_style_index_0_id_67ae894e_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_DragComponent_vue_vue_type_style_index_0_id_67ae894e_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__) if(__WEBPACK_IMPORT_KEY__ !== 'default') (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_DragComponent_vue_vue_type_style_index_0_id_67ae894e_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_DragComponent_vue_vue_type_style_index_0_id_67ae894e_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0___default.a); 
+
+/***/ }),
+
+/***/ "./resources/js/components/DragComponent.vue?vue&type=template&id=67ae894e&scoped=true&":
+/*!**********************************************************************************************!*\
+  !*** ./resources/js/components/DragComponent.vue?vue&type=template&id=67ae894e&scoped=true& ***!
+  \**********************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_DragComponent_vue_vue_type_template_id_67ae894e_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./DragComponent.vue?vue&type=template&id=67ae894e&scoped=true& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/DragComponent.vue?vue&type=template&id=67ae894e&scoped=true&");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_DragComponent_vue_vue_type_template_id_67ae894e_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_DragComponent_vue_vue_type_template_id_67ae894e_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
 
 
 

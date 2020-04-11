@@ -19,34 +19,85 @@
         </div>
     </div>
     <div class="chat-container pl-5 pr-5 flex-row"  v-if="user.active">
-        <button class="btn btn-primary float-right"
-            type="button"  id="btn-local-video-toggle"
-            v-bind:class="{ 'local-video-overlay': ui.inFullscreen }"
+        <!--Local Video Button-->
+        <button
+            class="btn float-right"
+            type="button"
+            id="btn-local-video-toggle"
+            v-bind:class="{
+                'btn-primary': stream.videoenabled,
+                'btn-outline-primary': !stream.videoenabled,
+                'local-video-overlay': ui.inFullscreen
+            }"
             v-on:click="toggleVideo">
-            <span class="sr-only" v-if="!stream.enabled">Start Video</span>
-            <i class="fas fa-video" v-if="!stream.enabled"></i>
+            <span class="sr-only" v-if="!stream.videoenabled">Start Video</span>
+            <i class="fas fa-video-slash" v-if="!stream.videoenabled"></i>
 
-            <span class="sr-only" v-if="stream.enabled">Stop Video</span>
-            <i class="fas fa-video-slash" v-if="stream.enabled"></i>
+            <span class="sr-only" v-if="stream.videoenabled">Stop Video</span>
+            <i class="fas fa-video" v-if="stream.videoenabled"></i>
         </button>
-        <div id="local-video-container" v-bind:class="{ 'local-video-overlay': ui.inFullscreen }" ></div>
+
+        <!--Local Audio Button-->
+        <button class="btn float-right"
+            type="button"
+            id="btn-local-audio-toggle"
+            v-bind:class="{
+                'btn-danger': stream.audioenabled,
+                'btn-outline-danger': !stream.audioenabled,
+                'local-audio-overlay': ui.inFullscreen
+            }"
+            v-if="stream.videoenabled"
+            v-on:click="toggleAudio">
+            <span class="sr-only" v-if="!stream.audioenabled">Enable Audio</span>
+            <i class="fas fa-microphone-slash" v-if="!stream.audioenabled"></i>
+
+            <span class="sr-only" v-if="stream.audioenabled">Mute Video</span>
+            <i class="fas fa-microphone" v-if="stream.audioenabled"></i>
+        </button>
+
+        <div id="local-video-container" v-bind:class="{ 'local-video-overlay': ui.inFullscreen }">
+
+
+
+            <video :srcObject.prop="stream.connection"
+                    v-on:webkitfullscreenchange="fullscreenVideo"
+                    v-on:mozfullscreenchange="fullscreenVideo"
+                    v-on:fullscreenchange="fullscreenVideo"
+                    poster = "https://bevy.chat/img/logo_color.png"
+                    autoplay="autoplay"
+                    muted="muted"
+                    class="local-stream"
+                    v-bind="stream.local"
+                    v-if="stream.videoenabled"
+                ></video>
+
+
+
+
+        </div>
+
         <network-graph-component ref="networkGraph" class="mb-3"></network-graph-component>
 
 
         <div id='videos' class="container">
             <div class="row justify-content-center">
             <div v-for="stream in peerStreams" :key="stream.id" class="col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3">
-                <div class="">
+                <div
+                    class="peer-video-details"
+                    v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }">
+                    {{stream.peeruser.name}}
+                    <i class="fas fa-lock" v-if="stream.peeruser.verified"></i>
+                </div>
                 <video :srcObject.prop="stream"
                     v-on:webkitfullscreenchange="fullscreenVideo"
                     v-on:mozfullscreenchange="fullscreenVideo"
                     v-on:fullscreenchange="fullscreenVideo"
                     poster = "https://bevy.chat/img/logo_color.png"
-                    controls="controls"
                     autoplay="autoplay"
+                    controls="controls"
                     class="embed-responsive-item"
+                    v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }"
                 ></video>
-                </div>
             </div>
             </div>
         </div>
@@ -88,6 +139,16 @@
         margin-top:20px;
     }
 
+    #btn-local-audio-toggle {
+        right:10px;
+        border-radius: 2em !important;
+        width: 4em;
+        height: 4em;
+        position: fixed;
+        z-index:2147483647;
+        margin-top:6em;
+    }
+
     #local-video-container, #local-video-container >>> video {
         width:200px;
         margin-top:20px;
@@ -96,7 +157,19 @@
         border-radius:3px;
         z-index: 2147483646;
     }
-
+    .peer-video-details {
+        position: absolute;
+        z-index: 2;
+        display: block;
+        top: 0px;
+        left: 0px;
+        float: left;
+        color: #fff;
+        background: #000;
+        opacity: 0.5;
+        padding-right: 5px;
+        padding-left: 5px;
+    }
     /* When fullscreened, shift things around*/
     #local-video-container.local-video-overlay, #local-video-container.local-video-overlay >>> video, #btn-local-video-toggle.local-video-overlay {
         margin-top:0px;
@@ -111,11 +184,21 @@
         z-index:2147483647 !important;
     }
 
+    button.local-audio-overlay {
+        margin-top:0px !important;
+        top:6em !important;
+        right:0px !important;
+        z-index:2147483647 !important;
+    }
+
     /* Main Video Fullscreen */
-    video[isFullscreen='true'] {
+    video.peer-video-fullscreen {
         position:fixed !important;
         background: #000;
         z-index: 1;
+    }
+    .peer-video-details.peer-video-fullscreen {
+        position:fixed;
     }
 
     #user-prompt {
@@ -144,7 +227,7 @@ export default {
             connections: {},
             chatId: null,
             user: {active: false},
-            stream: {enabled: false, connection: null, local:null},
+            stream: {videoenabled: false, audioenabled:true, connection: null, local:null},
             peerStreams: [],
             server: {ip:'bevy.chat', port:1337, signal: null},
             ui: {anonUsername: '', inFullscreen: false, sound: {connect: null, disconnect: null, message: null}}
@@ -157,22 +240,13 @@ export default {
             if (document.fullscreenElement) {
                 document.exitFullscreen();
 
-                console.log("IS FULLSCREEN?");
-                console.log(e.target.getAttribute('isFullscreen'));
-
                 //Going fullscreen
                 if(!vm.ui.inFullscreen) {
                     vm.ui.inFullscreen = true;
-                    e.target.setAttribute('isFullscreen', true);
                 } else {
                     vm.ui.inFullscreen = false;
-                    //Closing fullscreen
-                    e.target.setAttribute('isFullscreen', false);
                 }
             }
-
-            console.log("FULLSCREEN REQUEST");
-            console.log(e);
         },
         setAnonUser(e) {
             var vm = this;
@@ -183,9 +257,19 @@ export default {
                 vm.init();
             }
         },
+        toggleAudio(e) {
+            var vm = this;
+            if(vm.stream.videoenabled && vm.stream.audioenabled) {
+                vm.stream.connection.getAudioTracks().forEach(function(track){track.enabled = false;});
+                vm.stream.audioenabled = false;
+            } else if(vm.stream.videoenabled && !vm.stream.audioenabled) {
+                vm.stream.connection.getAudioTracks().forEach(function(track){track.enabled = true;});
+                vm.stream.audioenabled = true;
+            }
+        },
         toggleVideo(e) {
             var vm = this;
-            if(!vm.stream.enabled) {
+            if(!vm.stream.videoenabled) {
                 navigator.mediaDevices.getUserMedia({
                     video: true,
                     audio: true
@@ -219,7 +303,7 @@ export default {
             //var messageContainer = vm.$el.querySelector("#messages");
             //messageContainer.scrollTop = messageContainer.scrollHeight - 100;
         },
-        outputConnections (cons) {
+        outputConnections () {
             var vm = this;
 
             var networkChartData = {nodes:[{id: 'me', name: 'Me'}], links:[]};
@@ -227,8 +311,8 @@ export default {
             //var txtConnections = document.getElementById('connections');
             //txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
 
-            for(var id in cons) {
-                var peer = cons[id];
+            for(var id in vm.connections) {
+                var peer = vm.connections[id];
                 var name = typeof peer.user != 'undefined' ? peer.user.name : 'X';
 
                 //This is the host connection and it's actually bound to someone
@@ -269,6 +353,9 @@ export default {
             }
 
             stream.peerid = peerid;
+            stream.peeruser = vm.connections[peerid].user;
+
+
             vm.peerStreams.push(stream);
 
             stream.inactive = function(e) {
@@ -313,9 +400,9 @@ export default {
         onLocalStream(stream) {
             var vm = this;
 
-            if(!vm.stream.enabled) {
+            if(!vm.stream.videoenabled) {
                 console.log("++++LOCAL STREAM ENABLED");
-                var localVideoContainer = vm.$el.querySelector("#local-video-container");
+                /*var localVideoContainer = vm.$el.querySelector("#local-video-container");
                 var video = document.createElement('video');
                 video.className = 'local-stream';
                 video.muted = true;
@@ -328,9 +415,9 @@ export default {
                 }
 
                 video.play();
-                vm.stream.local = video;
+                vm.stream.local = video;*/
                 console.log("Set stream vars and tell everyone to retry");
-                vm.stream.enabled = true;
+                vm.stream.videoenabled = true;
                 vm.stream.connection = stream;
 
                 //New Local stream! Send it off  to all the peers
@@ -365,7 +452,7 @@ export default {
             //console.log(client.streams);
             //client.removeStream(vm.stream.connection);
 
-            if(vm.stream.enabled && !vm.connections[id].isStreaming) {
+            if(vm.stream.videoenabled && !vm.connections[id].isStreaming) {
                 console.log("+APPLYING STREAM");
                 vm.connections[id].addStream(vm.stream.connection);
             }
@@ -374,35 +461,32 @@ export default {
         stopLocalStream() {
             var vm = this;
 
-            if(!vm.stream.enabled) {return}
+            if(!vm.stream.videoenabled) {return}
 
-            vm.stream.enabled = false;
+            vm.stream.videoenabled = false;
 
-            //Send this stream to all the peers
+            //Remove this stream to all the peers so they don't need to do the timeout removal
             for(var id in vm.connections) {
                 if(!vm.connections[id].isStreaming) {
                     continue;
                 }
-                console.log("-----------------Remove stream from " + id);
                 vm.connections[id].removeStream(vm.stream.connection);
             }
 
-            //Also remove it from the UI
-            var localStream = vm.stream.local.srcObject;
-            var tracks = localStream.getTracks();
+            //Also remove it from the UI / Kill the feed
+            var tracks = vm.stream.connection.getTracks();
 
             tracks.forEach(function(track) {
                 track.stop();
             });
 
             vm.stream.connection = null;
-            vm.stream.local.srcObject = null;
-            vm.$el.querySelector("#local-video-container").innerHTML = "";
         },
         handlePeerDisconnect(id) {
             var vm = this;
             vm.ui.sound.disconnect.play();
             delete vm.connections[id];
+            vm.outputConnections();
 
             //Also remove anything they were streaming
             for(var i=0; i<vm.peerStreams.length; i++) {
@@ -455,9 +539,9 @@ export default {
                             vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
                         }
 
-                        vm.outputConnections(vm.connections);
+                        vm.outputConnections();
 
-                        if(vm.stream.enabled) {
+                        if(vm.stream.videoenabled) {
                             console.log("Try and send a stream to " + peer.id);
                             vm.sendStream(peer.id);
                         }
@@ -516,8 +600,8 @@ export default {
                             vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
                         }
 
-                        vm.outputConnections(vm.connections);
-                        if(vm.stream.enabled) {
+                        vm.outputConnections();
+                        if(vm.stream.videoenabled) {
                             console.log("Try and send a client stream to " + id);
                             vm.sendStream(id);
                         }
