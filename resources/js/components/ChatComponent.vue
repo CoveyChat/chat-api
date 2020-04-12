@@ -85,7 +85,7 @@
             <i class="fas fa-sync-alt"></i>
         </button>
 
-        <div id="local-video-container"
+        <div id="local-video-container" v-draggable
             v-bind:class="{
                         'local-video-overlay': ui.inFullscreen,
                         'local-video-sm': stream.localsize =='sm',
@@ -215,6 +215,14 @@
     .remote-stream {
         background:#000;
     }
+
+    /*Remove any previous positions*/
+    .is-draggable {
+        top:unset;
+        bottom: unset;
+        right:unset;
+        left:unset;
+    }
     /**Adjust the slash since font awesome doesn't offer a video slash option */
     #btn-local-screenshare-toggle >>> .fa-slash {
         display:block;
@@ -234,7 +242,7 @@
     #local-video-container.local-video-lg >>> video {
         width:300px;
     }
-    #local-video-container, #local-video-container >>> video {
+    #local-video-container {
         margin-top:20px;
         position:fixed;
         right:2em;
@@ -393,6 +401,13 @@ export default {
         },
         adjustLocalVideoSize(e) {
             var vm = this;
+
+            //Don't resize if we're still in the dragging lifecycle
+            if(e.target.hasAttribute('is-dragging')
+                || e.target.parentElement.hasAttribute('is-dragging')) {
+                return;
+            }
+
             if(vm.stream.localsize == 'lg') {
                 vm.stream.localsize = 'md'
             } else if(vm.stream.localsize == 'md') {

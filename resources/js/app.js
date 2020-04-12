@@ -16,16 +16,11 @@ window.Vue = require('vue');
  * Eg. ./components/ExampleComponent.vue -> <example-component></example-component>
  */
 
-const files = require.context('./', true, /\.vue$/i)
-files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default))
+const componentFiles = require.context('./components/', true, /\.vue$/i)
+componentFiles.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], componentFiles(key).default))
 
-//Vue.component('example-component', require('./components/ExampleComponent.vue').default);
-
-/**
- * Next, we will create a fresh Vue application instance and attach it to
- * the page. Then, you may begin adding components to this application
- * or customize the JavaScript scaffolding to fit your unique needs.
- */
+const directiveFiles = require.context('./directives/', true, /\.js/i)
+directiveFiles.keys().map(key => Vue.directive(key.split('/').pop().split('.')[0], directiveFiles(key).default))
 
 const app = new Vue({
     el: '#app',
