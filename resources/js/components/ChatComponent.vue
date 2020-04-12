@@ -432,7 +432,7 @@ export default {
                             audio: true
                         };
                     if(vm.user.devices.active.video != null) {
-                        options.video = {deviceId: { ideal: vm.user.devices.active.video }};
+                    //    options.video = {deviceId: { ideal: vm.user.devices.active.video }};
                     }
 
                     navigator.mediaDevices.getUserMedia(options).then(function(stream) {
