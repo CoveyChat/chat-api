@@ -2451,7 +2451,12 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
             audio: true
           };
 
-          if (vm.user.devices.active.video != null) {// options.video = {deviceId: { exact: vm.user.devices.active.video }};
+          if (vm.user.devices.active.video != null) {
+            options.video = {
+              deviceId: {
+                exact: vm.user.devices.active.video
+              }
+            };
           }
 
           navigator.mediaDevices.getUserMedia(options).then(function (stream) {

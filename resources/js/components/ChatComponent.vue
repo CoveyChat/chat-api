@@ -430,7 +430,7 @@ export default {
                             audio: true
                         };
                     if(vm.user.devices.active.video != null) {
-                       // options.video = {deviceId: { exact: vm.user.devices.active.video }};
+                        options.video = {deviceId: { exact: vm.user.devices.active.video }};
                     }
 
 
