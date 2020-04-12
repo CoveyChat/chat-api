@@ -426,13 +426,14 @@ export default {
                 }
 
                 if(!vm.stream.videoenabled) {
-                    console.log("Turning video on with camera id " + vm.user.devices.active.video);
+                    console.log("Turning on camera...");
                     var options = {
                             video: true,
                             audio: true
                         };
                     if(vm.user.devices.active.video != null) {
-                    //    options.video = {deviceId: { ideal: vm.user.devices.active.video }};
+                        console.log("Turning video on with camera id " + vm.user.devices.active.video);
+                        options.video = {deviceId: { ideal: vm.user.devices.active.video }};
                     }
 
                     navigator.mediaDevices.getUserMedia(options).then(function(stream) {
