@@ -2341,8 +2341,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
 
       for (var i = 0; i < vm.user.devices.video.length; i++) {
         if (vm.user.devices.video[i].deviceId == activeId) {
-          console.log("VIDEO INDEX CHECK " + i); //We found the current active one. Get the next
-
+          //We found the current active one. Get the next
           if (i < vm.user.devices.video.length - 1) {
             vm.user.devices.active.video = vm.user.devices.video[i + 1].deviceId;
           } else {
@@ -2353,7 +2352,6 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
         }
       }
 
-      console.log("Swapping to " + vm.user.devices.active.video);
       vm.stopLocalStream();
       vm.stream.videoenabled = false;
       vm.toggleVideo({
@@ -2440,9 +2438,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     toggleVideo: function toggleVideo(e) {
       var vm = this;
       vm.user.discoverDevices(function () {
-        console.log("Discovered Devices");
-        console.log(vm.user.devices);
-
+        //Turn off screensharing and swap back to video
         if (!vm.stream.videoenabled && vm.stream.screenshareenabled) {
           vm.stopLocalStream();
           vm.stream.screenshareenabled = false;

@@ -331,7 +331,6 @@ export default {
 
             for(var i=0; i<vm.user.devices.video.length; i++) {
                 if(vm.user.devices.video[i].deviceId == activeId) {
-                    console.log("VIDEO INDEX CHECK " + i);
                     //We found the current active one. Get the next
                     if(i < vm.user.devices.video.length-1) {
                         vm.user.devices.active.video = vm.user.devices.video[i+1].deviceId;
@@ -341,8 +340,6 @@ export default {
                     break;
                 }
             }
-
-            console.log("Swapping to " + vm.user.devices.active.video);
 
             vm.stopLocalStream();
             vm.stream.videoenabled = false;
@@ -420,9 +417,7 @@ export default {
             var vm = this;
 
             vm.user.discoverDevices(function() {
-                console.log("Discovered Devices");
-                console.log(vm.user.devices);
-
+                //Turn off screensharing and swap back to video
                 if(!vm.stream.videoenabled && vm.stream.screenshareenabled) {
                     vm.stopLocalStream();
                     vm.stream.screenshareenabled = false;
