@@ -333,7 +333,7 @@ export default {
                 if(vm.user.devices.video[i].deviceId == activeId) {
                     console.log("VIDEO INDEX CHECK " + i);
                     //We found the current active one. Get the next
-                    if(i < vm.user.devices.video.length) {
+                    if(i < vm.user.devices.video.length-1) {
                         vm.user.devices.active.video = vm.user.devices.video[i+1].deviceId;
                     } else {
                         vm.user.devices.active.video = vm.user.devices.video[0].deviceId;
