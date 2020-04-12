@@ -2438,8 +2438,9 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     },
     toggleVideo: function toggleVideo(e) {
       var vm = this;
-      vm.user.discoverDevices(function (devices) {
-        console.log("CALLBACCK RAN");
+      vm.user.discoverDevices(function () {
+        console.log("Discovered Devices");
+        console.log(vm.user.devices);
 
         if (!vm.stream.videoenabled && vm.stream.screenshareenabled) {
           vm.stopLocalStream();
@@ -3022,6 +3023,7 @@ var User = /*#__PURE__*/function () {
       var self = this; //If we've already found a video AND audio device, don't bother searching again
 
       if (self.devices.video.length == 0 || self.devices.audio.length == 0) {
+        console.log("Discovering input devices...");
         navigator.mediaDevices.enumerateDevices().then(function (devices) {
           for (var i = 0; i < devices.length; i++) {
             if (devices[i].kind == "audioinput") {
@@ -3041,6 +3043,8 @@ var User = /*#__PURE__*/function () {
             }
           }
 
+          console.log("Found devices:");
+          console.log(self.devices);
           cb();
         });
       }
