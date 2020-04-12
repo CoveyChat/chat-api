@@ -2447,13 +2447,13 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
         if (!vm.stream.videoenabled) {
           console.log("Turning video on with camera id " + vm.user.devices.active.video);
           var options = {
-            video: {
-              deviceId: {
-                exact: vm.user.devices.active.video
-              }
-            },
+            video: true,
             audio: true
           };
+
+          if (vm.user.devices.active.video != null) {// options.video = {deviceId: { exact: vm.user.devices.active.video }};
+          }
+
           navigator.mediaDevices.getUserMedia(options).then(function (stream) {
             vm.stream.videoenabled = true;
             vm.stream.screenshareenabled = false;
@@ -3020,16 +3020,14 @@ var User = /*#__PURE__*/function () {
         navigator.mediaDevices.enumerateDevices().then(function (devices) {
           for (var i = 0; i < devices.length; i++) {
             if (devices[i].kind == "audioinput") {
-              if (self.devices.audio.length == 0) {
-                //Set this device to be the default
-                self.devices.active.audio = devices[i].deviceId;
+              if (self.devices.audio.length == 0) {//Set this device to be the default
+                //self.devices.active.audio = devices[i].deviceId;
               }
 
               self.devices.audio.push(devices[i]);
             } else if (devices[i].kind == "videoinput") {
-              if (self.devices.video.length == 0) {
-                //Set this device to be the default
-                self.devices.active.video = devices[i].deviceId;
+              if (self.devices.video.length == 0) {//Set this device to be the default
+                //self.devices.active.video = devices[i].deviceId;
               }
 
               self.devices.video.push(devices[i]);
