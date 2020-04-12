@@ -737,7 +737,7 @@ export default {
                 var id=obj.hostid;
 
                 //Key to the host id since it can possibly reqest to init a bunch of times during the handshake
-                if(typeof vm.connections[obj.hostid] == 'undefined') {
+                if(typeof vm.connections[id] == 'undefined') {
                     console.log("Init a peer for host " + id);
                     var peer = new PeerConnection(vm.server.signal, false);
 
@@ -748,7 +748,7 @@ export default {
                     vm.connections[id].connection.on('connect', function() {
                         console.log("CONNECTED TO CLIENT~~");
                         console.log(this);
-                        console.log(vm.connections[this.hostid].user);
+                        console.log(vm.connections[id].user);
                         if(vm.ui.sound.connect.waitUntil <= Date.now()) {
                             vm.ui.sound.connect.play();
                             vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
@@ -756,20 +756,20 @@ export default {
 
                         vm.outputConnections();
                         if(vm.stream.videoenabled) {
-                            console.log("Try and send a client stream to " + this.hostid);
-                            vm.sendStream(this.hostid);
+                            console.log("Try and send a client stream to " + id);
+                            vm.sendStream(id);
                         }
                     });
 
-                    vm.connections[id].connection.on('close', function() {vm.handlePeerDisconnect(this.hostid);});
-                    vm.connections[id].connection.on('error', function() {vm.handlePeerDisconnect(this.hostid);});
+                    vm.connections[id].connection.on('close', function() {vm.handlePeerDisconnect(id);});
+                    vm.connections[id].connection.on('error', function() {vm.handlePeerDisconnect(id);});
 
                     vm.connections[id].connection.on('data', function(data) {
                         vm.ui.sound.message.play();
-                        vm.recieveMessage(vm.connections[this.hostid].user, data);
+                        vm.recieveMessage(vm.connections[id].user, data);
                     });
 
-                    vm.connections[id].connection.on('stream', stream => {vm.onPeerStream(stream, this.hostid); });
+                    vm.connections[id].connection.on('stream', stream => {vm.onPeerStream(stream, id); });
                 }
                 //Use the remote host id so that the client is overridden if it re-signals
 
