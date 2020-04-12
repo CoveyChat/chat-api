@@ -3036,8 +3036,6 @@ var User = /*#__PURE__*/function () {
             }
           }
 
-          console.log("Found devices:");
-          console.log(self.devices);
           cb();
         });
       }

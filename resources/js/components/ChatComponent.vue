@@ -985,8 +985,7 @@ class User {
                         self.devices.video.push(devices[i]);
                     }
                 }
-                console.log("Found devices:");
-                console.log(self.devices);
+
                 cb();
             });
         }
