@@ -2454,7 +2454,6 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
             },
             audio: true
           };
-          console.log(options);
           navigator.mediaDevices.getUserMedia(options).then(function (stream) {
             vm.stream.videoenabled = true;
             vm.stream.screenshareenabled = false;
@@ -2486,15 +2485,12 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     recieveMessage: function recieveMessage(user, data) {
       var self = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
       var vm = this;
-      console.log("Recieved from: ");
-      console.log(user);
       vm.chatLog.push({
         index: vm.chatLog.length,
         message: data,
         user: user,
         self: self
-      }); //var messageContainer = vm.$el.querySelector("#messages");
-      //messageContainer.scrollTop = messageContainer.scrollHeight - 100;
+      });
     },
     outputConnections: function outputConnections() {
       var vm = this;

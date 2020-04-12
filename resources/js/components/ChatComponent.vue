@@ -429,7 +429,7 @@ export default {
                         video: {deviceId: { exact: vm.user.devices.active.video }},
                         audio: true
                     };
-                    console.log(options);
+
                     navigator.mediaDevices.getUserMedia(options).then(function(stream) {
                         vm.stream.videoenabled = true;
                         vm.stream.screenshareenabled = false;
@@ -459,12 +459,7 @@ export default {
         },
         recieveMessage(user, data, self = false) {
             var vm = this;
-            console.log("Recieved from: ");
-            console.log(user);
             vm.chatLog.push({index: vm.chatLog.length, message: data, user: user, self: self});
-
-            //var messageContainer = vm.$el.querySelector("#messages");
-            //messageContainer.scrollTop = messageContainer.scrollHeight - 100;
         },
         outputConnections () {
             var vm = this;
