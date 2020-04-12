@@ -3032,6 +3032,8 @@ var User = /*#__PURE__*/function () {
 
           cb();
         });
+      } else {
+        cb();
       }
     }
   }, {

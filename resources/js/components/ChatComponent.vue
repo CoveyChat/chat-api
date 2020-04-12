@@ -979,6 +979,8 @@ class User {
 
                 cb();
             });
+        } else {
+            cb();
         }
     }
 
