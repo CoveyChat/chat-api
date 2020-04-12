@@ -2713,8 +2713,10 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
 
         for (var i = 0; i < numHosts; i++) {
           var peer = new PeerConnection(vm.server.signal, true);
-          vm.connections[peer.id] = peer;
-          vm.connections[peer.id].connection.on('connect', function () {
+          var id = peer.id;
+          vm.connections[id] = peer;
+          console.log("NEW HOST PEER " + id);
+          vm.connections[id].connection.on('connect', function () {
             if (vm.ui.sound.connect.waitUntil <= Date.now()) {
               vm.ui.sound.connect.play();
               vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
@@ -2723,23 +2725,23 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
             vm.outputConnections();
 
             if (vm.stream.videoenabled) {
-              console.log("Try and send a stream to " + peer.id);
-              vm.sendStream(peer.id);
+              console.log("Try and send a stream to " + this._id);
+              vm.sendStream(this._id);
             }
           });
-          vm.connections[peer.id].connection.on('close', function () {
-            vm.handlePeerDisconnect(peer.id);
+          vm.connections[id].connection.on('close', function () {
+            vm.handlePeerDisconnect(this._id);
           });
-          vm.connections[peer.id].connection.on('error', function () {
-            vm.handlePeerDisconnect(peer.id);
+          vm.connections[id].connection.on('error', function () {
+            vm.handlePeerDisconnect(this._id);
           });
-          vm.connections[peer.id].connection.on('data', function (data) {
+          vm.connections[id].connection.on('data', function (data) {
             vm.ui.sound.message.play();
-            vm.recieveMessage(vm.connections[peer.id].user, data);
+            vm.recieveMessage(vm.connections[this._id].user, data);
           });
-          vm.connections[peer.id].connection.on('stream', function (stream) {
+          vm.connections[id].connection.on('stream', function (stream) {
             console.log("ON PEER STREAM");
-            vm.onPeerStream(stream, peer.id);
+            vm.onPeerStream(stream, this._id);
           });
         }
       });
@@ -2765,6 +2767,8 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
        */
 
       vm.server.signal.on('initclient', function (obj) {
+        var _this = this;
+
         console.log("Got request to init a client for host " + obj.hostid);
         var id = obj.hostid; //Key to the host id since it can possibly reqest to init a bunch of times during the handshake
 
@@ -2775,6 +2779,10 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
           vm.connections[id].setHostId(obj.hostid);
           vm.connections[id].setUser(obj.user);
           vm.connections[id].connection.on('connect', function () {
+            console.log("CONNECTED TO CLIENT~~");
+            console.log(this);
+            console.log(vm.connections[this.hostid].user);
+
             if (vm.ui.sound.connect.waitUntil <= Date.now()) {
               vm.ui.sound.connect.play();
               vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
@@ -2783,22 +2791,22 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
             vm.outputConnections();
 
             if (vm.stream.videoenabled) {
-              console.log("Try and send a client stream to " + id);
-              vm.sendStream(id);
+              console.log("Try and send a client stream to " + this.hostid);
+              vm.sendStream(this.hostid);
             }
           });
           vm.connections[id].connection.on('close', function () {
-            vm.handlePeerDisconnect(id);
+            vm.handlePeerDisconnect(this.hostid);
           });
           vm.connections[id].connection.on('error', function () {
-            vm.handlePeerDisconnect(id);
+            vm.handlePeerDisconnect(this.hostid);
           });
           vm.connections[id].connection.on('data', function (data) {
             vm.ui.sound.message.play();
-            vm.recieveMessage(vm.connections[id].user, data);
+            vm.recieveMessage(vm.connections[this.hostid].user, data);
           });
           vm.connections[id].connection.on('stream', function (stream) {
-            vm.onPeerStream(stream, id);
+            vm.onPeerStream(stream, _this.hostid);
           });
         } //Use the remote host id so that the client is overridden if it re-signals
 
@@ -2850,7 +2858,7 @@ var PeerConnection = /*#__PURE__*/function () {
     self.server = server;
     self.id = self.connection._id;
     self.user = {
-      name: "anonymous",
+      name: "anonymous user",
       verified: false
     };
     self.initiator = initiator;
@@ -2914,11 +2922,13 @@ var PeerConnection = /*#__PURE__*/function () {
     key: "setHostId",
     value: function setHostId(id) {
       this.hostid = id;
+      this.connection.hostid = id;
     }
   }, {
     key: "setClientId",
     value: function setClientId(id) {
       this.clientid = id;
+      this.connection.clientid = id;
     }
   }, {
     key: "setUser",

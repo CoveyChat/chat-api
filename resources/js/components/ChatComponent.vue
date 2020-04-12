@@ -680,9 +680,10 @@ export default {
                 for(var i=0;i<numHosts;i++) {
 
                     var peer = new PeerConnection(vm.server.signal, true);
-                    vm.connections[peer.id] = peer;
-
-                    vm.connections[peer.id].connection.on('connect', function() {
+                    var id = peer.id;
+                    vm.connections[id] = peer;
+                    console.log("NEW HOST PEER " + id);
+                    vm.connections[id].connection.on('connect', function() {
                         if(vm.ui.sound.connect.waitUntil <= Date.now()) {
                             vm.ui.sound.connect.play();
                             vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
@@ -691,22 +692,22 @@ export default {
                         vm.outputConnections();
 
                         if(vm.stream.videoenabled) {
-                            console.log("Try and send a stream to " + peer.id);
-                            vm.sendStream(peer.id);
+                            console.log("Try and send a stream to " + this._id);
+                            vm.sendStream(this._id);
                         }
                     });
 
-                    vm.connections[peer.id].connection.on('close', function() {vm.handlePeerDisconnect(peer.id);});
-                    vm.connections[peer.id].connection.on('error', function() {vm.handlePeerDisconnect(peer.id);});
+                    vm.connections[id].connection.on('close', function() {vm.handlePeerDisconnect(this._id);});
+                    vm.connections[id].connection.on('error', function() {vm.handlePeerDisconnect(this._id);});
 
-                    vm.connections[peer.id].connection.on('data', function(data) {
+                    vm.connections[id].connection.on('data', function(data) {
                         vm.ui.sound.message.play();
-                        vm.recieveMessage(vm.connections[peer.id].user, data);
+                        vm.recieveMessage(vm.connections[this._id].user, data);
                     });
 
-                    vm.connections[peer.id].connection.on('stream', function(stream) {
+                    vm.connections[id].connection.on('stream', function(stream) {
                         console.log("ON PEER STREAM");
-                        vm.onPeerStream(stream, peer.id);
+                        vm.onPeerStream(stream, this._id);
                     });
                 }
             });
@@ -745,6 +746,9 @@ export default {
                     vm.connections[id].setUser(obj.user);
 
                     vm.connections[id].connection.on('connect', function() {
+                        console.log("CONNECTED TO CLIENT~~");
+                        console.log(this);
+                        console.log(vm.connections[this.hostid].user);
                         if(vm.ui.sound.connect.waitUntil <= Date.now()) {
                             vm.ui.sound.connect.play();
                             vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
@@ -752,20 +756,20 @@ export default {
 
                         vm.outputConnections();
                         if(vm.stream.videoenabled) {
-                            console.log("Try and send a client stream to " + id);
-                            vm.sendStream(id);
+                            console.log("Try and send a client stream to " + this.hostid);
+                            vm.sendStream(this.hostid);
                         }
                     });
 
-                    vm.connections[id].connection.on('close', function() {vm.handlePeerDisconnect(id);});
-                    vm.connections[id].connection.on('error', function() {vm.handlePeerDisconnect(id);});
+                    vm.connections[id].connection.on('close', function() {vm.handlePeerDisconnect(this.hostid);});
+                    vm.connections[id].connection.on('error', function() {vm.handlePeerDisconnect(this.hostid);});
 
                     vm.connections[id].connection.on('data', function(data) {
                         vm.ui.sound.message.play();
-                        vm.recieveMessage(vm.connections[id].user, data);
+                        vm.recieveMessage(vm.connections[this.hostid].user, data);
                     });
 
-                    vm.connections[id].connection.on('stream', stream => {vm.onPeerStream(stream, id); });
+                    vm.connections[id].connection.on('stream', stream => {vm.onPeerStream(stream, this.hostid); });
                 }
                 //Use the remote host id so that the client is overridden if it re-signals
 
@@ -820,7 +824,7 @@ class PeerConnection {
         self.server = server;
 
         self.id = self.connection._id;
-        self.user = {name: "anonymous", verified: false};
+        self.user = {name: "anonymous user", verified: false};
 
         self.initiator = initiator;
         self.hostid = initiator ? self.id : null;
@@ -882,9 +886,11 @@ class PeerConnection {
 
     setHostId(id) {
         this.hostid = id;
+        this.connection.hostid = id;
     }
     setClientId(id) {
         this.clientid = id;
+        this.connection.clientid = id;
     }
     setUser(user) {
         this.user = user;
