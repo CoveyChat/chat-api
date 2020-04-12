@@ -2340,7 +2340,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       var activeId = vm.user.devices.active.video;
 
       for (var i = 0; i < vm.user.devices.video.length; i++) {
-        if (vm.user.devices.video[i].deviceid == activeId) {
+        if (vm.user.devices.video[i].deviceId == activeId) {
           //We found the current active one. Get the next
           if (i < vm.user.devices.video.length) {
             vm.user.devices.active.video = vm.user.devices.video[i + 1].deviceId;
