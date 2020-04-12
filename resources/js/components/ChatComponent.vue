@@ -71,6 +71,20 @@
             <i class="fas fa-desktop" v-if="stream.screenshareenabled"></i>
         </button>
 
+        <!--Switch Video Feed Button-->
+        <button class="btn btn-primary float-right"
+            type="button"
+            id="btn-local-swapvideo-toggle"
+            v-bind:class="{
+                'local-swapvideo-overlay': ui.inFullscreen
+            }"
+            v-if="stream.videoenabled && user.devices.video.length > 1"
+            v-on:click="swapVideoFeed">
+
+            <span class="sr-only">Switch Video</span>
+            <i class="fas fa-sync-alt"></i>
+        </button>
+
         <div id="local-video-container"
             v-bind:class="{
                         'local-video-overlay': ui.inFullscreen,
@@ -180,6 +194,16 @@
         margin-top:11em;
     }
 
+    #btn-local-swapvideo-toggle {
+        right:10px;
+        border-radius: 2em !important;
+        width: 4em;
+        height: 4em;
+        position: fixed;
+        z-index:2147483647;
+        margin-top:16em;
+    }
+
     .btn-off {
         opacity: 0.75;
     }
@@ -234,7 +258,8 @@
 
     button.local-video-overlay,
     button.local-audio-overlay,
-    button.local-screenshare-overlay {
+    button.local-screenshare-overlay,
+    button.local-swapvideo-overlay {
         margin-top:0px !important;
         right:0px !important;
         z-index:2147483647 !important;
@@ -242,14 +267,16 @@
     button.local-video-overlay {
         top:0px;
     }
-
     button.local-audio-overlay {
         top:5em !important;
     }
-
     button.local-screenshare-overlay {
         top:10em !important;
     }
+    button.local-swapvideo-overlay {
+        top:15em !important;
+    }
+
 
     /* Main Video Fullscreen */
     video.peer-video-fullscreen {
@@ -296,6 +323,28 @@ export default {
     methods: {
         setDefaultVolume(e) {
             e.target.volume = 1;
+        },
+        swapVideoFeed(e) {
+            var vm = this;
+
+            var activeId = vm.user.devices.active.video;
+            var nextDevice = 0;
+
+            for(var i=0; i<vm.user.devices.video.length; i++) {
+                if(vm.user.devices.video[i].deviceid == activeId) {
+                    //We found the current active one. Get the next
+                    if(i < vm.user.devices.video.length) {
+                        vm.user.devices.active.video = vm.user.devices.video[i+1].deviceid;
+                    } else {
+                        vm.user.devices.active.video = vm.user.devices.video[0].deviceid;
+                    }
+                    break;
+                }
+            }
+
+            vm.stopLocalStream();
+            vm.stream.videoenabled = false;
+            vm.toggleVideo({'message': "swapping video feed to another camera"});
         },
         toggleScreenshare(e) {
             var vm = this;
@@ -368,28 +417,33 @@ export default {
         toggleVideo(e) {
             var vm = this;
 
-            if(!vm.stream.videoenabled && vm.stream.screenshareenabled) {
-                vm.stopLocalStream();
-                vm.stream.screenshareenabled = false;
-            }
-
-            if(!vm.stream.videoenabled) {
-                console.log("TURNING VIDEO ON");
-                navigator.mediaDevices.getUserMedia({
-                    video: true,
-                    audio: true
-                }).then(function(stream) {
-                    vm.stream.videoenabled = true;
+            vm.user.discoverDevices(function(devices) {
+                console.log("CALLBACCK RAN");
+                if(!vm.stream.videoenabled && vm.stream.screenshareenabled) {
+                    vm.stopLocalStream();
                     vm.stream.screenshareenabled = false;
-                    vm.onLocalStream(stream);
-                }).catch((e) => {
-                    console.log("Local Stream Error!");
-                    console.log(e);
-                });
-            } else {
-                vm.stopLocalStream();
-                vm.stream.videoenabled = false;
-            }
+                }
+
+                if(!vm.stream.videoenabled) {
+                    console.log("Turning video on with camera id " + vm.user.devices.active.video);
+                    var options = {
+                        video: {deviceId: { exact: vm.user.devices.active.video }},
+                        audio: true
+                    };
+                    console.log(options);
+                    navigator.mediaDevices.getUserMedia(options).then(function(stream) {
+                        vm.stream.videoenabled = true;
+                        vm.stream.screenshareenabled = false;
+                        vm.onLocalStream(stream);
+                    }).catch((e) => {
+                        console.log("Local Video Stream Error!");
+                        console.log(e);
+                    });
+                } else {
+                    vm.stopLocalStream();
+                    vm.stream.videoenabled = false;
+                }
+            });
         },
         sendMessage (e) {
             var vm = this;
@@ -861,7 +915,14 @@ class User {
     //Gets the current authenticated user
     constructor() {
         var self = this;
-        var id, name, email, avatar, token, verified, active;
+        self.id
+        self.name
+        self.email
+        self.avatar
+        self.token
+        self.verified
+        self.active;
+        self.devices = {video: [], audio: [], active: {video: null, audio: null}};
 
         this.transport = axios.create({
             withCredentials: true
@@ -898,6 +959,43 @@ class User {
                 }
             }
         });
+    }
+
+    getVideoDevices() {
+        return this.devices.video;
+    }
+
+    getAudioDevices() {
+        return this.devices.audio;
+    }
+
+    discoverDevices(cb) {
+        var self = this;
+
+        //If we've already found a video AND audio device, don't bother searching again
+        if(self.devices.video.length == 0 || self.devices.audio.length == 0) {
+            navigator.mediaDevices.enumerateDevices().then(function(devices) {
+                for(var i=0; i<devices.length; i++) {
+                    if(devices[i].kind == "audioinput") {
+                        if(self.devices.audio.length == 0) {
+                            //Set this device to be the default
+                            self.devices.active.audio = devices[i].deviceId;
+                        }
+                        self.devices.audio.push(devices[i]);
+                    } else if(devices[i].kind == "videoinput") {
+                        if(self.devices.video.length == 0) {
+                            //Set this device to be the default
+                            self.devices.active.video = devices[i].deviceId;
+                        }
+                        self.devices.video.push(devices[i]);
+                    }
+                }
+
+                cb();
+            });
+        }
+
+        cb();
     }
 
     getDataObject() {
