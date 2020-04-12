@@ -2298,6 +2298,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 //
 //
 //
+//
+//
 //Backfills for Mozilla / Safari
 navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 /* harmony default export */ __webpack_exports__["default"] = ({
@@ -2316,7 +2318,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
         screenshareenabled: false,
         connection: null,
         local: null,
-        localsize: 'lg'
+        localsize: 'md'
       },
       peerStreams: [],
       server: {
@@ -2327,6 +2329,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       ui: {
         anonUsername: '',
         inFullscreen: false,
+        dblClickTimer: null,
         sound: {
           connect: null,
           disconnect: null,
@@ -2336,6 +2339,19 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     };
   },
   methods: {
+    onDoubleClickCheck: function onDoubleClickCheck(e) {
+      var vm = this; //Play the video if you touched it
+      //Chrome disables auto-play if you don't interact with the document first
+
+      e.target.play(); //Clicked again within 1s, trigger fullscreen
+
+      if (vm.ui.dblClickTimer != null && Date.now() - 1000 <= vm.ui.dblClickTimer) {
+        vm.ui.dblClickTimer = null;
+        vm.fullscreenVideo(e);
+      } else {
+        vm.ui.dblClickTimer = Date.now();
+      }
+    },
     setDefaultVolume: function setDefaultVolume(e) {
       e.target.volume = 1;
     },
@@ -2406,13 +2422,14 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       var vm = this; //Don't actually fullscreen. Just make the video... Bigger
 
       if (document.fullscreenElement) {
-        document.exitFullscreen(); //Going fullscreen
+        document.exitFullscreen();
+      } //Going fullscreen
 
-        if (!vm.ui.inFullscreen) {
-          vm.ui.inFullscreen = true;
-        } else {
-          vm.ui.inFullscreen = false;
-        }
+
+      if (!vm.ui.inFullscreen) {
+        vm.ui.inFullscreen = true;
+      } else {
+        vm.ui.inFullscreen = false;
       }
     },
     setAnonUser: function setAnonUser(e) {
@@ -3256,6 +3273,8 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+//
+//
 //
 //
 //
@@ -10348,7 +10367,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n.remote-stream[data-v-80d584ac] {\n    background:#000;\n}\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac], #local-video-container[data-v-80d584ac] video {\n\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n    position: absolute;\n    z-index: 2;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video,\n#btn-local-video-toggle.local-video-overlay[data-v-80d584ac] {\n    margin-top:0px;\n    top:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\nbutton.local-audio-overlay[data-v-80d584ac],\nbutton.local-screenshare-overlay[data-v-80d584ac],\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    top:15em !important;\n}\n\n\n/* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n.remote-stream[data-v-80d584ac] {\n    background:#000;\n}\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac], #local-video-container[data-v-80d584ac] video {\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n    position: absolute;\n    z-index: 2;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\nbutton.local-audio-overlay[data-v-80d584ac],\nbutton.local-screenshare-overlay[data-v-80d584ac],\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    top:15em !important;\n}\n\n\n/* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -10405,7 +10424,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n#messages[data-v-1e09f4b6] {\n    /*Not sure why this works but it does */\n    height: 0px;\n}\n", ""]);
+exports.push([module.i, "\n#messages[data-v-1e09f4b6] {\n    /*This acts as a \"minimum\" height for when flexbox wants to collapse down to nothing\n    Very important for mobile since videos \"stack\" and will otherwise collapse the messages\n    area down to nothing */\n    height: 300px;\n}\n", ""]);
 
 // exports
 
@@ -56164,7 +56183,7 @@ var render = function() {
                           {
                             staticClass: "local-stream",
                             attrs: {
-                              poster: "https://bevy.chat/img/logo_color.png",
+                              poster: "https://bevy.chat/img/video_poster.png",
                               autoplay: "autoplay",
                               muted: "muted"
                             },
@@ -56227,9 +56246,8 @@ var render = function() {
                             "peer-video-fullscreen": _vm.ui.inFullscreen
                           },
                           attrs: {
-                            poster: "https://bevy.chat/img/logo_color.png",
+                            poster: "https://bevy.chat/img/video_poster.png",
                             autoplay: "autoplay",
-                            controls: "controls",
                             volume: "1"
                           },
                           domProps: { srcObject: stream },
@@ -56237,6 +56255,7 @@ var render = function() {
                             webkitfullscreenchange: _vm.fullscreenVideo,
                             mozfullscreenchange: _vm.fullscreenVideo,
                             fullscreenchange: _vm.fullscreenVideo,
+                            click: _vm.onDoubleClickCheck,
                             play: _vm.setDefaultVolume
                           }
                         })

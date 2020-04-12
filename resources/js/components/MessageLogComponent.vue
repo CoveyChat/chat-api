@@ -17,8 +17,10 @@
 
 <style scoped>
     #messages {
-        /*Not sure why this works but it does */
-        height: 0px;
+        /*This acts as a "minimum" height for when flexbox wants to collapse down to nothing
+        Very important for mobile since videos "stack" and will otherwise collapse the messages
+        area down to nothing */
+        height: 300px;
     }
 </style>
 

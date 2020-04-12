@@ -96,7 +96,7 @@
 
             <video :srcObject.prop="stream.connection"
                     v-on:click="adjustLocalVideoSize"
-                    poster = "https://bevy.chat/img/logo_color.png"
+                    poster = "https://bevy.chat/img/video_poster.png"
                     autoplay="autoplay"
                     muted="muted"
                     class="local-stream"
@@ -114,7 +114,10 @@
 
         <div id='videos' class="container">
             <div class="row justify-content-center">
-            <div v-for="stream in peerStreams" :key="stream.id" class="col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3">
+            <div v-for="stream in peerStreams"
+                :key="stream.id"
+
+                class="col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3">
                 <div
                     class="peer-video-details"
                     v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }">
@@ -125,10 +128,11 @@
                     v-on:webkitfullscreenchange="fullscreenVideo"
                     v-on:mozfullscreenchange="fullscreenVideo"
                     v-on:fullscreenchange="fullscreenVideo"
+                    v-on:click="onDoubleClickCheck"
                     v-on:play="setDefaultVolume"
-                    poster = "https://bevy.chat/img/logo_color.png"
+
+                    poster = "https://bevy.chat/img/video_poster.png"
                     autoplay="autoplay"
-                    controls="controls"
                     volume="1"
                     class="embed-responsive-item remote-stream"
                     v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }"
@@ -231,7 +235,6 @@
         width:300px;
     }
     #local-video-container, #local-video-container >>> video {
-
         margin-top:20px;
         position:fixed;
         right:2em;
@@ -253,10 +256,9 @@
     }
     /* When fullscreened, shift things around*/
     #local-video-container.local-video-overlay,
-    #local-video-container.local-video-overlay >>> video,
-    #btn-local-video-toggle.local-video-overlay {
-        margin-top:0px;
-        top:0px;
+    #local-video-container.local-video-overlay >>> video {
+        margin-right:0px;
+        bottom:0px;
         right:0px;
     }
 
@@ -318,13 +320,28 @@ export default {
             connections: {},
             chatId: null,
             user: {active: false},
-            stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'lg'},
+            stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
             peerStreams: [],
             server: {ip:'bevy.chat', port:1337, signal: null},
-            ui: {anonUsername: '', inFullscreen: false, sound: {connect: null, disconnect: null, message: null}}
+            ui: {anonUsername: '', inFullscreen: false, dblClickTimer: null, sound: {connect: null, disconnect: null, message: null}}
         }
     },
     methods: {
+        onDoubleClickCheck(e) {
+            var vm = this;
+
+            //Play the video if you touched it
+            //Chrome disables auto-play if you don't interact with the document first
+            e.target.play();
+
+            //Clicked again within 1s, trigger fullscreen
+            if(vm.ui.dblClickTimer != null && Date.now() - 1000 <= vm.ui.dblClickTimer) {
+                vm.ui.dblClickTimer = null;
+                vm.fullscreenVideo(e);
+            } else {
+                vm.ui.dblClickTimer = Date.now();
+            }
+        },
         setDefaultVolume(e) {
             e.target.volume = 1;
         },
@@ -389,14 +406,15 @@ export default {
             //Don't actually fullscreen. Just make the video... Bigger
             if (document.fullscreenElement) {
                 document.exitFullscreen();
-
-                //Going fullscreen
-                if(!vm.ui.inFullscreen) {
-                    vm.ui.inFullscreen = true;
-                } else {
-                    vm.ui.inFullscreen = false;
-                }
             }
+
+            //Going fullscreen
+            if(!vm.ui.inFullscreen) {
+                vm.ui.inFullscreen = true;
+            } else {
+                vm.ui.inFullscreen = false;
+            }
+
         },
         setAnonUser(e) {
             var vm = this;
