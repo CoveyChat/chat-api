@@ -976,7 +976,8 @@ class User {
                         self.devices.video.push(devices[i]);
                     }
                 }
-
+                console.log("FOUND");
+console.log(self.devices);
                 cb();
             });
         } else {

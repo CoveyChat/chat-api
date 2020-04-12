@@ -3029,6 +3029,8 @@ var User = /*#__PURE__*/function () {
             }
           }
 
+          console.log("FOUND");
+          console.log(self.devices);
           cb();
         });
       } else {
