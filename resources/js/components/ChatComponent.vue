@@ -328,7 +328,6 @@ export default {
             var vm = this;
 
             var activeId = vm.user.devices.active.video;
-            var nextDevice = 0;
 
             for(var i=0; i<vm.user.devices.video.length; i++) {
                 if(vm.user.devices.video[i].deviceid == activeId) {
@@ -341,6 +340,8 @@ export default {
                     break;
                 }
             }
+
+            console.log("Swapping to " + vm.user.devices.active.video);
 
             vm.stopLocalStream();
             vm.stream.videoenabled = false;
