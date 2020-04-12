@@ -1,13 +1,37 @@
+<template>
+    <span>
+    </span>
+</template>
+<style scoped>
 
-Vue.directive('draggable', {
+</style>
+
+
+<script>
+
+export default {
+    props: {
+        derpderp: { type: Function }
+    },
     data: function () {
         return {
-            event: null,
+
         }
     },
-    bind: function(el) {
-        console.log("DEFINE EVENT");
-        this.event = new Event('draggable-onclick');
+    methods: {
+        onClick(e) {
+            var vm = this;
+            navigator.clipboard.writeText(vm.text);
+            vm.showCopiedBadge = true;
+
+            setTimeout(function() {
+                vm.showCopiedBadge = false
+            }, 300);
+        }
+    },
+    update() {
+        console.log('Draggable Component mounted.');
+        var vm = this;
 
         el.style.position = 'absolute';
         var self, startX, startY, initialMouseX, initialMouseY, deadzoned;
@@ -18,6 +42,7 @@ Vue.directive('draggable', {
 
             //30x30 deadzone to
             if(Math.abs(dx) < 30 && Math.abs(dy) < 30) {
+                console.log("Deadzoned?");
                 return false;
             }
 
@@ -35,11 +60,19 @@ Vue.directive('draggable', {
 
         function touchmove(e) {
             onMove(e.touches[0].clientX, e.touches[0].clientY);
+            e.preventDefault();
         }
 
         function movedone(e) {
             if(deadzoned) {
-                el.dispatchEvent(self.event);
+                console.log("CALL IT");
+                console.log(vnode);
+                console.log(this);
+                console.log(self);
+                console.log(binding);
+                //vnode.context[binding.expression]("onclick");
+                //vnode.context.$vnode.context.$emit("derpderp");
+                //self.$emit('derpderp')
             }
             //Dirty way to keep the attribute incase there's any trickle down events
             setTimeout(function() {
@@ -48,15 +81,15 @@ Vue.directive('draggable', {
           }
 
           function mouseup(e) {
-            el.removeEventListener('mousemove', mousemove);
-            el.removeEventListener('mouseup', mouseup);
+            document.removeEventListener('mousemove', mousemove);
+            document.removeEventListener('mouseup', mouseup);
 
             movedone(e);
         }
 
         function touchend(e) {
-            el.removeEventListener('touchmove', touchmove);
-            el.removeEventListener('touchend', touchend);
+            document.removeEventListener('touchmove', mousemove);
+            document.removeEventListener('touchend', mouseup);
 
             movedone(e);
         }
@@ -67,8 +100,8 @@ Vue.directive('draggable', {
             startY = el.offsetTop;
             initialMouseX = e.clientX;
             initialMouseY = e.clientY;
-            el.addEventListener('mousemove', mousemove);
-            el.addEventListener('mouseup', mouseup);
+            document.addEventListener('mousemove', mousemove);
+            document.addEventListener('mouseup', mouseup);
 
             return false;
         });
@@ -79,12 +112,19 @@ Vue.directive('draggable', {
             startY = el.offsetTop;
             initialMouseX = e.touches[0].clientX;
             initialMouseY = e.touches[0].clientY
-
-            el.addEventListener('touchmove', touchmove);
-            el.addEventListener('touchend', touchend);
-
             e.preventDefault();
+            document.addEventListener('touchmove', touchmove);
+            document.addEventListener('touchend', touchend);
+
             return false;
         });
+
+
+
+
+
+
     }
-  });
+}
+
+</script>

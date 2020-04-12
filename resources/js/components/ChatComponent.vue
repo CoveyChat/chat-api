@@ -85,7 +85,7 @@
             <i class="fas fa-sync-alt"></i>
         </button>
 
-        <div id="local-video-container" v-draggable
+        <div id="local-video-container" v-draggable v-on:draggable-onclick="adjustLocalVideoSize"
             v-bind:class="{
                         'local-video-overlay': ui.inFullscreen,
                         'local-video-sm': stream.localsize =='sm',
@@ -95,7 +95,7 @@
             >
 
             <video :srcObject.prop="stream.connection"
-                    v-on:click="adjustLocalVideoSize"
+
                     poster = "https://bevy.chat/img/video_poster.png"
                     autoplay="autoplay"
                     muted="muted"
@@ -330,7 +330,7 @@ export default {
             user: {active: false},
             stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
             peerStreams: [],
-            server: {ip:'bevy.chat', port:1337, signal: null},
+            server: {ip:'devbevy.chat', port:1337, signal: null},
             ui: {anonUsername: '', inFullscreen: false, dblClickTimer: null, sound: {connect: null, disconnect: null, message: null}}
         }
     },
