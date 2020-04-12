@@ -418,7 +418,7 @@ export default {
         toggleVideo(e) {
             var vm = this;
 
-            vm.user.discoverDevices(function() {
+            vm.user.discoverDevices();
                 //Turn off screensharing and swap back to video
                 if(!vm.stream.videoenabled && vm.stream.screenshareenabled) {
                     vm.stopLocalStream();
@@ -448,7 +448,7 @@ export default {
                     vm.stopLocalStream();
                     vm.stream.videoenabled = false;
                 }
-            });
+
         },
         sendMessage (e) {
             var vm = this;
