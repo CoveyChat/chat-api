@@ -2488,6 +2488,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
             vm.stream.screenshareenabled = false;
             vm.onLocalStream(stream);
           })["catch"](function (e) {
+            alert("Something went horrible wrong when getting your video feed.\nYou should probably screencap this and send it to Jake\n\n\nError: " + JSON.stringify(e) + "\n\nOptions: " + JSON.stringify(options));
             console.log("Local Video Stream Error!");
             console.log(e);
           });
