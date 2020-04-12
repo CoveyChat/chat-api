@@ -2439,7 +2439,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     },
     toggleVideo: function toggleVideo(e) {
       var vm = this;
-      vm.user.discoverDevices(); //Turn off screensharing and swap back to video
+      vm.user.discoverDevices(function () {}); //Turn off screensharing and swap back to video
 
       if (!vm.stream.videoenabled && vm.stream.screenshareenabled) {
         vm.stopLocalStream();
