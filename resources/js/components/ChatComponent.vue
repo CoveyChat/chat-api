@@ -979,8 +979,6 @@ class User {
                 cb();
             });
         }
-
-        cb();
     }
 
     getDataObject() {

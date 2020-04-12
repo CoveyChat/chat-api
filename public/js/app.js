@@ -3032,8 +3032,6 @@ var User = /*#__PURE__*/function () {
           cb();
         });
       }
-
-      cb();
     }
   }, {
     key: "getDataObject",
