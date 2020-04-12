@@ -2456,7 +2456,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
           if (vm.user.devices.active.video != null) {
             options.video = {
               deviceId: {
-                exact: vm.user.devices.active.video
+                ideal: vm.user.devices.active.video
               }
             };
           }
