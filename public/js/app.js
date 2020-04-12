@@ -2603,26 +2603,12 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
      */
     onLocalStream: function onLocalStream(stream) {
       var vm = this;
-      console.log("++++LOCAL STREAM ENABLED");
-      /*var localVideoContainer = vm.$el.querySelector("#local-video-container");
-      var video = document.createElement('video');
-      video.className = 'local-stream';
-      video.muted = true;
-      localVideoContainer.appendChild(video);
-       if ('srcObject' in video) {
-          video.srcObject = stream
-      } else {
-          video.src = window.URL.createObjectURL(stream) // for older browsers
-      }
-       video.play();
-      vm.stream.local = video;*/
-
-      console.log("Set stream vars and tell everyone to retry");
+      console.log("Local stream created - Set stream vars and tell everyone to retry");
       vm.stream.connection = stream; //New Local stream! Send it off  to all the peers
 
       for (var id in vm.connections) {
         if (vm.connections[id].connection == null || !vm.connections[id].connection.connected || vm.connections[id].connection.destroyed) {
-          console.log("SKIP CONNECTION " + id);
+          console.log("Don't send stream. Skip bad connection " + id);
           console.log(vm.connections[id]);
           continue;
         }
