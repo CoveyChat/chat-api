@@ -2439,41 +2439,42 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     },
     toggleVideo: function toggleVideo(e) {
       var vm = this;
-      vm.user.discoverDevices(function () {}); //Turn off screensharing and swap back to video
-
-      if (!vm.stream.videoenabled && vm.stream.screenshareenabled) {
-        vm.stopLocalStream();
-        vm.stream.screenshareenabled = false;
-      }
-
-      if (!vm.stream.videoenabled) {
-        console.log("Turning on camera...");
-        var options = {
-          video: true,
-          audio: true
-        };
-
-        if (vm.user.devices.active.video != null) {
-          console.log("Turning video on with camera id " + vm.user.devices.active.video);
-          options.video = {
-            deviceId: {
-              ideal: vm.user.devices.active.video
-            }
-          };
+      vm.user.discoverDevices(function () {
+        //Turn off screensharing and swap back to video
+        if (!vm.stream.videoenabled && vm.stream.screenshareenabled) {
+          vm.stopLocalStream();
+          vm.stream.screenshareenabled = false;
         }
 
-        navigator.mediaDevices.getUserMedia(options).then(function (stream) {
-          vm.stream.videoenabled = true;
-          vm.stream.screenshareenabled = false;
-          vm.onLocalStream(stream);
-        })["catch"](function (e) {
-          console.log("Local Video Stream Error!");
-          console.log(e);
-        });
-      } else {
-        vm.stopLocalStream();
-        vm.stream.videoenabled = false;
-      }
+        if (!vm.stream.videoenabled) {
+          console.log("Turning on camera...");
+          var options = {
+            video: true,
+            audio: true
+          };
+
+          if (vm.user.devices.active.video != null) {
+            console.log("Turning video on with camera id " + vm.user.devices.active.video);
+            options.video = {
+              deviceId: {
+                ideal: vm.user.devices.active.video
+              }
+            };
+          }
+
+          navigator.mediaDevices.getUserMedia(options).then(function (stream) {
+            vm.stream.videoenabled = true;
+            vm.stream.screenshareenabled = false;
+            vm.onLocalStream(stream);
+          })["catch"](function (e) {
+            console.log("Local Video Stream Error!");
+            console.log(e);
+          });
+        } else {
+          vm.stopLocalStream();
+          vm.stream.videoenabled = false;
+        }
+      });
     },
     sendMessage: function sendMessage(e) {
       var vm = this;
@@ -3029,8 +3030,6 @@ var User = /*#__PURE__*/function () {
             }
           }
 
-          console.log("FOUND");
-          console.log(self.devices);
           cb();
         });
       } else {
