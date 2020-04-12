@@ -208,7 +208,7 @@
         opacity: 0.75;
     }
 
-    #remote-stream {
+    .remote-stream {
         background:#000;
     }
     /**Adjust the slash since font awesome doesn't offer a video slash option */
