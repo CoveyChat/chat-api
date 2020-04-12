@@ -66,7 +66,7 @@ Vue.directive('draggable', {
             startY = el.offsetTop;
             initialMouseX = e.touches[0].clientX;
             initialMouseY = e.touches[0].clientY
-
+            e.preventDefault();
             document.addEventListener('touchmove', touchmove);
             document.addEventListener('touchend', touchend);
             return false;
