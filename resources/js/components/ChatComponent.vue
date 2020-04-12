@@ -130,7 +130,7 @@
                     autoplay="autoplay"
                     controls="controls"
                     volume="1"
-                    class="embed-responsive-item"
+                    class="embed-responsive-item remote-stream"
                     v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }"
                 ></video>
             </div>
@@ -206,6 +206,10 @@
 
     .btn-off {
         opacity: 0.75;
+    }
+
+    #remote-stream {
+        background:#000;
     }
     /**Adjust the slash since font awesome doesn't offer a video slash option */
     #btn-local-screenshare-toggle >>> .fa-slash {
