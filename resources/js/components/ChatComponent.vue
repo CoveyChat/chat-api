@@ -407,9 +407,11 @@ export default {
             var vm = this;
             if((vm.stream.videoenabled || vm.stream.screenshareenabled) && vm.stream.audioenabled) {
                 vm.stream.connection.getAudioTracks().forEach(function(track){track.enabled = false;});
+                console.log("Muted");
                 vm.stream.audioenabled = false;
             } else if((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.stream.audioenabled) {
                 vm.stream.connection.getAudioTracks().forEach(function(track){track.enabled = true;});
+                console.log("Not Muted");
                 vm.stream.audioenabled = true;
             }
         },
