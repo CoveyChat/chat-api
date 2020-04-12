@@ -26,6 +26,7 @@ Vue.directive('draggable', {
 
         function touchmove(e) {
             onMove(e.touches[0].clientX, e.touches[0].clientY);
+            e.preventDefault();
         }
 
         function movedone() {
