@@ -33,8 +33,9 @@
                 //Orientation change, recalculate the width of the chart
                 setTimeout(function() {
                     vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
+                    vm.svg.attr("width", vm.width);
                     vm.update(vm.connections);
-                }, 100);
+                }, 200);
 
             });
             vm.init();

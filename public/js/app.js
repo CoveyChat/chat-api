@@ -2362,7 +2362,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       },
       peerStreams: [],
       server: {
-        ip: 'devbevy.chat',
+        ip: 'bevy.chat',
         port: 1337,
         signal: null
       },
@@ -3103,8 +3103,9 @@ __webpack_require__.r(__webpack_exports__);
       //Orientation change, recalculate the width of the chart
       setTimeout(function () {
         vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
+        vm.svg.attr("width", vm.width);
         vm.update(vm.connections);
-      }, 100);
+      }, 200);
     });
     vm.init();
   },
@@ -68945,8 +68946,25 @@ Vue.directive('draggable', {
     };
   },
   bind: function bind(el) {
-    console.log("DEFINE EVENT");
-    this.event = new Event('draggable-onclick');
+    this.event = new Event('draggable-onclick'); //Watch out for orientation change and the element disappearing
+
+    window.addEventListener("orientationchange", function (e) {
+      //Orientation change, recalculate after 100ms for dom updates
+      setTimeout(function () {
+        //Orientation change, find the closest edge
+        if (el.style.top != null && el.style.left != null) {
+          var position = el.getBoundingClientRect(); //Don't lose the element off the bottom/right screen
+
+          if (position.y > window.screen.height - position.height) {
+            el.style.top = window.screen.height - position.height + "px";
+          }
+
+          if (position.x > window.screen.width - position.width) {
+            el.style.left = window.screen.width - position.width + "px";
+          }
+        }
+      }, 200);
+    });
     el.style.position = 'absolute';
     var self, startX, startY, initialMouseX, initialMouseY, deadzoned;
     self = this;

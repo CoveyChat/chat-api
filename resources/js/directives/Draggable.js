@@ -6,8 +6,27 @@ Vue.directive('draggable', {
         }
     },
     bind: function(el) {
-        console.log("DEFINE EVENT");
         this.event = new Event('draggable-onclick');
+
+        //Watch out for orientation change and the element disappearing
+        window.addEventListener("orientationchange", function(e) {
+            //Orientation change, recalculate after 100ms for dom updates
+            setTimeout(function() {
+                //Orientation change, find the closest edge
+                if(el.style.top != null && el.style.left != null) {
+                    var position = el.getBoundingClientRect();
+
+                    //Don't lose the element off the bottom/right screen
+                    if(position.y > (window.screen.height - position.height)) {
+                        el.style.top = (window.screen.height - position.height) + "px";
+                    }
+                    if(position.x > (window.screen.width - position.width)) {
+                        el.style.left = (window.screen.width - position.width) + "px";
+                    }
+                }
+            }, 200);
+
+        });
 
         el.style.position = 'absolute';
         var self, startX, startY, initialMouseX, initialMouseY, deadzoned;
