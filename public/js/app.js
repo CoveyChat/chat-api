@@ -2335,7 +2335,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       },
       peerStreams: [],
       server: {
-        ip: 'devbevy.chat',
+        ip: 'bevy.chat',
         port: 1337,
         signal: null
       },
