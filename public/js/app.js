@@ -2340,6 +2340,7 @@ try {
   //Backfills for Mozilla / Safari
   navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 } catch (e) {
+  document.write("Your device does not support video. If you see Jake, tell him this:<br /><pre>" + JSON.stringify(e) + "</pre><br />");
   alert("Your device does not support video. If you see Jake, tell him this:\n\n" + JSON.stringify(e));
 }
 
