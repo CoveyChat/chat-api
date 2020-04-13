@@ -48,15 +48,15 @@ Vue.directive('draggable', {
           }
 
           function mouseup(e) {
-            el.removeEventListener('mousemove', mousemove);
-            el.removeEventListener('mouseup', mouseup);
+            document.removeEventListener('mousemove', mousemove);
+            document.removeEventListener('mouseup', mouseup);
 
             movedone(e);
         }
 
         function touchend(e) {
-            el.removeEventListener('touchmove', touchmove);
-            el.removeEventListener('touchend', touchend);
+            document.removeEventListener('touchmove', touchmove);
+            document.removeEventListener('touchend', touchend);
 
             movedone(e);
         }
@@ -67,8 +67,8 @@ Vue.directive('draggable', {
             startY = el.offsetTop;
             initialMouseX = e.clientX;
             initialMouseY = e.clientY;
-            el.addEventListener('mousemove', mousemove);
-            el.addEventListener('mouseup', mouseup);
+            document.addEventListener('mousemove', mousemove);
+            document.addEventListener('mouseup', mouseup);
 
             return false;
         });
@@ -80,8 +80,8 @@ Vue.directive('draggable', {
             initialMouseX = e.touches[0].clientX;
             initialMouseY = e.touches[0].clientY
 
-            el.addEventListener('touchmove', touchmove);
-            el.addEventListener('touchend', touchend);
+            document.addEventListener('touchmove', touchmove);
+            document.addEventListener('touchend', touchend);
 
             e.preventDefault();
             return false;

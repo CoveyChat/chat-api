@@ -223,6 +223,11 @@
         right:unset;
         left:unset;
     }
+
+    video {
+        border-radius: 5px;
+        box-shadow: 0px 1px 3px #000;
+    }
     /**Adjust the slash since font awesome doesn't offer a video slash option */
     #btn-local-screenshare-toggle >>> .fa-slash {
         display:block;
@@ -413,7 +418,23 @@ export default {
             } else if(vm.stream.localsize == 'md') {
                 vm.stream.localsize = 'sm'
             } else if(vm.stream.localsize == 'sm') {
-                vm.stream.localsize = 'lg'
+                vm.stream.localsize = 'md'
+            }
+
+            //Don't lose the element off the top/left screen
+            if(e.target.offsetTop < 0) {
+                e.target.style.top = "0px";
+            }
+            if(e.target.offsetLeft < 0) {
+                e.target.style.left = "0px";
+            }
+
+            //Don't lose the element off the bottom/right screen
+            if(e.target.offsetTop > (window.screen.height - 200)) {
+                e.target.style.top = (window.screen.height - 200) + "px";
+            }
+            if(e.target.offsetLeft > (window.screen.width - 100)) {
+                e.target.style.left = (window.screen.width - 100) + "px";
             }
         },
         fullscreenVideo(e) {
