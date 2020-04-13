@@ -2552,15 +2552,20 @@ try {
             };
           }
 
-          navigator.mediaDevices.getUserMedia(options).then(function (stream) {
-            vm.stream.videoenabled = true;
-            vm.stream.screenshareenabled = false;
-            vm.onLocalStream(stream);
-          })["catch"](function (e) {
-            alert("Something went horrible wrong when getting your video feed.\nYou should probably screencap this and send it to Jake\n\n\nError: " + JSON.stringify(e) + "\n\nOptions: " + JSON.stringify(options));
-            console.log("Local Video Stream Error!");
+          try {
+            navigator.mediaDevices.getUserMedia(options).then(function (stream) {
+              vm.stream.videoenabled = true;
+              vm.stream.screenshareenabled = false;
+              vm.onLocalStream(stream);
+            })["catch"](function (e) {
+              alert("Something went horrible wrong when getting your video feed.\nYou should probably screencap this and send it to Jake\n\n\nError: " + JSON.stringify(e) + "\n\nOptions: " + JSON.stringify(options));
+              console.log("Local Video Stream Error!");
+              console.log(e);
+            });
+          } catch (e) {
+            console.log("Could not get user media for local stream");
             console.log(e);
-          });
+          }
         } else {
           vm.stopLocalStream();
           vm.stream.videoenabled = false;
@@ -69386,27 +69391,34 @@ var User = /*#__PURE__*/function () {
 
       if (self.devices.video.length == 0 || self.devices.audio.length == 0) {
         console.log("Discovering input devices...");
-        navigator.mediaDevices.enumerateDevices().then(function (devices) {
-          for (var i = 0; i < devices.length; i++) {
-            if (devices[i].kind == "audioinput") {
-              if (self.devices.audio.length == 0) {
-                //Set this device to be the default
-                self.devices.active.audio = devices[i].deviceId;
-              }
 
-              self.devices.audio.push(devices[i]);
-            } else if (devices[i].kind == "videoinput") {
-              if (self.devices.video.length == 0) {
-                //Set this device to be the default
-                self.devices.active.video = devices[i].deviceId;
-              }
+        try {
+          navigator.mediaDevices.enumerateDevices().then(function (devices) {
+            for (var i = 0; i < devices.length; i++) {
+              if (devices[i].kind == "audioinput") {
+                if (self.devices.audio.length == 0) {
+                  //Set this device to be the default
+                  self.devices.active.audio = devices[i].deviceId;
+                }
 
-              self.devices.video.push(devices[i]);
+                self.devices.audio.push(devices[i]);
+              } else if (devices[i].kind == "videoinput") {
+                if (self.devices.video.length == 0) {
+                  //Set this device to be the default
+                  self.devices.active.video = devices[i].deviceId;
+                }
+
+                self.devices.video.push(devices[i]);
+              }
             }
-          }
 
-          cb();
-        });
+            cb();
+          });
+        } catch (e) {
+          //navigator.mediaDevices does not exist
+          console.log("Could not discover user devices");
+          console.log(e);
+        }
       } else {
         cb();
       }

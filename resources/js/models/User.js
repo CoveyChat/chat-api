@@ -63,25 +63,31 @@ export default class User {
         //If we've already found a video AND audio device, don't bother searching again
         if(self.devices.video.length == 0 || self.devices.audio.length == 0) {
             console.log("Discovering input devices...");
-            navigator.mediaDevices.enumerateDevices().then(function(devices) {
-                for(var i=0; i<devices.length; i++) {
-                    if(devices[i].kind == "audioinput") {
-                        if(self.devices.audio.length == 0) {
-                            //Set this device to be the default
-                            self.devices.active.audio = devices[i].deviceId;
+            try {
+                navigator.mediaDevices.enumerateDevices().then(function(devices) {
+                    for(var i=0; i<devices.length; i++) {
+                        if(devices[i].kind == "audioinput") {
+                            if(self.devices.audio.length == 0) {
+                                //Set this device to be the default
+                                self.devices.active.audio = devices[i].deviceId;
+                            }
+                            self.devices.audio.push(devices[i]);
+                        } else if(devices[i].kind == "videoinput") {
+                            if(self.devices.video.length == 0) {
+                                //Set this device to be the default
+                                self.devices.active.video = devices[i].deviceId;
+                            }
+                            self.devices.video.push(devices[i]);
                         }
-                        self.devices.audio.push(devices[i]);
-                    } else if(devices[i].kind == "videoinput") {
-                        if(self.devices.video.length == 0) {
-                            //Set this device to be the default
-                            self.devices.active.video = devices[i].deviceId;
-                        }
-                        self.devices.video.push(devices[i]);
                     }
-                }
 
-                cb();
-            });
+                    cb();
+                });
+            } catch (e) {
+                //navigator.mediaDevices does not exist
+                console.log("Could not discover user devices")
+                console.log(e);
+            }
         } else {
             cb();
         }

@@ -345,10 +345,10 @@
 
 <script>
 try {
-	//Backfills for Mozilla / Safari
-	navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia ||
-	navigator.webkitGetUserMedia ||
-	navigator.mozGetUserMedia;
+    //Backfills for Mozilla / Safari
+    navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia ||
+    navigator.webkitGetUserMedia ||
+    navigator.mozGetUserMedia;
 } catch (e) {
     alert("Your device does not support video. If you see Jake, tell him this:\n\n" + JSON.stringify(e));
 }
@@ -531,16 +531,20 @@ export default {
                         console.log("Turning video on with camera id " + vm.user.devices.active.video);
                         options.video = {deviceId: { ideal: vm.user.devices.active.video }};
                     }
-
-                    navigator.mediaDevices.getUserMedia(options).then(function(stream) {
-                        vm.stream.videoenabled = true;
-                        vm.stream.screenshareenabled = false;
-                        vm.onLocalStream(stream);
-                    }).catch((e) => {
-                        alert("Something went horrible wrong when getting your video feed.\nYou should probably screencap this and send it to Jake\n\n\nError: " + JSON.stringify(e) + "\n\nOptions: " + JSON.stringify(options));
-                        console.log("Local Video Stream Error!");
+                    try {
+                        navigator.mediaDevices.getUserMedia(options).then(function(stream) {
+                            vm.stream.videoenabled = true;
+                            vm.stream.screenshareenabled = false;
+                            vm.onLocalStream(stream);
+                        }).catch((e) => {
+                            alert("Something went horrible wrong when getting your video feed.\nYou should probably screencap this and send it to Jake\n\n\nError: " + JSON.stringify(e) + "\n\nOptions: " + JSON.stringify(options));
+                            console.log("Local Video Stream Error!");
+                            console.log(e);
+                        });
+                    } catch (e) {
+                        console.log("Could not get user media for local stream");
                         console.log(e);
-                    });
+                    }
                 } else {
                     vm.stopLocalStream();
                     vm.stream.videoenabled = false;
