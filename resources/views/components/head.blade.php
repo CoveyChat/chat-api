@@ -9,11 +9,21 @@
 <title>{{ config('app.name', 'Bevy Chat') }} - For the birds</title>
 
 <script type="text/javascript">
-	window.addEventListener("error", function (e) {
-			alert("Error occurred: " + e.error.message);
-			document.write(e.error.message);
-			return false;
-	});
+    window.addEventListener("error", function (e) {
+            alert("Error occurred: " + e.error.message);
+            document.write(e.error.message);
+            return false;
+    });
+
+    try {
+        //Backfills for Mozilla / Safari
+        navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia ||
+        navigator.webkitGetUserMedia ||
+        navigator.mozGetUserMedia;
+    } catch (e) {
+        document.write("Your device does not support video. If you see Jake, tell him this:<br /><pre>" + JSON.stringify(e) + "</pre><br />");
+        alert("Your device does not support video. If you see Jake, tell him this:\n\n" + JSON.stringify(e));
+    }
 </script>
 
 <!-- Scripts -->
