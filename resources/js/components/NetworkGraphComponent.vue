@@ -5,6 +5,9 @@
 </template>
 
 <style>
+    #active-network-chart {
+        height: 150px;
+    }
     .link {
         stroke: #aaa;
     }
@@ -24,13 +27,23 @@
 <script>
     export default {
         mounted() {
+            var vm = this;
             console.log("Network Graph Mounted");
-            this.init();
+            window.addEventListener("orientationchange", function(e) {
+                //Orientation change, recalculate the width of the chart
+                setTimeout(function() {
+                    vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
+                    vm.update(vm.connections);
+                }, 100);
+
+            });
+            vm.init();
         },
         data: function () {
             return {
                 height: 0,
                 width: 0,
+                svg: null,
                 simulation: null,
                 link: null,
                 node: null,
@@ -50,6 +63,7 @@
         methods: {
             init () {
                 var vm = this;
+
                 vm.color = d3.scaleOrdinal(d3.schemeTableau10);
                 console.log("Network Graph Mounted!");
 
@@ -58,7 +72,7 @@
                 vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
                 vm.height = 150;
 
-                vm.tooltip = d3.select("body")
+                vm.tooltip = d3.select("#active-network-chart")
                     .append("div")
                     .attr("class", "network-node-tooltip")
                     .style("position", "absolute")
@@ -73,7 +87,7 @@
                     .text("---");
 
 
-                let svg = d3.select("#active-network-chart")
+                vm.svg = d3.select("#active-network-chart")
                     .append("svg")
                     .attr("width", vm.width)
                     .attr("height", vm.height)
@@ -86,17 +100,17 @@
                     .force("y", d3.forceY(vm.height / 2))
                     .on("tick", vm.tick);
 
-                vm.link = svg.append("g")
+                vm.link = vm.svg.append("g")
                     .attr("stroke", "#ccc")
                     .attr("stroke-width", 1.5)
                     .selectAll("line");
 
-                vm.node = svg.append("g")
+                vm.node = vm.svg.append("g")
                     .attr("stroke", "#fff")
                     .attr("stroke-width", 1.5)
                     .selectAll("circle");
 
-                vm.label = svg.append("g")
+                vm.label = vm.svg.append("g")
                     .attr("class", "labels")
                     .style("cursor", "default")
                     .selectAll("text")
@@ -107,6 +121,7 @@
             },
             update(data) {
                 var vm = this;
+                vm.connections = data;
 
                 // Make a shallow copy to protect against mutation, while
                 // recycling old nodes to preserve position and velocity.
@@ -174,11 +189,22 @@
             tick() {
                 var vm = this;
 
+                vm.node.attr("cx", function(d) {
+                        //Hard lock the me element to center
+                        if(d.id == 'me') {return d.x= vm.width/2;}
+                        return d.x = Math.max(20, Math.min(vm.width - 20, d.x));
+                    })
+                    .attr("cy", function(d) {
+                         //Hard lock the me element to center
+                        if(d.id == 'me') {return d.y = vm.height/2;}
+                        return d.y = Math.max(20, Math.min(vm.height - 20, d.y));
+                    });
+
+
                 //vm.node.attr("cx", d => d.x)
                 //    .attr("cy", d => d.y)
+                //console.log(vm.width);
 
-                vm.node.attr("cx", function(d) {return d.x = Math.max(20, Math.min(vm.width - 20, d.x));})
-                    .attr("cy", function(d) {return d.y = Math.max(20, Math.min(vm.height - 20, d.y));});
 
                 vm.link.attr("x1", d => d.source.x)
                     .attr("y1", d => d.source.y)

@@ -112,11 +112,14 @@
         <network-graph-component ref="networkGraph" class="mb-3"></network-graph-component>
 
 
-        <div id='videos' class="container">
-            <div class="row justify-content-center">
+        <div id="videos" class="container">
+            <div class="row justify-content-center video-connections">
+            <div v-if="peerStreams.length == 0" class="no-video-connections">
+                <h1><i class="fas fa-broadcast-tower"></i><i class="fas fa-slash tower-slash"></i></h1>
+                <p>Nobody is streaming</p>
+            </div>
             <div v-for="stream in peerStreams"
                 :key="stream.id"
-
                 class="col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3">
                 <div
                     class="peer-video-details"
@@ -168,6 +171,28 @@
 </template>
 
 <style scoped>
+    .no-video-connections {
+        padding: 4vh;
+        text-align: center;
+    }
+    .video-connections {
+        background: #eee;
+        color:#555;
+        padding: 1vh;
+        border-radius: 5px;
+        box-shadow: 0px 1px 3px #ccc;
+    }
+    .no-video-connections >>> h1 {
+        height:2em;
+    }
+    .no-video-connections >>> i {
+        position: absolute;
+        /*Center the icons*/
+        left: 0;
+        right: 0;
+    }
+
+
     #btn-local-video-toggle {
         right:10px;
         border-radius: 2em !important;

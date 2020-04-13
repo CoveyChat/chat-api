@@ -2311,6 +2311,31 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //Backfills for Mozilla / Safari
 navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
@@ -3067,15 +3092,27 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   mounted: function mounted() {
+    var vm = this;
     console.log("Network Graph Mounted");
-    this.init();
+    window.addEventListener("orientationchange", function (e) {
+      //Orientation change, recalculate the width of the chart
+      setTimeout(function () {
+        vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
+        vm.update(vm.connections);
+      }, 100);
+    });
+    vm.init();
   },
   data: function data() {
     return {
       height: 0,
       width: 0,
+      svg: null,
       simulation: null,
       link: null,
       node: null,
@@ -3104,19 +3141,20 @@ __webpack_require__.r(__webpack_exports__);
       };
       vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
       vm.height = 150;
-      vm.tooltip = d3.select("body").append("div").attr("class", "network-node-tooltip").style("position", "absolute").style("top", "0px").style("left", "0px").style("font-size", "16px").style("z-index", "10").style("visibility", "hidden").style("background", "#fff").style("border-radius", "5px").style("padding", "5px").text("---");
-      var svg = d3.select("#active-network-chart").append("svg").attr("width", vm.width).attr("height", vm.height); //.attr("viewBox", [-vm.width / 2, -vm.height / 2, vm.width, vm.height]);
+      vm.tooltip = d3.select("#active-network-chart").append("div").attr("class", "network-node-tooltip").style("position", "absolute").style("top", "0px").style("left", "0px").style("font-size", "16px").style("z-index", "10").style("visibility", "hidden").style("background", "#fff").style("border-radius", "5px").style("padding", "5px").text("---");
+      vm.svg = d3.select("#active-network-chart").append("svg").attr("width", vm.width).attr("height", vm.height); //.attr("viewBox", [-vm.width / 2, -vm.height / 2, vm.width, vm.height]);
 
       vm.simulation = d3.forceSimulation().force("charge", d3.forceManyBody().strength(-400)).force("link", d3.forceLink().id(function (d) {
         return d.id;
       }).distance(75)).force("x", d3.forceX(vm.width / 2)).force("y", d3.forceY(vm.height / 2)).on("tick", vm.tick);
-      vm.link = svg.append("g").attr("stroke", "#ccc").attr("stroke-width", 1.5).selectAll("line");
-      vm.node = svg.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5).selectAll("circle");
-      vm.label = svg.append("g").attr("class", "labels").style("cursor", "default").selectAll("text");
+      vm.link = vm.svg.append("g").attr("stroke", "#ccc").attr("stroke-width", 1.5).selectAll("line");
+      vm.node = vm.svg.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5).selectAll("circle");
+      vm.label = vm.svg.append("g").attr("class", "labels").style("cursor", "default").selectAll("text");
       vm.update(vm.connections);
     },
     update: function update(data) {
-      var vm = this; // Make a shallow copy to protect against mutation, while
+      var vm = this;
+      vm.connections = data; // Make a shallow copy to protect against mutation, while
       // recycling old nodes to preserve position and velocity.
 
       var old = new Map(vm.node.data().map(function (d) {
@@ -3174,14 +3212,25 @@ __webpack_require__.r(__webpack_exports__);
       return vm.tooltip.style("visibility", "hidden");
     },
     tick: function tick() {
-      var vm = this; //vm.node.attr("cx", d => d.x)
-      //    .attr("cy", d => d.y)
-
+      var vm = this;
       vm.node.attr("cx", function (d) {
+        //Hard lock the me element to center
+        if (d.id == 'me') {
+          return d.x = vm.width / 2;
+        }
+
         return d.x = Math.max(20, Math.min(vm.width - 20, d.x));
       }).attr("cy", function (d) {
+        //Hard lock the me element to center
+        if (d.id == 'me') {
+          return d.y = vm.height / 2;
+        }
+
         return d.y = Math.max(20, Math.min(vm.height - 20, d.y));
-      });
+      }); //vm.node.attr("cx", d => d.x)
+      //    .attr("cy", d => d.y)
+      //console.log(vm.width);
+
       vm.link.attr("x1", function (d) {
         return d.source.x;
       }).attr("y1", function (d) {
@@ -10047,7 +10096,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n.remote-stream[data-v-80d584ac] {\n    background:#000;\n}\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n    position: absolute;\n    z-index: 2;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\nbutton.local-audio-overlay[data-v-80d584ac],\nbutton.local-screenshare-overlay[data-v-80d584ac],\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    top:15em !important;\n}\n\n\n/* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n.remote-stream[data-v-80d584ac] {\n    background:#000;\n}\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n    position: absolute;\n    z-index: 2;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\nbutton.local-audio-overlay[data-v-80d584ac],\nbutton.local-screenshare-overlay[data-v-80d584ac],\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    top:15em !important;\n}\n\n\n/* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -10104,7 +10153,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.link {\n    stroke: #aaa;\n}\n.node text {\n    stroke:#333;\n    cursor:pointer;\n}\n.node circle{\n    stroke:#fff;\n    stroke-width:3px;\n    fill:#555;\n}\n", ""]);
+exports.push([module.i, "\n#active-network-chart {\n    height: 150px;\n}\n.link {\n    stroke: #aaa;\n}\n.node text {\n    stroke:#333;\n    cursor:pointer;\n}\n.node circle{\n    stroke:#fff;\n    stroke-width:3px;\n    fill:#555;\n}\n", ""]);
 
 // exports
 
@@ -55842,59 +55891,71 @@ var render = function() {
               _c("div", { staticClass: "container", attrs: { id: "videos" } }, [
                 _c(
                   "div",
-                  { staticClass: "row justify-content-center" },
-                  _vm._l(_vm.peerStreams, function(stream) {
-                    return _c(
-                      "div",
-                      {
-                        key: stream.id,
-                        staticClass:
-                          "col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3"
-                      },
-                      [
-                        _c(
-                          "div",
-                          {
-                            staticClass: "peer-video-details",
+                  {
+                    staticClass: "row justify-content-center video-connections"
+                  },
+                  [
+                    _vm.peerStreams.length == 0
+                      ? _c("div", { staticClass: "no-video-connections" }, [
+                          _vm._m(0),
+                          _vm._v(" "),
+                          _c("p", [_vm._v("Nobody is streaming")])
+                        ])
+                      : _vm._e(),
+                    _vm._v(" "),
+                    _vm._l(_vm.peerStreams, function(stream) {
+                      return _c(
+                        "div",
+                        {
+                          key: stream.id,
+                          staticClass:
+                            "col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3"
+                        },
+                        [
+                          _c(
+                            "div",
+                            {
+                              staticClass: "peer-video-details",
+                              class: {
+                                "peer-video-fullscreen": _vm.ui.inFullscreen
+                              }
+                            },
+                            [
+                              _vm._v(
+                                "\n                " +
+                                  _vm._s(stream.peeruser.name) +
+                                  "\n                "
+                              ),
+                              stream.peeruser.verified
+                                ? _c("i", { staticClass: "fas fa-lock" })
+                                : _vm._e()
+                            ]
+                          ),
+                          _vm._v(" "),
+                          _c("video", {
+                            staticClass: "embed-responsive-item remote-stream",
                             class: {
                               "peer-video-fullscreen": _vm.ui.inFullscreen
+                            },
+                            attrs: {
+                              poster: "https://bevy.chat/img/video_poster.png",
+                              autoplay: "autoplay",
+                              volume: "1"
+                            },
+                            domProps: { srcObject: stream },
+                            on: {
+                              webkitfullscreenchange: _vm.fullscreenVideo,
+                              mozfullscreenchange: _vm.fullscreenVideo,
+                              fullscreenchange: _vm.fullscreenVideo,
+                              click: _vm.onDoubleClickCheck,
+                              play: _vm.setDefaultVolume
                             }
-                          },
-                          [
-                            _vm._v(
-                              "\n                " +
-                                _vm._s(stream.peeruser.name) +
-                                "\n                "
-                            ),
-                            stream.peeruser.verified
-                              ? _c("i", { staticClass: "fas fa-lock" })
-                              : _vm._e()
-                          ]
-                        ),
-                        _vm._v(" "),
-                        _c("video", {
-                          staticClass: "embed-responsive-item remote-stream",
-                          class: {
-                            "peer-video-fullscreen": _vm.ui.inFullscreen
-                          },
-                          attrs: {
-                            poster: "https://bevy.chat/img/video_poster.png",
-                            autoplay: "autoplay",
-                            volume: "1"
-                          },
-                          domProps: { srcObject: stream },
-                          on: {
-                            webkitfullscreenchange: _vm.fullscreenVideo,
-                            mozfullscreenchange: _vm.fullscreenVideo,
-                            fullscreenchange: _vm.fullscreenVideo,
-                            click: _vm.onDoubleClickCheck,
-                            play: _vm.setDefaultVolume
-                          }
-                        })
-                      ]
-                    )
-                  }),
-                  0
+                          })
+                        ]
+                      )
+                    })
+                  ],
+                  2
                 )
               ])
             ],
@@ -55968,7 +56029,17 @@ var render = function() {
     1
   )
 }
-var staticRenderFns = []
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("h1", [
+      _c("i", { staticClass: "fas fa-broadcast-tower" }),
+      _c("i", { staticClass: "fas fa-slash tower-slash" })
+    ])
+  }
+]
 render._withStripped = true
 
 
