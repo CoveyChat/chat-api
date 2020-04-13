@@ -2336,8 +2336,13 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//Backfills for Mozilla / Safari
-navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+try {
+  //Backfills for Mozilla / Safari
+  navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+} catch (e) {
+  alert("Your device does not support video. If you see Jake, tell him this:\n\n" + JSON.stringify(e));
+}
+
 
 
 
@@ -2518,6 +2523,12 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     },
     toggleVideo: function toggleVideo(e) {
       var vm = this;
+
+      if (typeof navigator.mediaDevices == 'undefined') {
+        alert("Something went wrong and your device does not support video");
+        return;
+      }
+
       vm.user.discoverDevices(function () {
         //Turn off screensharing and swap back to video
         if (!vm.stream.videoenabled && vm.stream.screenshareenabled) {

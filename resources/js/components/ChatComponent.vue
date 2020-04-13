@@ -344,11 +344,14 @@
 </style>
 
 <script>
-
-//Backfills for Mozilla / Safari
-navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia ||
-navigator.webkitGetUserMedia ||
-navigator.mozGetUserMedia;
+try {
+	//Backfills for Mozilla / Safari
+	navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia ||
+	navigator.webkitGetUserMedia ||
+	navigator.mozGetUserMedia;
+} catch (e) {
+    alert("Your device does not support video. If you see Jake, tell him this:\n\n" + JSON.stringify(e));
+}
 
 import SoundEffect from '../models/SoundEffect.js';
 import User from '../models/User.js';
@@ -505,6 +508,11 @@ export default {
         },
         toggleVideo(e) {
             var vm = this;
+
+            if(typeof navigator.mediaDevices == 'undefined') {
+                alert("Something went wrong and your device does not support video");
+                return;
+            }
 
             vm.user.discoverDevices(function() {
                 //Turn off screensharing and swap back to video
