@@ -325,6 +325,11 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia ||
 navigator.webkitGetUserMedia ||
 navigator.mozGetUserMedia;
 
+import SoundEffect from '../models/SoundEffect.js';
+import User from '../models/User.js';
+import Message from '../models/Message.js';
+import PeerConnection from '../models/PeerConnection.js';
+
 export default {
     data: function () {
         return {
@@ -335,8 +340,8 @@ export default {
             user: {active: false},
             stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
             peerStreams: [],
-            server: {ip:'bevy.chat', port:1337, signal: null},
-            ui: {anonUsername: '', inFullscreen: false, dblClickTimer: null, sound: {connect: null, disconnect: null, message: null}}
+            server: {ip:'devbevy.chat', port:1337, signal: null},
+            ui: {anonUsername: '', inFullscreen: false, dblClickTimer: null, sound: null}
         }
     },
     methods: {
@@ -688,7 +693,7 @@ export default {
         },
         handlePeerDisconnect(id) {
             var vm = this;
-            vm.ui.sound.disconnect.play();
+            vm.ui.sound.play('disconnect');
             delete vm.connections[id];
             vm.outputConnections();
 
@@ -739,10 +744,7 @@ export default {
                     vm.connections[id] = peer;
                     console.log("NEW HOST PEER " + id);
                     vm.connections[id].connection.on('connect', function() {
-                        if(vm.ui.sound.connect.waitUntil <= Date.now()) {
-                            vm.ui.sound.connect.play();
-                            vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
-                        }
+                        vm.ui.sound.play('connect');
 
                         vm.outputConnections();
 
@@ -756,7 +758,7 @@ export default {
                     vm.connections[id].connection.on('error', function() {vm.handlePeerDisconnect(this._id);});
 
                     vm.connections[id].connection.on('data', function(data) {
-                        vm.ui.sound.message.play();
+                        vm.ui.sound.play('message');
                         vm.recieveMessage(vm.connections[this._id].user, data);
                     });
 
@@ -804,10 +806,7 @@ export default {
                         console.log("CONNECTED TO CLIENT~~");
                         console.log(this);
                         console.log(vm.connections[id].user);
-                        if(vm.ui.sound.connect.waitUntil <= Date.now()) {
-                            vm.ui.sound.connect.play();
-                            vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
-                        }
+                        vm.ui.sound.play('connect');
 
                         vm.outputConnections();
                         if(vm.stream.videoenabled) {
@@ -838,18 +837,10 @@ export default {
         }
     },
 mounted() {
-    console.log('Component mounted.');
+    console.log('Chat Component mounted.');
     //View model reference for inside scoped functions
     var vm = this;
-
-    vm.ui.sound.connect = new Audio("/media/join.mp3");
-    vm.ui.sound.connect.waitUntil = Date.now();
-
-    vm.ui.sound.disconnect = new Audio("/media/leave.mp3");
-    vm.ui.sound.disconnect.waitUntil = Date.now();
-
-    vm.ui.sound.message = new Audio("/media/message.mp3");
-    vm.ui.sound.message.waitUntil = Date.now();
+    vm.ui.sound = new SoundEffect();
 
     vm.user = new User();
     vm.user.auth().then(function(response) {
@@ -861,242 +852,8 @@ mounted() {
 }
 }
 
-class PeerConnection {
-
-    constructor(server, initiator) {
-        var Peer = require('simple-peer');
-        var self = this;
-
-        self.connection = new Peer({
-            initiator: initiator,
-            config: {
-                iceServers: [
-                    {urls: 'stun:bevy.chat'},
-                    {urls: 'turn:bevy.chat', username: 'bevychat', credential: 'bevychatturntest'}
-                ]
-            }
-        });
-        self.server = server;
-
-        self.id = self.connection._id;
-        self.user = {name: "anonymous user", verified: false};
-
-        self.initiator = initiator;
-        self.hostid = initiator ? self.id : null;
-        self.clientid = initiator ? null : self.id;
-
-        self.isStreaming = false;
-
-        self.connection.on('connect', function() {
-            console.log("~~~~~Connected!~~~~~");
-        });
-
-        self.connection.on('signal', function (webRtcId) {
-            if(self.connection.initiator) {
-                console.log('Got initiator signal, sending off to client');
-                self.server.emit('sendtoclient', {webRtcId: webRtcId, hostid: self.hostid, clientid: self.clientid});
-            } else {
-                console.log('Got client signal, sending off to host');
-
-                //Got a response from the initiator
-                self.server.emit('sendtohost', {webRtcId:webRtcId, hostid: self.hostid, clientid: self.clientid});
-            }
 
 
-        });
-
-        self.connection.on('close', function() {
-            console.log("Connection closed - " + self.id);
-            self.destroy();
-        });
-
-        self.connection.on('error', function(err) {
-            console.log("Connection error - " + self.id);
-            self.destroy();
-        });
-
-        return this;
-    }
-
-    addStream(stream) {
-        if(this.isStreaming) {
-            console.log("ALREADY STREAMING");
-        } else {
-            console.log(this.connection);
-            this.connection.addStream(stream);
-            this.isStreaming = true;
-        }
-
-    }
-
-    removeStream(stream) {
-        if(!this.isStreaming) {
-            console.log("NOT STREAMING");
-        } else {
-            this.connection.removeStream(stream);
-            this.isStreaming = false;
-        }
-
-    }
-
-    setHostId(id) {
-        this.hostid = id;
-        this.connection.hostid = id;
-    }
-    setClientId(id) {
-        this.clientid = id;
-        this.connection.clientid = id;
-    }
-    setUser(user) {
-        this.user = user;
-    }
-
-    signal(webRtcId) {
-        this.connection.signal(webRtcId);
-    }
-
-    destroy() {
-        this.connection.destroy();
-        return null;
-    }
-}
-
-class User {
-    //Gets the current authenticated user
-    constructor() {
-        var self = this;
-        self.id
-        self.name
-        self.email
-        self.avatar
-        self.token
-        self.verified
-        self.active;
-        self.devices = {video: [], audio: [], active: {video: null, audio: null}};
-
-        this.transport = axios.create({
-            withCredentials: true
-        });
-
-        //Used to determine if the user object has been instantiated
-        self.active = false;
-    }
-
-    auth() {
-        var self = this;
-
-        //Get this chat database record
-        return this.transport.get('/api/1.0/users/whoami').then(response => {
-            //console.log(response.data);
-            self.id = response.data.data.id;
-            self.name = response.data.data.name;
-            self.email = response.data.data.email;
-            self.token = response.data.data.token;
-            self.verified = true;
-            self.active = true;
-            return response.data;
-        }).catch(error => {
-            if (error.response.status === 401) {
-                //Prop up an empty user data object
-                return {
-                    success: false,
-                    message: '',
-                    data: {
-                        id: null,
-                        name: self.name,
-                        verified: false
-                    }
-                }
-            }
-        });
-    }
-
-    getVideoDevices() {
-        return this.devices.video;
-    }
-
-    getAudioDevices() {
-        return this.devices.audio;
-    }
-
-    discoverDevices(cb) {
-        var self = this;
-
-        //If we've already found a video AND audio device, don't bother searching again
-        if(self.devices.video.length == 0 || self.devices.audio.length == 0) {
-            console.log("Discovering input devices...");
-            navigator.mediaDevices.enumerateDevices().then(function(devices) {
-                for(var i=0; i<devices.length; i++) {
-                    if(devices[i].kind == "audioinput") {
-                        if(self.devices.audio.length == 0) {
-                            //Set this device to be the default
-                            self.devices.active.audio = devices[i].deviceId;
-                        }
-                        self.devices.audio.push(devices[i]);
-                    } else if(devices[i].kind == "videoinput") {
-                        if(self.devices.video.length == 0) {
-                            //Set this device to be the default
-                            self.devices.active.video = devices[i].deviceId;
-                        }
-                        self.devices.video.push(devices[i]);
-                    }
-                }
-
-                cb();
-            });
-        } else {
-            cb();
-        }
-    }
-
-    getDataObject() {
-        return {
-            id: this.id,
-            name: this.name,
-            verified: this.verified
-        };
-    }
-
-    getAuthObject() {
-        return {
-            name: this.name,
-            token: this.token
-        };
-    }
-}
-
-class Message {
-    constructor() {}
-
-    static broadcast(connections, message) {
-        if(message == '' || Object.keys(connections).length == 0) {
-            return false;
-        }
-
-        console.log("Broadcasting to (" + Object.keys(connections).length + ") open connections");
-
-        for(var id in connections) {
-            var conn = connections[id].connection;
-            if(conn == null || !conn.connected || conn.destroyed) {
-                console.log("Tried sending through bad connection id " + id);
-                console.log(connections);
-                console.log(conn);
-                console.log("Connected " + conn.connected);
-                console.log("Destroyed " + conn.destroyed);
-                delete connections[id];
-                continue;
-            }
-
-            console.log("Sending to " + id);
-            conn.send(message);
-        }
-
-        //After deleting any bad connections, if there's any left that we sent to then return true
-        return Object.keys(connections).length > 0;
-
-
-    }
-}
 
 
 

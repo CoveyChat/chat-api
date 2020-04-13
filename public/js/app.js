@@ -1987,12 +1987,10 @@ module.exports = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
+/* harmony import */ var _models_SoundEffect_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../models/SoundEffect.js */ "./resources/js/models/SoundEffect.js");
+/* harmony import */ var _models_User_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../models/User.js */ "./resources/js/models/User.js");
+/* harmony import */ var _models_Message_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../models/Message.js */ "./resources/js/models/Message.js");
+/* harmony import */ var _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../models/PeerConnection.js */ "./resources/js/models/PeerConnection.js");
 //
 //
 //
@@ -2315,6 +2313,10 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 //
 //Backfills for Mozilla / Safari
 navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+
+
+
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -2335,7 +2337,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       },
       peerStreams: [],
       server: {
-        ip: 'bevy.chat',
+        ip: 'devbevy.chat',
         port: 1337,
         signal: null
       },
@@ -2343,11 +2345,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
         anonUsername: '',
         inFullscreen: false,
         dblClickTimer: null,
-        sound: {
-          connect: null,
-          disconnect: null,
-          message: null
-        }
+        sound: null
       }
     };
   },
@@ -2538,7 +2536,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
       console.log('Called message sender');
 
       if (vm.message != '' && Object.keys(vm.connections).length > 0) {
-        if (Message.broadcast(vm.connections, vm.message)) {
+        if (_models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].broadcast(vm.connections, vm.message)) {
           //Write the message we just sent to ourself
           vm.recieveMessage(vm.user.getDataObject(), vm.message, true);
           vm.message = '';
@@ -2720,7 +2718,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     },
     handlePeerDisconnect: function handlePeerDisconnect(id) {
       var vm = this;
-      vm.ui.sound.disconnect.play();
+      vm.ui.sound.play('disconnect');
       delete vm.connections[id];
       vm.outputConnections(); //Also remove anything they were streaming
 
@@ -2765,16 +2763,12 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
         console.log("init (" + numHosts + ") hosts");
 
         for (var i = 0; i < numHosts; i++) {
-          var peer = new PeerConnection(vm.server.signal, true);
+          var peer = new _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__["default"](vm.server.signal, true);
           var id = peer.id;
           vm.connections[id] = peer;
           console.log("NEW HOST PEER " + id);
           vm.connections[id].connection.on('connect', function () {
-            if (vm.ui.sound.connect.waitUntil <= Date.now()) {
-              vm.ui.sound.connect.play();
-              vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
-            }
-
+            vm.ui.sound.play('connect');
             vm.outputConnections();
 
             if (vm.stream.videoenabled) {
@@ -2789,7 +2783,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
             vm.handlePeerDisconnect(this._id);
           });
           vm.connections[id].connection.on('data', function (data) {
-            vm.ui.sound.message.play();
+            vm.ui.sound.play('message');
             vm.recieveMessage(vm.connections[this._id].user, data);
           });
           vm.connections[id].connection.on('stream', function (stream) {
@@ -2825,7 +2819,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
 
         if (typeof vm.connections[id] == 'undefined') {
           console.log("Init a peer for host " + id);
-          var peer = new PeerConnection(vm.server.signal, false);
+          var peer = new _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__["default"](vm.server.signal, false);
           vm.connections[id] = peer;
           vm.connections[id].setHostId(obj.hostid);
           vm.connections[id].setUser(obj.user);
@@ -2833,12 +2827,7 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
             console.log("CONNECTED TO CLIENT~~");
             console.log(this);
             console.log(vm.connections[id].user);
-
-            if (vm.ui.sound.connect.waitUntil <= Date.now()) {
-              vm.ui.sound.connect.play();
-              vm.ui.sound.connect.waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
-            }
-
+            vm.ui.sound.play('connect');
             vm.outputConnections();
 
             if (vm.stream.videoenabled) {
@@ -2868,16 +2857,11 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     }
   },
   mounted: function mounted() {
-    console.log('Component mounted.'); //View model reference for inside scoped functions
+    console.log('Chat Component mounted.'); //View model reference for inside scoped functions
 
     var vm = this;
-    vm.ui.sound.connect = new Audio("/media/join.mp3");
-    vm.ui.sound.connect.waitUntil = Date.now();
-    vm.ui.sound.disconnect = new Audio("/media/leave.mp3");
-    vm.ui.sound.disconnect.waitUntil = Date.now();
-    vm.ui.sound.message = new Audio("/media/message.mp3");
-    vm.ui.sound.message.waitUntil = Date.now();
-    vm.user = new User();
+    vm.ui.sound = new _models_SoundEffect_js__WEBPACK_IMPORTED_MODULE_0__["default"]();
+    vm.user = new _models_User_js__WEBPACK_IMPORTED_MODULE_1__["default"]();
     vm.user.auth().then(function (response) {
       //Prompt for a name
       if (response.success) {
@@ -2886,281 +2870,6 @@ navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || nav
     });
   }
 });
-
-var PeerConnection = /*#__PURE__*/function () {
-  function PeerConnection(server, initiator) {
-    _classCallCheck(this, PeerConnection);
-
-    var Peer = __webpack_require__(/*! simple-peer */ "./node_modules/simple-peer/index.js");
-
-    var self = this;
-    self.connection = new Peer({
-      initiator: initiator,
-      config: {
-        iceServers: [{
-          urls: 'stun:bevy.chat'
-        }, {
-          urls: 'turn:bevy.chat',
-          username: 'bevychat',
-          credential: 'bevychatturntest'
-        }]
-      }
-    });
-    self.server = server;
-    self.id = self.connection._id;
-    self.user = {
-      name: "anonymous user",
-      verified: false
-    };
-    self.initiator = initiator;
-    self.hostid = initiator ? self.id : null;
-    self.clientid = initiator ? null : self.id;
-    self.isStreaming = false;
-    self.connection.on('connect', function () {
-      console.log("~~~~~Connected!~~~~~");
-    });
-    self.connection.on('signal', function (webRtcId) {
-      if (self.connection.initiator) {
-        console.log('Got initiator signal, sending off to client');
-        self.server.emit('sendtoclient', {
-          webRtcId: webRtcId,
-          hostid: self.hostid,
-          clientid: self.clientid
-        });
-      } else {
-        console.log('Got client signal, sending off to host'); //Got a response from the initiator
-
-        self.server.emit('sendtohost', {
-          webRtcId: webRtcId,
-          hostid: self.hostid,
-          clientid: self.clientid
-        });
-      }
-    });
-    self.connection.on('close', function () {
-      console.log("Connection closed - " + self.id);
-      self.destroy();
-    });
-    self.connection.on('error', function (err) {
-      console.log("Connection error - " + self.id);
-      self.destroy();
-    });
-    return this;
-  }
-
-  _createClass(PeerConnection, [{
-    key: "addStream",
-    value: function addStream(stream) {
-      if (this.isStreaming) {
-        console.log("ALREADY STREAMING");
-      } else {
-        console.log(this.connection);
-        this.connection.addStream(stream);
-        this.isStreaming = true;
-      }
-    }
-  }, {
-    key: "removeStream",
-    value: function removeStream(stream) {
-      if (!this.isStreaming) {
-        console.log("NOT STREAMING");
-      } else {
-        this.connection.removeStream(stream);
-        this.isStreaming = false;
-      }
-    }
-  }, {
-    key: "setHostId",
-    value: function setHostId(id) {
-      this.hostid = id;
-      this.connection.hostid = id;
-    }
-  }, {
-    key: "setClientId",
-    value: function setClientId(id) {
-      this.clientid = id;
-      this.connection.clientid = id;
-    }
-  }, {
-    key: "setUser",
-    value: function setUser(user) {
-      this.user = user;
-    }
-  }, {
-    key: "signal",
-    value: function signal(webRtcId) {
-      this.connection.signal(webRtcId);
-    }
-  }, {
-    key: "destroy",
-    value: function destroy() {
-      this.connection.destroy();
-      return null;
-    }
-  }]);
-
-  return PeerConnection;
-}();
-
-var User = /*#__PURE__*/function () {
-  //Gets the current authenticated user
-  function User() {
-    _classCallCheck(this, User);
-
-    var self = this;
-    self.id;
-    self.name;
-    self.email;
-    self.avatar;
-    self.token;
-    self.verified;
-    self.active;
-    self.devices = {
-      video: [],
-      audio: [],
-      active: {
-        video: null,
-        audio: null
-      }
-    };
-    this.transport = axios.create({
-      withCredentials: true
-    }); //Used to determine if the user object has been instantiated
-
-    self.active = false;
-  }
-
-  _createClass(User, [{
-    key: "auth",
-    value: function auth() {
-      var self = this; //Get this chat database record
-
-      return this.transport.get('/api/1.0/users/whoami').then(function (response) {
-        //console.log(response.data);
-        self.id = response.data.data.id;
-        self.name = response.data.data.name;
-        self.email = response.data.data.email;
-        self.token = response.data.data.token;
-        self.verified = true;
-        self.active = true;
-        return response.data;
-      })["catch"](function (error) {
-        if (error.response.status === 401) {
-          //Prop up an empty user data object
-          return {
-            success: false,
-            message: '',
-            data: {
-              id: null,
-              name: self.name,
-              verified: false
-            }
-          };
-        }
-      });
-    }
-  }, {
-    key: "getVideoDevices",
-    value: function getVideoDevices() {
-      return this.devices.video;
-    }
-  }, {
-    key: "getAudioDevices",
-    value: function getAudioDevices() {
-      return this.devices.audio;
-    }
-  }, {
-    key: "discoverDevices",
-    value: function discoverDevices(cb) {
-      var self = this; //If we've already found a video AND audio device, don't bother searching again
-
-      if (self.devices.video.length == 0 || self.devices.audio.length == 0) {
-        console.log("Discovering input devices...");
-        navigator.mediaDevices.enumerateDevices().then(function (devices) {
-          for (var i = 0; i < devices.length; i++) {
-            if (devices[i].kind == "audioinput") {
-              if (self.devices.audio.length == 0) {
-                //Set this device to be the default
-                self.devices.active.audio = devices[i].deviceId;
-              }
-
-              self.devices.audio.push(devices[i]);
-            } else if (devices[i].kind == "videoinput") {
-              if (self.devices.video.length == 0) {
-                //Set this device to be the default
-                self.devices.active.video = devices[i].deviceId;
-              }
-
-              self.devices.video.push(devices[i]);
-            }
-          }
-
-          cb();
-        });
-      } else {
-        cb();
-      }
-    }
-  }, {
-    key: "getDataObject",
-    value: function getDataObject() {
-      return {
-        id: this.id,
-        name: this.name,
-        verified: this.verified
-      };
-    }
-  }, {
-    key: "getAuthObject",
-    value: function getAuthObject() {
-      return {
-        name: this.name,
-        token: this.token
-      };
-    }
-  }]);
-
-  return User;
-}();
-
-var Message = /*#__PURE__*/function () {
-  function Message() {
-    _classCallCheck(this, Message);
-  }
-
-  _createClass(Message, null, [{
-    key: "broadcast",
-    value: function broadcast(connections, message) {
-      if (message == '' || Object.keys(connections).length == 0) {
-        return false;
-      }
-
-      console.log("Broadcasting to (" + Object.keys(connections).length + ") open connections");
-
-      for (var id in connections) {
-        var conn = connections[id].connection;
-
-        if (conn == null || !conn.connected || conn.destroyed) {
-          console.log("Tried sending through bad connection id " + id);
-          console.log(connections);
-          console.log(conn);
-          console.log("Connected " + conn.connected);
-          console.log("Destroyed " + conn.destroyed);
-          delete connections[id];
-          continue;
-        }
-
-        console.log("Sending to " + id);
-        conn.send(message);
-      } //After deleting any bad connections, if there's any left that we sent to then return true
-
-
-      return Object.keys(connections).length > 0;
-    }
-  }]);
-
-  return Message;
-}();
 
 /***/ }),
 
@@ -69240,6 +68949,391 @@ Vue.directive('draggable', {
     });
   }
 });
+
+/***/ }),
+
+/***/ "./resources/js/models/Message.js":
+/*!****************************************!*\
+  !*** ./resources/js/models/Message.js ***!
+  \****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Message; });
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var Message = /*#__PURE__*/function () {
+  function Message() {
+    _classCallCheck(this, Message);
+  }
+
+  _createClass(Message, null, [{
+    key: "broadcast",
+    value: function broadcast(connections, message) {
+      if (message == '' || Object.keys(connections).length == 0) {
+        return false;
+      }
+
+      console.log("Broadcasting to (" + Object.keys(connections).length + ") open connections");
+
+      for (var id in connections) {
+        var conn = connections[id].connection;
+
+        if (conn == null || !conn.connected || conn.destroyed) {
+          console.log("Tried sending through bad connection id " + id);
+          console.log(connections);
+          console.log(conn);
+          console.log("Connected " + conn.connected);
+          console.log("Destroyed " + conn.destroyed);
+          delete connections[id];
+          continue;
+        }
+
+        console.log("Sending to " + id);
+        conn.send(message);
+      } //After deleting any bad connections, if there's any left that we sent to then return true
+
+
+      return Object.keys(connections).length > 0;
+    }
+  }]);
+
+  return Message;
+}();
+
+
+
+/***/ }),
+
+/***/ "./resources/js/models/PeerConnection.js":
+/*!***********************************************!*\
+  !*** ./resources/js/models/PeerConnection.js ***!
+  \***********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return PeerConnection; });
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var PeerConnection = /*#__PURE__*/function () {
+  function PeerConnection(server, initiator) {
+    _classCallCheck(this, PeerConnection);
+
+    var Peer = __webpack_require__(/*! simple-peer */ "./node_modules/simple-peer/index.js");
+
+    var self = this;
+    self.connection = new Peer({
+      initiator: initiator,
+      config: {
+        iceServers: [{
+          urls: 'stun:bevy.chat'
+        }, {
+          urls: 'turn:bevy.chat',
+          username: 'bevychat',
+          credential: 'bevychatturntest'
+        }]
+      }
+    });
+    self.server = server;
+    self.id = self.connection._id;
+    self.user = {
+      name: "anonymous user",
+      verified: false
+    };
+    self.initiator = initiator;
+    self.hostid = initiator ? self.id : null;
+    self.clientid = initiator ? null : self.id;
+    self.isStreaming = false;
+    self.connection.on('connect', function () {
+      console.log("~~~~~Connected!~~~~~");
+    });
+    self.connection.on('signal', function (webRtcId) {
+      if (self.connection.initiator) {
+        console.log('Got initiator signal, sending off to client');
+        self.server.emit('sendtoclient', {
+          webRtcId: webRtcId,
+          hostid: self.hostid,
+          clientid: self.clientid
+        });
+      } else {
+        console.log('Got client signal, sending off to host'); //Got a response from the initiator
+
+        self.server.emit('sendtohost', {
+          webRtcId: webRtcId,
+          hostid: self.hostid,
+          clientid: self.clientid
+        });
+      }
+    });
+    self.connection.on('close', function () {
+      console.log("Connection closed - " + self.id);
+      self.destroy();
+    });
+    self.connection.on('error', function (err) {
+      console.log("Connection error - " + self.id);
+      self.destroy();
+    });
+    return this;
+  }
+
+  _createClass(PeerConnection, [{
+    key: "addStream",
+    value: function addStream(stream) {
+      if (this.isStreaming) {
+        console.log("ALREADY STREAMING");
+      } else {
+        console.log(this.connection);
+        this.connection.addStream(stream);
+        this.isStreaming = true;
+      }
+    }
+  }, {
+    key: "removeStream",
+    value: function removeStream(stream) {
+      if (!this.isStreaming) {
+        console.log("NOT STREAMING");
+      } else {
+        this.connection.removeStream(stream);
+        this.isStreaming = false;
+      }
+    }
+  }, {
+    key: "setHostId",
+    value: function setHostId(id) {
+      this.hostid = id;
+      this.connection.hostid = id;
+    }
+  }, {
+    key: "setClientId",
+    value: function setClientId(id) {
+      this.clientid = id;
+      this.connection.clientid = id;
+    }
+  }, {
+    key: "setUser",
+    value: function setUser(user) {
+      this.user = user;
+    }
+  }, {
+    key: "signal",
+    value: function signal(webRtcId) {
+      this.connection.signal(webRtcId);
+    }
+  }, {
+    key: "destroy",
+    value: function destroy() {
+      this.connection.destroy();
+      return null;
+    }
+  }]);
+
+  return PeerConnection;
+}();
+
+
+
+/***/ }),
+
+/***/ "./resources/js/models/SoundEffect.js":
+/*!********************************************!*\
+  !*** ./resources/js/models/SoundEffect.js ***!
+  \********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return SoundEffect; });
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var SoundEffect = /*#__PURE__*/function () {
+  function SoundEffect() {
+    _classCallCheck(this, SoundEffect);
+
+    this.sound = {};
+    this.sound.connect = new Audio("/media/join.mp3");
+    this.sound.connect.waitUntil = Date.now();
+    this.sound.disconnect = new Audio("/media/leave.mp3");
+    this.sound.disconnect.waitUntil = Date.now();
+    this.sound.message = new Audio("/media/message.mp3");
+    this.sound.message.waitUntil = Date.now();
+  }
+
+  _createClass(SoundEffect, [{
+    key: "play",
+    value: function play(key) {
+      if (typeof this.sound[key] == 'undefined') {
+        console.log("Sound '" + key + "' does not exist");
+      }
+
+      if (this.sound[key].waitUntil <= Date.now()) {
+        this.sound[key].play();
+        this.sound[key].waitUntil = Date.now() + 5000; //Wait 5 seconds before playing again
+      }
+    }
+  }]);
+
+  return SoundEffect;
+}();
+
+
+
+/***/ }),
+
+/***/ "./resources/js/models/User.js":
+/*!*************************************!*\
+  !*** ./resources/js/models/User.js ***!
+  \*************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return User; });
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var User = /*#__PURE__*/function () {
+  //Gets the current authenticated user
+  function User() {
+    _classCallCheck(this, User);
+
+    var self = this;
+    self.id;
+    self.name;
+    self.email;
+    self.avatar;
+    self.token;
+    self.verified;
+    self.active;
+    self.devices = {
+      video: [],
+      audio: [],
+      active: {
+        video: null,
+        audio: null
+      }
+    };
+    this.transport = axios.create({
+      withCredentials: true
+    }); //Used to determine if the user object has been instantiated
+
+    self.active = false;
+  }
+
+  _createClass(User, [{
+    key: "auth",
+    value: function auth() {
+      var self = this; //Get this chat database record
+
+      return this.transport.get('/api/1.0/users/whoami').then(function (response) {
+        //console.log(response.data);
+        self.id = response.data.data.id;
+        self.name = response.data.data.name;
+        self.email = response.data.data.email;
+        self.token = response.data.data.token;
+        self.verified = true;
+        self.active = true;
+        return response.data;
+      })["catch"](function (error) {
+        if (error.response.status === 401) {
+          //Prop up an empty user data object
+          return {
+            success: false,
+            message: '',
+            data: {
+              id: null,
+              name: self.name,
+              verified: false
+            }
+          };
+        }
+      });
+    }
+  }, {
+    key: "getVideoDevices",
+    value: function getVideoDevices() {
+      return this.devices.video;
+    }
+  }, {
+    key: "getAudioDevices",
+    value: function getAudioDevices() {
+      return this.devices.audio;
+    }
+  }, {
+    key: "discoverDevices",
+    value: function discoverDevices(cb) {
+      var self = this; //If we've already found a video AND audio device, don't bother searching again
+
+      if (self.devices.video.length == 0 || self.devices.audio.length == 0) {
+        console.log("Discovering input devices...");
+        navigator.mediaDevices.enumerateDevices().then(function (devices) {
+          for (var i = 0; i < devices.length; i++) {
+            if (devices[i].kind == "audioinput") {
+              if (self.devices.audio.length == 0) {
+                //Set this device to be the default
+                self.devices.active.audio = devices[i].deviceId;
+              }
+
+              self.devices.audio.push(devices[i]);
+            } else if (devices[i].kind == "videoinput") {
+              if (self.devices.video.length == 0) {
+                //Set this device to be the default
+                self.devices.active.video = devices[i].deviceId;
+              }
+
+              self.devices.video.push(devices[i]);
+            }
+          }
+
+          cb();
+        });
+      } else {
+        cb();
+      }
+    }
+  }, {
+    key: "getDataObject",
+    value: function getDataObject() {
+      return {
+        id: this.id,
+        name: this.name,
+        verified: this.verified
+      };
+    }
+  }, {
+    key: "getAuthObject",
+    value: function getAuthObject() {
+      return {
+        name: this.name,
+        token: this.token
+      };
+    }
+  }]);
+
+  return User;
+}();
+
+
 
 /***/ }),
 
