@@ -494,7 +494,6 @@ export default {
             var vm = this;
             var position = e.target.getBoundingClientRect();
 
-            console.log(position);
             if(vm.stream.localsize == 'lg') {
                 vm.stream.localsize = 'md'
             } else if(vm.stream.localsize == 'md') {
@@ -588,6 +587,7 @@ export default {
                         navigator.mediaDevices.getUserMedia(options).then(function(stream) {
                             vm.stream.videoenabled = true;
                             vm.stream.screenshareenabled = false;
+
                             vm.onLocalStream(stream);
                         }).catch((e) => {
                             alert("Something went horrible wrong when getting your video feed.\nYou should probably screencap this and send it to Jake\n\n\nError: " + JSON.stringify(e) + "\n\nOptions: " + JSON.stringify(options));
@@ -619,7 +619,8 @@ export default {
         },
         recieveMessage(user, data, self = false) {
             var vm = this;
-            vm.chatLog.push({index: vm.chatLog.length, message: data, user: user, self: self});
+            //Add the elements in reverse so that the log trickles from the bottom up
+            vm.chatLog.unshift({index: vm.chatLog.length, message: data, user: user, self: self});
         },
         outputConnections () {
             var vm = this;

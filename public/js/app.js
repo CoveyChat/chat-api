@@ -2508,7 +2508,6 @@ __webpack_require__.r(__webpack_exports__);
     adjustLocalVideoSize: function adjustLocalVideoSize(e) {
       var vm = this;
       var position = e.target.getBoundingClientRect();
-      console.log(position);
 
       if (vm.stream.localsize == 'lg') {
         vm.stream.localsize = 'md';
@@ -2647,8 +2646,9 @@ __webpack_require__.r(__webpack_exports__);
     },
     recieveMessage: function recieveMessage(user, data) {
       var self = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-      var vm = this;
-      vm.chatLog.push({
+      var vm = this; //Add the elements in reverse so that the log trickles from the bottom up
+
+      vm.chatLog.unshift({
         index: vm.chatLog.length,
         message: data,
         user: user,
@@ -3103,6 +3103,8 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+//
+//
 //
 //
 //
@@ -10395,7 +10397,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n#messages[data-v-1e09f4b6] {\n    /*This acts as a \"minimum\" height for when flexbox wants to collapse down to nothing\n    Very important for mobile since videos \"stack\" and will otherwise collapse the messages\n    area down to nothing */\n    height: 300px;\n}\n", ""]);
+exports.push([module.i, "\n#messages[data-v-1e09f4b6] {\n    /*This acts as a \"minimum\" height for when flexbox wants to collapse down to nothing\n    Very important for mobile since videos \"stack\" and will otherwise collapse the messages\n    area down to nothing */\n    height: 300px;\n    -webkit-mask-image: linear-gradient(0deg, rgba(2,0,36,1) 0%, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);\n}\n", ""]);
 
 // exports
 
@@ -56518,45 +56520,50 @@ var render = function() {
     "div",
     {
       ref: "messages",
-      staticClass: "overflow-auto d-flex flex-grow-1 flex-column",
+      staticClass:
+        "overflow-auto d-flex flex-grow-1 flex-column flex-column-reverse ",
       attrs: { id: "messages" }
     },
-    _vm._l(_vm.chatLog, function(item) {
-      return _c("div", { key: item.index }, [
-        item.index == 0 ||
-        (item.index > 0 &&
-          _vm.chatLog[item.index - 1].user.name != item.user.name)
-          ? _c(
-              "p",
-              {
-                staticClass: "text-muted p-0 mb-0",
-                class: { "text-right": item.self, "text-left": !item.self }
-              },
-              [
-                _vm._v(
-                  "\n            " + _vm._s(item.user.name) + "\n            "
-                ),
-                item.user.verified
-                  ? _c("i", { staticClass: "fas fa-lock" })
-                  : _vm._e()
-              ]
-            )
-          : _vm._e(),
-        _vm._v(" "),
-        _c(
-          "p",
-          {
-            staticClass: "card p-3 m-1",
-            class: {
-              "text-right alert-info ml-6": item.self,
-              "mr-6": !item.self
-            }
-          },
-          [_vm._v("\n            " + _vm._s(item.message) + "\n        ")]
-        )
-      ])
-    }),
-    0
+    [
+      _vm._l(_vm.chatLog, function(item, $index) {
+        return _c("div", { key: item.index }, [
+          item.index == 0 ||
+          (item.index > 0 &&
+            _vm.chatLog[$index + 1].user.name != item.user.name)
+            ? _c(
+                "p",
+                {
+                  staticClass: "text-muted p-0 mb-0",
+                  class: { "text-right": item.self, "text-left": !item.self }
+                },
+                [
+                  _vm._v(
+                    "\n            " + _vm._s(item.user.name) + "\n            "
+                  ),
+                  item.user.verified
+                    ? _c("i", { staticClass: "fas fa-lock" })
+                    : _vm._e()
+                ]
+              )
+            : _vm._e(),
+          _vm._v(" "),
+          _c(
+            "p",
+            {
+              staticClass: "card p-3 m-1",
+              class: {
+                "text-right alert-info ml-6": item.self,
+                "mr-6": !item.self
+              }
+            },
+            [_vm._v("\n            " + _vm._s(item.message) + "\n        ")]
+          )
+        ])
+      }),
+      _vm._v(" "),
+      _c("div", { staticClass: "p-3" })
+    ],
+    2
   )
 }
 var staticRenderFns = []

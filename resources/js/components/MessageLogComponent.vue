@@ -1,9 +1,9 @@
 <template>
-    <div id="messages" ref="messages" class="overflow-auto d-flex flex-grow-1 flex-column">
-        <div v-for="item in chatLog" :key="item.index">
+    <div id="messages" ref="messages" class="overflow-auto d-flex flex-grow-1 flex-column flex-column-reverse ">
+        <div v-for="(item, $index) in chatLog" :key="item.index">
             <p class="text-muted p-0 mb-0"
                 v-bind:class="{ 'text-right': item.self, 'text-left': !item.self }"
-                v-if="item.index == 0 || (item.index > 0 && chatLog[item.index-1].user.name != item.user.name)">
+                v-if="item.index == 0 || (item.index > 0 && chatLog[$index+1].user.name != item.user.name)">
                 {{item.user.name}}
                 <i class="fas fa-lock" v-if="item.user.verified"></i>
             </p>
@@ -12,6 +12,7 @@
                 {{item.message}}
             </p>
         </div>
+        <div class="p-3"><!--Empty div so the fade is pushed down a little --></div>
     </div>
 </template>
 
@@ -21,6 +22,7 @@
         Very important for mobile since videos "stack" and will otherwise collapse the messages
         area down to nothing */
         height: 300px;
+        -webkit-mask-image: linear-gradient(0deg, rgba(2,0,36,1) 0%, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
     }
 </style>
 
