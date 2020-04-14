@@ -2876,7 +2876,7 @@ __webpack_require__.r(__webpack_exports__);
             vm.handlePeerDisconnect(id);
           });
           vm.connections[id].connection.on('data', function (data) {
-            vm.ui.sound.message.play();
+            vm.ui.sound.play('message');
             vm.recieveMessage(vm.connections[id].user, data);
           });
           vm.connections[id].connection.on('stream', function (stream) {

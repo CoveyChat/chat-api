@@ -848,7 +848,7 @@ export default {
                     vm.connections[id].connection.on('error', function() {vm.handlePeerDisconnect(id);});
 
                     vm.connections[id].connection.on('data', function(data) {
-                        vm.ui.sound.message.play();
+                        vm.ui.sound.play('message');
                         vm.recieveMessage(vm.connections[id].user, data);
                     });
 
