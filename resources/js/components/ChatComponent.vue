@@ -1,5 +1,6 @@
 <template>
     <div class="d-flex flex-column w-100">
+    <div ref="modalcontainer"></div>
     <div id="user-prompt" v-if="!user.active" name="fade" class="flex-row flex-grow-1">
         <div class="row">
             <div class="offset-md-4 col-md-4 ">
@@ -19,6 +20,10 @@
         </div>
     </div>
     <div class="chat-container pl-5 pr-5 flex-row"  v-if="user.active">
+        <button class="btn-leave-chat btn btn-outline-danger" v-on:click="confirmLeave">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="sr-only">Leave Chat</span>
+        </button>
         <!--Local Video Button-->
         <button
             class="btn btn-primary float-right"
@@ -175,6 +180,14 @@
     .no-video-connections {
         padding: 4vh;
         text-align: center;
+    }
+    .btn-leave-chat {
+        position: fixed;
+        width: 30%;
+        top: 0px;
+        left: 50%;
+        margin-top: 6px;
+        margin-left: -15%;
     }
     .video-connections {
         background: #eee;
@@ -350,6 +363,7 @@ import SoundEffect from '../models/SoundEffect.js';
 import User from '../models/User.js';
 import Message from '../models/Message.js';
 import PeerConnection from '../models/PeerConnection.js';
+import ModalComponent from './ModalComponent.vue'
 
 export default {
     data: function () {
@@ -366,6 +380,52 @@ export default {
         }
     },
     methods: {
+        confirmLeave(e) {
+            var vm = this;
+            console.log("Confirm leave");
+            const Confirmation = Vue.extend(ModalComponent);
+            var modal = new Confirmation({propsData: {
+                    close: {text: "Go back"},
+                    confirm: {
+                        text: "Leave",
+                        class: "btn btn-danger"
+                    }}
+            });
+
+            /*var modal = Vue.extend(ModalComponent)
+            const modal = new Vue( Object.assign({}, ModalComponent, {
+                propsData: {
+                    confirm: {
+                        text: "leave",
+                        class: "btn btn-danger"
+                    }}
+            }));*/
+
+            modal.$slots.header = ['Confirm'];
+            modal.$slots.body = ['Are you sure you want to leave this chat?'];
+            modal.$mount();
+            vm.$refs.modalcontainer.appendChild(modal.$el)
+
+            modal.$on('close', function(e) {
+                modal.$destroy();
+                modal.$el.remove();
+            });
+
+            modal.$on('confirm', function(e) {
+                modal.$destroy();
+                modal.$el.remove();
+
+                //Let everyone know I'm leaving so they don't sit then hanging
+                for(var id in vm.connections) {
+                    //If we're streaming to them then kill it
+                    vm.connections[id].removeStream(vm.stream.connection);
+                    vm.connections[id].destroy();
+                }
+                //vm.server.signal.close();
+                //Go back to the homepage
+                window.location.href = '/';
+            });
+        },
         onDoubleClickCheck(e) {
             var vm = this;
 

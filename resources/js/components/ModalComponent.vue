@@ -18,8 +18,16 @@
 
               <div class="modal-footer">
                 <slot name="footer">
-                  <button class="btn btn-md btn-primary modal-default-button" @click="$emit('close')">
-                    Close
+                  <button
+                    v-bind:class="{[close.class]: close.class, 'btn btn-md btn-primary': !close.class}"
+                    class="modal-default-button" @click="$emit('close')">
+                    {{close.text || 'Close'}}
+                  </button>
+
+                  <button v-if="confirm"
+                    v-bind:class="{[confirm.class]: confirm.class, 'btn btn-md btn-primary': !confirm.class}"
+                    class="modal-default-button" @click="$emit('confirm')">
+                    {{confirm.text || 'Confirm'}}
                   </button>
                 </slot>
               </div>
@@ -101,28 +109,22 @@
 <script>
 
 export default {
+    name: "ModalComponent",
     props: {
-        text: String
+        close: Object,
+        confirm: Object
     },
     data: function () {
         return {
-            showModal: false
+
         }
     },
     methods: {
-        onClose() {
-            console.log("?????");
-            this.showModal = false;
-        }
+
     },
 mounted() {
     console.log('Modal Component mounted.');
-    //View model reference for inside scoped functions
     var vm = this;
-    vm.showModal = true;
-    //var modal = this.$refs['modal'];
-    //modal.modal()
-    //$('#myModal').modal(options)
 
 }
 }

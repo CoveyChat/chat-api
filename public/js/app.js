@@ -1991,6 +1991,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _models_User_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../models/User.js */ "./resources/js/models/User.js");
 /* harmony import */ var _models_Message_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../models/Message.js */ "./resources/js/models/Message.js");
 /* harmony import */ var _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../models/PeerConnection.js */ "./resources/js/models/PeerConnection.js");
+/* harmony import */ var _ModalComponent_vue__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./ModalComponent.vue */ "./resources/js/components/ModalComponent.vue");
 //
 //
 //
@@ -2337,6 +2338,20 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
 
 
 
@@ -2375,6 +2390,53 @@ __webpack_require__.r(__webpack_exports__);
     };
   },
   methods: {
+    confirmLeave: function confirmLeave(e) {
+      var vm = this;
+      console.log("Confirm leave");
+      var Confirmation = Vue.extend(_ModalComponent_vue__WEBPACK_IMPORTED_MODULE_4__["default"]);
+      var modal = new Confirmation({
+        propsData: {
+          close: {
+            text: "Go back"
+          },
+          confirm: {
+            text: "Leave",
+            "class": "btn btn-danger"
+          }
+        }
+      });
+      /*var modal = Vue.extend(ModalComponent)
+      const modal = new Vue( Object.assign({}, ModalComponent, {
+          propsData: {
+              confirm: {
+                  text: "leave",
+                  class: "btn btn-danger"
+              }}
+      }));*/
+
+      modal.$slots.header = ['Confirm'];
+      modal.$slots.body = ['Are you sure you want to leave this chat?'];
+      modal.$mount();
+      vm.$refs.modalcontainer.appendChild(modal.$el);
+      modal.$on('close', function (e) {
+        modal.$destroy();
+        modal.$el.remove();
+      });
+      modal.$on('confirm', function (e) {
+        modal.$destroy();
+        modal.$el.remove(); //Let everyone know I'm leaving so they don't sit then hanging
+
+        for (var id in vm.connections) {
+          //If we're streaming to them then kill it
+          vm.connections[id].removeStream(vm.stream.connection);
+          vm.connections[id].destroy();
+        } //vm.server.signal.close();
+        //Go back to the homepage
+
+
+        window.location.href = '/';
+      });
+    },
     onDoubleClickCheck: function onDoubleClickCheck(e) {
       var vm = this; //Play the video if you touched it
       //Chrome disables auto-play if you don't interact with the document first
@@ -3230,28 +3292,27 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
+  name: "ModalComponent",
   props: {
-    text: String
+    close: Object,
+    confirm: Object
   },
   data: function data() {
-    return {
-      showModal: false
-    };
+    return {};
   },
-  methods: {
-    onClose: function onClose() {
-      console.log("?????");
-      this.showModal = false;
-    }
-  },
+  methods: {},
   mounted: function mounted() {
-    console.log('Modal Component mounted.'); //View model reference for inside scoped functions
-
+    console.log('Modal Component mounted.');
     var vm = this;
-    vm.showModal = true; //var modal = this.$refs['modal'];
-    //modal.modal()
-    //$('#myModal').modal(options)
   }
 });
 
@@ -10294,7 +10355,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n.remote-stream[data-v-80d584ac] {\n    background:#000;\n}\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n    position: absolute;\n    z-index: 2;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\nbutton.local-audio-overlay[data-v-80d584ac],\nbutton.local-screenshare-overlay[data-v-80d584ac],\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    top:15em !important;\n}\n\n\n/* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.btn-leave-chat[data-v-80d584ac] {\n    position: fixed;\n    width: 30%;\n    top: 0px;\n    left: 50%;\n    margin-top: 6px;\n    margin-left: -15%;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n.remote-stream[data-v-80d584ac] {\n    background:#000;\n}\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n    position: absolute;\n    z-index: 2;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\nbutton.local-audio-overlay[data-v-80d584ac],\nbutton.local-screenshare-overlay[data-v-80d584ac],\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    top:15em !important;\n}\n\n\n/* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -55868,6 +55929,8 @@ var render = function() {
     "div",
     { staticClass: "d-flex flex-column w-100" },
     [
+      _c("div", { ref: "modalcontainer" }),
+      _vm._v(" "),
       !_vm.user.active
         ? _c(
             "div",
@@ -55954,6 +56017,19 @@ var render = function() {
             "div",
             { staticClass: "chat-container pl-5 pr-5 flex-row" },
             [
+              _c(
+                "button",
+                {
+                  staticClass: "btn-leave-chat btn btn-outline-danger",
+                  on: { click: _vm.confirmLeave }
+                },
+                [
+                  _c("i", { staticClass: "fas fa-sign-out-alt" }),
+                  _vm._v(" "),
+                  _c("span", { staticClass: "sr-only" }, [_vm._v("Leave Chat")])
+                ]
+              ),
+              _vm._v(" "),
               _vm.ui.videoenabled
                 ? _c(
                     "button",
@@ -56500,6 +56576,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "render", function() { return render; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return staticRenderFns; });
 var render = function() {
+  var _obj, _obj$1
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
@@ -56537,15 +56614,53 @@ var render = function() {
                 _c(
                   "button",
                   {
-                    staticClass: "btn btn-md btn-primary modal-default-button",
+                    staticClass: "modal-default-button",
+                    class:
+                      ((_obj = {}),
+                      (_obj[_vm.close.class] = _vm.close.class),
+                      (_obj["btn btn-md btn-primary"] = !_vm.close.class),
+                      _obj),
                     on: {
                       click: function($event) {
                         return _vm.$emit("close")
                       }
                     }
                   },
-                  [_vm._v("\n                Close\n              ")]
-                )
+                  [
+                    _vm._v(
+                      "\n                " +
+                        _vm._s(_vm.close.text || "Close") +
+                        "\n              "
+                    )
+                  ]
+                ),
+                _vm._v(" "),
+                _vm.confirm
+                  ? _c(
+                      "button",
+                      {
+                        staticClass: "modal-default-button",
+                        class:
+                          ((_obj$1 = {}),
+                          (_obj$1[_vm.confirm.class] = _vm.confirm.class),
+                          (_obj$1["btn btn-md btn-primary"] = !_vm.confirm
+                            .class),
+                          _obj$1),
+                        on: {
+                          click: function($event) {
+                            return _vm.$emit("confirm")
+                          }
+                        }
+                      },
+                      [
+                        _vm._v(
+                          "\n                " +
+                            _vm._s(_vm.confirm.text || "Confirm") +
+                            "\n              "
+                        )
+                      ]
+                    )
+                  : _vm._e()
               ])
             ],
             2
