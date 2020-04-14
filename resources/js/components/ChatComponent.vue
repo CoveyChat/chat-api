@@ -344,6 +344,7 @@
 </style>
 
 <script>
+import adapter from 'webrtc-adapter';
 
 import SoundEffect from '../models/SoundEffect.js';
 import User from '../models/User.js';
