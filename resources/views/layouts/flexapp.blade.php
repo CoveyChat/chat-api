@@ -7,6 +7,7 @@
 </head>
 <body>
     <div id="app" class="d-flex flex-column">
+        <compat-component></compat-component>
         <div class="d-flex flex-column">
             <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
                 <div class="container-fluid">

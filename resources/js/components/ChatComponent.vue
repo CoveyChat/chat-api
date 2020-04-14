@@ -28,7 +28,8 @@
                 'btn-off': !stream.videoenabled,
                 'local-video-overlay': ui.inFullscreen
             }"
-            v-on:click="toggleVideo">
+            v-on:click="toggleVideo"
+            v-if="ui.videoenabled">
             <span class="sr-only" v-if="!stream.videoenabled">Start Video</span>
             <i class="fas fa-video-slash" v-if="!stream.videoenabled"></i>
 
@@ -361,7 +362,7 @@ export default {
             stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
             peerStreams: [],
             server: {ip:'bevy.chat', port:1337, signal: null},
-            ui: {anonUsername: '', inFullscreen: false, dblClickTimer: null, sound: null}
+            ui: {videoenabled: true, anonUsername: '', inFullscreen: false, dblClickTimer: null, sound: null}
         }
     },
     methods: {
@@ -870,6 +871,8 @@ mounted() {
     //View model reference for inside scoped functions
     var vm = this;
     vm.ui.sound = new SoundEffect();
+    //Hide the video button since they don't support mediaDevices
+    vm.ui.videoenabled = typeof navigator.mediaDevices != 'undefined';
 
     vm.user = new User();
     vm.user.auth().then(function(response) {
