@@ -2376,7 +2376,7 @@ __webpack_require__.r(__webpack_exports__);
       },
       peerStreams: [],
       server: {
-        ip: 'bevy.chat',
+        ip: 'devbevy.chat',
         port: 1337,
         signal: null
       },
@@ -2506,18 +2506,20 @@ __webpack_require__.r(__webpack_exports__);
       }
     },
     adjustLocalVideoSize: function adjustLocalVideoSize(e) {
-      var vm = this; //Don't resize if we're still in the dragging lifecycle
-
-      if (e.target.hasAttribute('is-dragging') || e.target.parentElement.hasAttribute('is-dragging')) {
-        return;
-      }
+      var vm = this;
+      var position = e.target.getBoundingClientRect();
+      console.log(position);
 
       if (vm.stream.localsize == 'lg') {
         vm.stream.localsize = 'md';
       } else if (vm.stream.localsize == 'md') {
         vm.stream.localsize = 'sm';
+        e.target.style.top = position.y + 10 + "px";
+        e.target.style.left = position.x + 50 + "px";
       } else if (vm.stream.localsize == 'sm') {
         vm.stream.localsize = 'md';
+        e.target.style.top = position.y - 50 + "px";
+        e.target.style.left = position.x - 50 + "px";
       } //Don't lose the element off the top/left screen
 
 

@@ -375,7 +375,7 @@ export default {
             user: {active: false},
             stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
             peerStreams: [],
-            server: {ip:'bevy.chat', port:1337, signal: null},
+            server: {ip:'devbevy.chat', port:1337, signal: null},
             ui: {videoenabled: true, anonUsername: '', inFullscreen: false, dblClickTimer: null, sound: null}
         }
     },
@@ -492,19 +492,19 @@ export default {
         },
         adjustLocalVideoSize(e) {
             var vm = this;
+            var position = e.target.getBoundingClientRect();
 
-            //Don't resize if we're still in the dragging lifecycle
-            if(e.target.hasAttribute('is-dragging')
-                || e.target.parentElement.hasAttribute('is-dragging')) {
-                return;
-            }
-
+            console.log(position);
             if(vm.stream.localsize == 'lg') {
                 vm.stream.localsize = 'md'
             } else if(vm.stream.localsize == 'md') {
                 vm.stream.localsize = 'sm'
+                e.target.style.top = (position.y + 10) + "px"
+                e.target.style.left = (position.x + 50) + "px"
             } else if(vm.stream.localsize == 'sm') {
                 vm.stream.localsize = 'md'
+                e.target.style.top = (position.y - 50) + "px"
+                e.target.style.left = (position.x - 50) + "px"
             }
 
             //Don't lose the element off the top/left screen
