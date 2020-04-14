@@ -375,7 +375,7 @@ export default {
             user: {active: false},
             stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
             peerStreams: [],
-            server: {ip:'devbevy.chat', port:1337, signal: null},
+            server: {ip:'bevy.chat', port:1337, signal: null},
             ui: {videoenabled: true, anonUsername: '', inFullscreen: false, dblClickTimer: null, sound: null}
         }
     },
