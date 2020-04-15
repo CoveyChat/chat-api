@@ -1,5 +1,5 @@
 <template>
-    <div id="active-network-chart">
+    <div id="active-network-chart" v-bind:class="{'peer-video-fullscreen': inFullscreen}">
 
     </div>
 </template>
@@ -8,6 +8,14 @@
     #active-network-chart {
         height: 150px;
     }
+
+    #active-network-chart.peer-video-fullscreen {
+        /*Set the height to 0 so the width calculations can still work if the orientation changes*/
+        /*Otherwise setting to display-none will set the width to NaN*/
+        height: 0px;
+        overflow: hidden;
+    }
+
     .link {
         stroke: #aaa;
     }
@@ -26,13 +34,18 @@
 
 <script>
     export default {
+        props: {
+            inFullscreen: Boolean
+        },
         mounted() {
             var vm = this;
             console.log("Network Graph Mounted");
             window.addEventListener("orientationchange", function(e) {
                 //Orientation change, recalculate the width of the chart
                 setTimeout(function() {
+
                     vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
+
                     vm.svg.attr("width", vm.width);
                     vm.update(vm.connections);
                 }, 200);

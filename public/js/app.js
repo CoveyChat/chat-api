@@ -2366,6 +2366,35 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -3159,6 +3188,24 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: {
     chatLog: Array,
@@ -3387,7 +3434,18 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
+  props: {
+    inFullscreen: Boolean
+  },
   mounted: function mounted() {
     var vm = this;
     console.log("Network Graph Mounted");
@@ -10389,7 +10447,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.btn[data-v-80d584ac] {\n    border-radius: 0px;\n}\n.btn-show-messages[data-v-80d584ac] {\n    z-index:1;\n}\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.btn-leave-chat[data-v-80d584ac] {\n    position: fixed;\n    width: 30%;\n    top: 0px;\n    left: 50%;\n    margin-top: 6px;\n    margin-left: -15%;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n.remote-stream[data-v-80d584ac] {\n    background:#000;\n}\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n    position: absolute;\n    z-index: 2;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\nbutton.local-audio-overlay[data-v-80d584ac],\nbutton.local-screenshare-overlay[data-v-80d584ac],\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    top:15em !important;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n    z-index:1;\n}\n\n/* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n.btn[data-v-80d584ac] {\n        border-radius: 0px;\n}\n#message-box[data-v-80d584ac] {\n        border-radius:0px;\n}\n.btn-show-messages[data-v-80d584ac] {\n        z-index:1;\n}\n.no-video-connections[data-v-80d584ac] {\n        padding: 4vh;\n        text-align: center;\n}\n.btn-leave-chat[data-v-80d584ac] {\n        position: absolute;\n        width: 25%;\n        top: 0px;\n        left: 50%;\n        margin-top: 6px;\n        margin-left: -15%;\n}\n.video-connections[data-v-80d584ac] {\n        background: #eee;\n        color:#555;\n        padding: 1vh;\n        border-radius: 5px;\n        box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n        height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n        position: absolute;\n        /*Center the icons*/\n        left: 0;\n        right: 0;\n}\n#btn-local-video-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n        opacity: 0.75;\n}\n.remote-stream[data-v-80d584ac] {\n        background:#000;\n}\n\n    /*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n        top:unset;\n        bottom: unset;\n        right:unset;\n        left:unset;\n}\nvideo[data-v-80d584ac] {\n        border-radius: 5px;\n        box-shadow: 0px 1px 3px #000;\n}\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n        box-shadow: none;\n}\n    /**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n        display:block;\n        margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n    #local-video-container.local-video-sm[data-v-80d584ac] video {\n        margin-right:25px;\n        width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n    #local-video-container.local-video-md[data-v-80d584ac] video {\n        width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n    #local-video-container.local-video-lg[data-v-80d584ac] video {\n        width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n        margin-top:20px;\n        position:fixed;\n        right:2em;\n        border-radius:3px;\n        z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n        position: absolute;\n        z-index: 2;\n        display: block;\n        top: 0px;\n        left: 0px;\n        float: left;\n        color: #fff;\n        background: #000;\n        opacity: 0.5;\n        padding-right: 5px;\n        padding-left: 5px;\n}\n    /* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n    #local-video-container.local-video-overlay[data-v-80d584ac] video {\n        margin-right:0px;\n        bottom:0px;\n        right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\n    button.local-audio-overlay[data-v-80d584ac],\n    button.local-screenshare-overlay[data-v-80d584ac],\n    button.local-swapvideo-overlay[data-v-80d584ac] {\n        margin-top:0px !important;\n        right:0px !important;\n        z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n        top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n        top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n        top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n        top:15em !important;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n        z-index:1;\n}\n\n    /*Videos container shrink so messages and stuff shows correctly*/\n#videos.peer-video-fullscreen[data-v-80d584ac] .video-connections {\n            height:0px;\n}\n/*\n\n    @media screen and (max-height: 400px) {\n        #videos.peer-video-fullscreen >>> .video-connections {\n            min-height:10vh;\n        }\n    }\n\n    @media screen and (min-height: 401px) and (max-height: 799px) {\n        #videos.peer-video-fullscreen >>> .video-connections {\n            min-height:25vh;\n        }\n    }*/\n\n\n    /* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n        position:fixed !important;\n        background: #000;\n        z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n        position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n        margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n        transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n        opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -10427,7 +10485,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n#messages[data-v-1e09f4b6] {\n    /*This acts as a \"minimum\" height for when flexbox wants to collapse down to nothing\n    Very important for mobile since videos \"stack\" and will otherwise collapse the messages\n    area down to nothing */\n    height: 300px;\n    -webkit-mask-image: linear-gradient(0deg, rgba(2,0,36,1) 0%, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);\n}\n#messages.peer-video-fullscreen[data-v-1e09f4b6] {\n    z-index:1;\n}\n.btn-show-messages[data-v-1e09f4b6] {\n    border-radius:0px;\n}\n.high-contrast[data-v-1e09f4b6] {\n    color:#fff !important;\n    font-weight: bold;\n}\n", ""]);
+exports.push([module.i, "\n#messages[data-v-1e09f4b6] {\n    /*This acts as a \"minimum\" height for when flexbox wants to collapse down to nothing\n    Very important for mobile since videos \"stack\" and will otherwise collapse the messages\n    area down to nothing */\n    -webkit-mask-image: linear-gradient(0deg, rgba(2,0,36,1) 0%, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);\n}\n@media screen and (max-height: 400px) {\n#messages[data-v-1e09f4b6] {\n        max-height:50vh;\n}\n}\n@media screen and (min-height: 401px) and (max-height: 799px) {\n#messages[data-v-1e09f4b6] {\n        max-height:40vh;\n}\n}\n@media screen and (min-height: 800px) {\n#messages[data-v-1e09f4b6] {\n        max-height:30vh;\n}\n}\n#messages.peer-video-fullscreen[data-v-1e09f4b6] {\n    z-index:1;\n}\n.btn-show-messages[data-v-1e09f4b6] {\n    border-radius:0px;\n}\n.high-contrast[data-v-1e09f4b6] {\n    color:#fff !important;\n    font-weight: bold;\n}\n", ""]);
 
 // exports
 
@@ -10465,7 +10523,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n#active-network-chart {\n    height: 150px;\n}\n.link {\n    stroke: #aaa;\n}\n.node text {\n    stroke:#333;\n    cursor:pointer;\n}\n.node circle{\n    stroke:#fff;\n    stroke-width:3px;\n    fill:#555;\n}\n", ""]);
+exports.push([module.i, "\n#active-network-chart {\n    height: 150px;\n}\n#active-network-chart.peer-video-fullscreen {\n    /*Set the height to 0 so the width calculations can still work if the orientation changes*/\n    /*Otherwise setting to display-none will set the width to NaN*/\n    height: 0px;\n    overflow: hidden;\n}\n.link {\n    stroke: #aaa;\n}\n.node text {\n    stroke:#333;\n    cursor:pointer;\n}\n.node circle{\n    stroke:#fff;\n    stroke-width:3px;\n    fill:#555;\n}\n", ""]);
 
 // exports
 
@@ -56049,12 +56107,12 @@ var render = function() {
       _vm.user.active
         ? _c(
             "div",
-            { staticClass: "chat-container pl-5 pr-5 flex-row" },
+            { staticClass: "chat-container pl-5 pr-5 flex-row flex-fill" },
             [
               _c(
                 "button",
                 {
-                  staticClass: "btn-leave-chat btn btn-outline-danger",
+                  staticClass: "btn-leave-chat btn btn-danger",
                   on: { click: _vm.confirmLeave }
                 },
                 [
@@ -56244,79 +56302,91 @@ var render = function() {
               _vm._v(" "),
               _c("network-graph-component", {
                 ref: "networkGraph",
-                staticClass: "mb-3"
+                staticClass: "mb-3",
+                attrs: { inFullscreen: _vm.ui.inFullscreen }
               }),
               _vm._v(" "),
-              _c("div", { staticClass: "container", attrs: { id: "videos" } }, [
-                _c(
-                  "div",
-                  {
-                    staticClass: "row justify-content-center video-connections"
-                  },
-                  [
-                    _vm.peerStreams.length == 0
-                      ? _c("div", { staticClass: "no-video-connections" }, [
-                          _vm._m(0),
-                          _vm._v(" "),
-                          _c("p", [_vm._v("Nobody is streaming")])
-                        ])
-                      : _vm._e(),
-                    _vm._v(" "),
-                    _vm._l(_vm.peerStreams, function(stream) {
-                      return _c(
-                        "div",
-                        {
-                          key: stream.id,
-                          staticClass:
-                            "col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3"
-                        },
-                        [
-                          _c(
-                            "div",
-                            {
-                              staticClass: "peer-video-details",
+              _c(
+                "div",
+                {
+                  staticClass: "container",
+                  class: { "peer-video-fullscreen": _vm.ui.inFullscreen },
+                  attrs: { id: "videos" }
+                },
+                [
+                  _c(
+                    "div",
+                    {
+                      staticClass:
+                        "row justify-content-center video-connections flex-fill"
+                    },
+                    [
+                      _vm.peerStreams.length == 0
+                        ? _c("div", { staticClass: "no-video-connections" }, [
+                            _vm._m(0),
+                            _vm._v(" "),
+                            _c("p", [_vm._v("Nobody is streaming")])
+                          ])
+                        : _vm._e(),
+                      _vm._v(" "),
+                      _vm._l(_vm.peerStreams, function(stream) {
+                        return _c(
+                          "div",
+                          {
+                            key: stream.id,
+                            staticClass:
+                              "col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3"
+                          },
+                          [
+                            _c(
+                              "div",
+                              {
+                                staticClass: "peer-video-details",
+                                class: {
+                                  "peer-video-fullscreen": _vm.ui.inFullscreen
+                                }
+                              },
+                              [
+                                _vm._v(
+                                  "\n                " +
+                                    _vm._s(stream.peeruser.name) +
+                                    "\n                "
+                                ),
+                                stream.peeruser.verified
+                                  ? _c("i", { staticClass: "fas fa-lock" })
+                                  : _vm._e()
+                              ]
+                            ),
+                            _vm._v(" "),
+                            _c("video", {
+                              staticClass:
+                                "embed-responsive-item remote-stream",
                               class: {
                                 "peer-video-fullscreen": _vm.ui.inFullscreen
+                              },
+                              attrs: {
+                                poster:
+                                  "https://bevy.chat/img/video_poster.png",
+                                autoplay: "autoplay",
+                                volume: "1"
+                              },
+                              domProps: { srcObject: stream },
+                              on: {
+                                webkitfullscreenchange: _vm.fullscreenVideo,
+                                mozfullscreenchange: _vm.fullscreenVideo,
+                                fullscreenchange: _vm.fullscreenVideo,
+                                click: _vm.onDoubleClickCheck,
+                                play: _vm.setDefaultVolume
                               }
-                            },
-                            [
-                              _vm._v(
-                                "\n                " +
-                                  _vm._s(stream.peeruser.name) +
-                                  "\n                "
-                              ),
-                              stream.peeruser.verified
-                                ? _c("i", { staticClass: "fas fa-lock" })
-                                : _vm._e()
-                            ]
-                          ),
-                          _vm._v(" "),
-                          _c("video", {
-                            staticClass: "embed-responsive-item remote-stream",
-                            class: {
-                              "peer-video-fullscreen": _vm.ui.inFullscreen
-                            },
-                            attrs: {
-                              poster: "https://bevy.chat/img/video_poster.png",
-                              autoplay: "autoplay",
-                              volume: "1"
-                            },
-                            domProps: { srcObject: stream },
-                            on: {
-                              webkitfullscreenchange: _vm.fullscreenVideo,
-                              mozfullscreenchange: _vm.fullscreenVideo,
-                              fullscreenchange: _vm.fullscreenVideo,
-                              click: _vm.onDoubleClickCheck,
-                              play: _vm.setDefaultVolume
-                            }
-                          })
-                        ]
-                      )
-                    })
-                  ],
-                  2
-                )
-              ])
+                            })
+                          ]
+                        )
+                      })
+                    ],
+                    2
+                  )
+                ]
+              )
             ],
             1
           )
@@ -56388,7 +56458,7 @@ var render = function() {
                   attrs: {
                     type: "text",
                     placeholder: "Type a message",
-                    id: "message"
+                    id: "message-box"
                   },
                   domProps: { value: _vm.message },
                   on: {
@@ -56792,7 +56862,10 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c("div", { attrs: { id: "active-network-chart" } })
+  return _c("div", {
+    class: { "peer-video-fullscreen": _vm.inFullscreen },
+    attrs: { id: "active-network-chart" }
+  })
 }
 var staticRenderFns = []
 render._withStripped = true

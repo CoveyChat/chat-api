@@ -19,8 +19,8 @@
             </div>
         </div>
     </div>
-    <div class="chat-container pl-5 pr-5 flex-row"  v-if="user.active">
-        <button class="btn-leave-chat btn btn-outline-danger" v-on:click="confirmLeave">
+    <div class="chat-container pl-5 pr-5 flex-row flex-fill"  v-if="user.active">
+        <button class="btn-leave-chat btn btn-danger" v-on:click="confirmLeave">
             <i class="fas fa-sign-out-alt"></i>
             <span class="sr-only">Leave Chat</span>
         </button>
@@ -115,11 +115,15 @@
 
         </div>
 
-        <network-graph-component ref="networkGraph" class="mb-3"></network-graph-component>
+        <network-graph-component
+            ref="networkGraph"
+            class="mb-3"
+            v-bind:inFullscreen="ui.inFullscreen">
+        </network-graph-component>
 
 
-        <div id="videos" class="container">
-            <div class="row justify-content-center video-connections">
+        <div id="videos" class="container" v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }">
+            <div class="row justify-content-center video-connections flex-fill">
             <div v-if="peerStreams.length == 0" class="no-video-connections">
                 <h1><i class="fas fa-broadcast-tower"></i><i class="fas fa-slash tower-slash"></i></h1>
                 <p>Nobody is streaming</p>
@@ -169,7 +173,7 @@
 
     <div class="flex-column message-box" v-if="user.active" v-bind:class="{ 'peer-video-fullscreen': (ui.inFullscreen && ui.showMessagesFullscreen) }">
         <div class="input-group">
-            <input type="text" v-model="message" class="form-control" placeholder="Type a message" id="message" v-on:keyup.enter="sendMessage" />
+            <input type="text" v-model="message" class="form-control" placeholder="Type a message" id="message-box" v-on:keyup.enter="sendMessage" />
             <div class="input-group-btn">
                 <button class="btn btn-primary" type="button"  id="send" v-on:click="sendMessage">
                     <span class="sr-only">Send Message</span>
@@ -186,6 +190,9 @@
     .btn {
         border-radius: 0px;
     }
+    #message-box {
+        border-radius:0px;
+    }
     .btn-show-messages {
         z-index:1;
     }
@@ -194,8 +201,8 @@
         text-align: center;
     }
     .btn-leave-chat {
-        position: fixed;
-        width: 30%;
+        position: absolute;
+        width: 25%;
         top: 0px;
         left: 50%;
         margin-top: 6px;
@@ -279,6 +286,9 @@
         border-radius: 5px;
         box-shadow: 0px 1px 3px #000;
     }
+    video.peer-video-fullscreen {
+        box-shadow: none;
+    }
     /**Adjust the slash since font awesome doesn't offer a video slash option */
     #btn-local-screenshare-toggle >>> .fa-slash {
         display:block;
@@ -350,6 +360,25 @@
     .message-box.peer-video-fullscreen {
         z-index:1;
     }
+
+    /*Videos container shrink so messages and stuff shows correctly*/
+    #videos.peer-video-fullscreen >>> .video-connections {
+            height:0px;
+        }
+/*
+
+    @media screen and (max-height: 400px) {
+        #videos.peer-video-fullscreen >>> .video-connections {
+            min-height:10vh;
+        }
+    }
+
+    @media screen and (min-height: 401px) and (max-height: 799px) {
+        #videos.peer-video-fullscreen >>> .video-connections {
+            min-height:25vh;
+        }
+    }*/
+
 
     /* Main Video Fullscreen */
     video.peer-video-fullscreen {

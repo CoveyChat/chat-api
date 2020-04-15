@@ -23,9 +23,27 @@
         /*This acts as a "minimum" height for when flexbox wants to collapse down to nothing
         Very important for mobile since videos "stack" and will otherwise collapse the messages
         area down to nothing */
-        height: 300px;
         -webkit-mask-image: linear-gradient(0deg, rgba(2,0,36,1) 0%, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
     }
+
+    @media screen and (max-height: 400px) {
+        #messages {
+            max-height:50vh;
+        }
+    }
+
+    @media screen and (min-height: 401px) and (max-height: 799px) {
+        #messages {
+            max-height:40vh;
+        }
+    }
+
+    @media screen and (min-height: 800px) {
+        #messages {
+            max-height:30vh;
+        }
+    }
+
     #messages.peer-video-fullscreen {
         z-index:1;
     }
