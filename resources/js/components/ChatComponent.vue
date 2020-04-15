@@ -149,19 +149,25 @@
             </div>
             </div>
         </div>
-    <!--
-        <strong>Log</strong><br />
-        <textarea id="logger" readonly class="form-control" rows=1></textarea>
-        <hr />-->
-
-        <!--<strong>Peer Connections</strong><br />
-        <textarea id="connections" readonly class="form-control" rows=5></textarea>
-        <hr />-->
-
     </div>
-    <message-log-component v-bind:chatLog="chatLog" v-if="user.active"></message-log-component>
 
-    <div class="flex-column" v-if="user.active">
+    <div class="d-flex" v-if="ui.inFullscreen">
+        <button class="btn btn-md btn-primary btn-show-messages"
+            v-bind:class="{'btn-off': !ui.showMessagesFullscreen}"
+            v-on:click="ui.showMessagesFullscreen = !ui.showMessagesFullscreen">
+            <span class="sr-only">Show messages Panel</span>
+            <i class="fas fa-comment" v-if="!ui.showMessagesFullscreen"></i>
+            <i class="fas fa-comment-slash" v-if="ui.showMessagesFullscreen"></i>
+        </button>
+    </div>
+
+    <message-log-component
+        v-bind:chatLog="chatLog" v-if="user.active"
+        v-bind:inFullscreen="ui.inFullscreen"
+        v-bind:showMessagesFullscreen="ui.showMessagesFullscreen">
+    </message-log-component>
+
+    <div class="flex-column message-box" v-if="user.active" v-bind:class="{ 'peer-video-fullscreen': (ui.inFullscreen && ui.showMessagesFullscreen) }">
         <div class="input-group">
             <input type="text" v-model="message" class="form-control" placeholder="Type a message" id="message" v-on:keyup.enter="sendMessage" />
             <div class="input-group-btn">
@@ -177,6 +183,12 @@
 </template>
 
 <style scoped>
+    .btn {
+        border-radius: 0px;
+    }
+    .btn-show-messages {
+        z-index:1;
+    }
     .no-video-connections {
         padding: 4vh;
         text-align: center;
@@ -335,6 +347,9 @@
         top:15em !important;
     }
 
+    .message-box.peer-video-fullscreen {
+        z-index:1;
+    }
 
     /* Main Video Fullscreen */
     video.peer-video-fullscreen {
@@ -376,7 +391,7 @@ export default {
             stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
             peerStreams: [],
             server: {ip:'bevy.chat', port:1337, signal: null},
-            ui: {videoenabled: true, anonUsername: '', inFullscreen: false, dblClickTimer: null, sound: null}
+            ui: {videoenabled: true, anonUsername: '', inFullscreen: false, showMessagesFullscreen: false, dblClickTimer: null, sound: null}
         }
     },
     methods: {

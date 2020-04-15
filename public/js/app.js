@@ -2351,6 +2351,21 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -2384,6 +2399,7 @@ __webpack_require__.r(__webpack_exports__);
         videoenabled: true,
         anonUsername: '',
         inFullscreen: false,
+        showMessagesFullscreen: false,
         dblClickTimer: null,
         sound: null
       }
@@ -3131,9 +3147,23 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: {
-    chatLog: Array
+    chatLog: Array,
+    inFullscreen: Boolean,
+    showMessagesFullscreen: Boolean
   },
   data: function data() {
     return {};
@@ -10359,7 +10389,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.btn-leave-chat[data-v-80d584ac] {\n    position: fixed;\n    width: 30%;\n    top: 0px;\n    left: 50%;\n    margin-top: 6px;\n    margin-left: -15%;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n.remote-stream[data-v-80d584ac] {\n    background:#000;\n}\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n    position: absolute;\n    z-index: 2;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\nbutton.local-audio-overlay[data-v-80d584ac],\nbutton.local-screenshare-overlay[data-v-80d584ac],\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    top:15em !important;\n}\n\n\n/* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n.btn[data-v-80d584ac] {\n    border-radius: 0px;\n}\n.btn-show-messages[data-v-80d584ac] {\n    z-index:1;\n}\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.btn-leave-chat[data-v-80d584ac] {\n    position: fixed;\n    width: 30%;\n    top: 0px;\n    left: 50%;\n    margin-top: 6px;\n    margin-left: -15%;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n.remote-stream[data-v-80d584ac] {\n    background:#000;\n}\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n    position: absolute;\n    z-index: 2;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\nbutton.local-audio-overlay[data-v-80d584ac],\nbutton.local-screenshare-overlay[data-v-80d584ac],\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    top:15em !important;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n    z-index:1;\n}\n\n/* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed !important;\n    background: #000;\n    z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n    position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -10397,7 +10427,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n#messages[data-v-1e09f4b6] {\n    /*This acts as a \"minimum\" height for when flexbox wants to collapse down to nothing\n    Very important for mobile since videos \"stack\" and will otherwise collapse the messages\n    area down to nothing */\n    height: 300px;\n    -webkit-mask-image: linear-gradient(0deg, rgba(2,0,36,1) 0%, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);\n}\n", ""]);
+exports.push([module.i, "\n#messages[data-v-1e09f4b6] {\n    /*This acts as a \"minimum\" height for when flexbox wants to collapse down to nothing\n    Very important for mobile since videos \"stack\" and will otherwise collapse the messages\n    area down to nothing */\n    height: 300px;\n    -webkit-mask-image: linear-gradient(0deg, rgba(2,0,36,1) 0%, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);\n}\n#messages.peer-video-fullscreen[data-v-1e09f4b6] {\n    z-index:1;\n}\n.btn-show-messages[data-v-1e09f4b6] {\n    border-radius:0px;\n}\n.high-contrast[data-v-1e09f4b6] {\n    color:#fff !important;\n    font-weight: bold;\n}\n", ""]);
 
 // exports
 
@@ -56292,67 +56322,114 @@ var render = function() {
           )
         : _vm._e(),
       _vm._v(" "),
-      _vm.user.active
-        ? _c("message-log-component", { attrs: { chatLog: _vm.chatLog } })
+      _vm.ui.inFullscreen
+        ? _c("div", { staticClass: "d-flex" }, [
+            _c(
+              "button",
+              {
+                staticClass: "btn btn-md btn-primary btn-show-messages",
+                class: { "btn-off": !_vm.ui.showMessagesFullscreen },
+                on: {
+                  click: function($event) {
+                    _vm.ui.showMessagesFullscreen = !_vm.ui
+                      .showMessagesFullscreen
+                  }
+                }
+              },
+              [
+                _c("span", { staticClass: "sr-only" }, [
+                  _vm._v("Show messages Panel")
+                ]),
+                _vm._v(" "),
+                !_vm.ui.showMessagesFullscreen
+                  ? _c("i", { staticClass: "fas fa-comment" })
+                  : _vm._e(),
+                _vm._v(" "),
+                _vm.ui.showMessagesFullscreen
+                  ? _c("i", { staticClass: "fas fa-comment-slash" })
+                  : _vm._e()
+              ]
+            )
+          ])
         : _vm._e(),
       _vm._v(" "),
       _vm.user.active
-        ? _c("div", { staticClass: "flex-column" }, [
-            _c("div", { staticClass: "input-group" }, [
-              _c("input", {
-                directives: [
-                  {
-                    name: "model",
-                    rawName: "v-model",
-                    value: _vm.message,
-                    expression: "message"
-                  }
-                ],
-                staticClass: "form-control",
-                attrs: {
-                  type: "text",
-                  placeholder: "Type a message",
-                  id: "message"
-                },
-                domProps: { value: _vm.message },
-                on: {
-                  keyup: function($event) {
-                    if (
-                      !$event.type.indexOf("key") &&
-                      _vm._k($event.keyCode, "enter", 13, $event.key, "Enter")
-                    ) {
-                      return null
+        ? _c("message-log-component", {
+            attrs: {
+              chatLog: _vm.chatLog,
+              inFullscreen: _vm.ui.inFullscreen,
+              showMessagesFullscreen: _vm.ui.showMessagesFullscreen
+            }
+          })
+        : _vm._e(),
+      _vm._v(" "),
+      _vm.user.active
+        ? _c(
+            "div",
+            {
+              staticClass: "flex-column message-box",
+              class: {
+                "peer-video-fullscreen":
+                  _vm.ui.inFullscreen && _vm.ui.showMessagesFullscreen
+              }
+            },
+            [
+              _c("div", { staticClass: "input-group" }, [
+                _c("input", {
+                  directives: [
+                    {
+                      name: "model",
+                      rawName: "v-model",
+                      value: _vm.message,
+                      expression: "message"
                     }
-                    return _vm.sendMessage($event)
+                  ],
+                  staticClass: "form-control",
+                  attrs: {
+                    type: "text",
+                    placeholder: "Type a message",
+                    id: "message"
                   },
-                  input: function($event) {
-                    if ($event.target.composing) {
-                      return
+                  domProps: { value: _vm.message },
+                  on: {
+                    keyup: function($event) {
+                      if (
+                        !$event.type.indexOf("key") &&
+                        _vm._k($event.keyCode, "enter", 13, $event.key, "Enter")
+                      ) {
+                        return null
+                      }
+                      return _vm.sendMessage($event)
+                    },
+                    input: function($event) {
+                      if ($event.target.composing) {
+                        return
+                      }
+                      _vm.message = $event.target.value
                     }
-                    _vm.message = $event.target.value
                   }
-                }
-              }),
-              _vm._v(" "),
-              _c("div", { staticClass: "input-group-btn" }, [
-                _c(
-                  "button",
-                  {
-                    staticClass: "btn btn-primary",
-                    attrs: { type: "button", id: "send" },
-                    on: { click: _vm.sendMessage }
-                  },
-                  [
-                    _c("span", { staticClass: "sr-only" }, [
-                      _vm._v("Send Message")
-                    ]),
-                    _vm._v(" "),
-                    _c("i", { staticClass: "fas fa-paper-plane" })
-                  ]
-                )
+                }),
+                _vm._v(" "),
+                _c("div", { staticClass: "input-group-btn" }, [
+                  _c(
+                    "button",
+                    {
+                      staticClass: "btn btn-primary",
+                      attrs: { type: "button", id: "send" },
+                      on: { click: _vm.sendMessage }
+                    },
+                    [
+                      _c("span", { staticClass: "sr-only" }, [
+                        _vm._v("Send Message")
+                      ]),
+                      _vm._v(" "),
+                      _c("i", { staticClass: "fas fa-paper-plane" })
+                    ]
+                  )
+                ])
               ])
-            ])
-          ])
+            ]
+          )
         : _vm._e()
     ],
     1
@@ -56522,6 +56599,9 @@ var render = function() {
       ref: "messages",
       staticClass:
         "overflow-auto d-flex flex-grow-1 flex-column flex-column-reverse ",
+      class: {
+        "peer-video-fullscreen": _vm.inFullscreen && _vm.showMessagesFullscreen
+      },
       attrs: { id: "messages" }
     },
     [
@@ -56529,16 +56609,23 @@ var render = function() {
         return _c("div", { key: item.index }, [
           item.index == 0 ||
           (item.index > 0 &&
-            _vm.chatLog[$index + 1].user.name != item.user.name)
+            (_vm.chatLog[$index + 1].user.id != item.user.id ||
+              _vm.chatLog[$index + 1].user.name != item.user.name))
             ? _c(
                 "p",
                 {
                   staticClass: "text-muted p-0 mb-0",
-                  class: { "text-right": item.self, "text-left": !item.self }
+                  class: {
+                    "text-right": item.self,
+                    "text-left": !item.self,
+                    "high-contrast": _vm.inFullscreen
+                  }
                 },
                 [
                   _vm._v(
-                    "\n            " + _vm._s(item.user.name) + "\n            "
+                    "\n                " +
+                      _vm._s(item.user.name) +
+                      "\n                "
                   ),
                   item.user.verified
                     ? _c("i", { staticClass: "fas fa-lock" })
@@ -56556,7 +56643,11 @@ var render = function() {
                 "mr-6": !item.self
               }
             },
-            [_vm._v("\n            " + _vm._s(item.message) + "\n        ")]
+            [
+              _vm._v(
+                "\n                " + _vm._s(item.message) + "\n            "
+              )
+            ]
           )
         ])
       }),
