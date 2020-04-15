@@ -206,7 +206,7 @@
         top: 0px;
         left: 50%;
         margin-top: 6px;
-        margin-left: -15%;
+        margin-left: -12.5%;
     }
     .video-connections {
         background: #eee;
