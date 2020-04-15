@@ -121,7 +121,6 @@
             v-bind:inFullscreen="ui.inFullscreen">
         </network-graph-component>
 
-
         <div id="videos" class="container" v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }">
             <div class="row justify-content-center video-connections flex-fill">
             <div v-if="peerStreams.length == 0" class="no-video-connections">
@@ -134,8 +133,8 @@
                 <div
                     class="peer-video-details"
                     v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }">
-                    {{stream.peeruser.name}}
-                    <i class="fas fa-lock" v-if="stream.peeruser.verified"></i>
+                    {{stream.peerConnection.user.name}}
+                    <i class="fas fa-lock" v-if="stream.peerConnection.user.verified"></i>
                 </div>
                 <video :srcObject.prop="stream"
                     v-on:webkitfullscreenchange="fullscreenVideo"
@@ -148,7 +147,7 @@
                     autoplay="autoplay"
                     volume="1"
                     class="embed-responsive-item remote-stream"
-                    v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }"
+                    v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen, 'peer-is-speaking': stream.peerConnection.user.isSpeaking }"
                 ></video>
             </div>
             </div>
@@ -288,6 +287,9 @@
     }
     video.peer-video-fullscreen {
         box-shadow: none;
+    }
+    .peer-is-speaking {
+        border:2px solid #f00;
     }
     /**Adjust the slash since font awesome doesn't offer a video slash option */
     #btn-local-screenshare-toggle >>> .fa-slash {
@@ -716,25 +718,10 @@ export default {
             }
 
             stream.peerid = peerid;
-            stream.peeruser = vm.connections[peerid].user;
-
+            stream.peerConnection = vm.connections[peerid];
+            vm.connections[peerid].setStream(stream);
 
             vm.peerStreams.push(stream);
-
-            stream.inactive = function(e) {
-                console.log("ON INACTIVE");
-                console.log(e);
-            };
-
-            stream.onended = function(e) {
-                console.log("ON ENDED");
-                console.log(e);
-            };
-
-            stream.addEventListener('ended', function(e) {
-                console.log("ON INACTIVE");
-                console.log(e);
-            });
 
             /**
              * Fires twice. Once when the audio is removed and once when the video is removed
@@ -847,6 +834,7 @@ export default {
 
             var Peer = require('simple-peer');
             var io = require('socket.io-client');
+
 
             vm.chatId = location.pathname.replace('/chat/', '');
             vm.server.signal = io.connect('https://' + vm.server.ip + ':' + vm.server.port);
@@ -984,6 +972,20 @@ mounted() {
         //Prompt for a name
         if(response.success) {
             vm.init();
+        }
+    });
+
+    document.addEventListener("speaking", function(e) {
+        if(typeof vm.connections[e.peer.hostid] != 'undefined') {
+            vm.connections[e.peer.hostid].user.isSpeaking = true;
+            vm.$forceUpdate();
+        }
+    });
+
+    document.addEventListener("stopped_speaking", function(e) {
+        if(typeof vm.connections[e.peer.hostid] != 'undefined') {
+            vm.connections[e.peer.hostid].user.isSpeaking = false;
+            vm.$forceUpdate();
         }
     });
 }

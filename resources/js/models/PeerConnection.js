@@ -1,10 +1,14 @@
+import hark from 'hark';
 
 export default class PeerConnection {
 
     constructor(server, initiator) {
         var Peer = require('simple-peer');
         var self = this;
-
+        self.events = {
+            speaking: new Event('speaking'),
+            stopped_speaking: new Event('stopped_speaking')
+        };
         self.connection = new Peer({
             initiator: initiator,
             config: {
@@ -17,13 +21,16 @@ export default class PeerConnection {
         self.server = server;
 
         self.id = self.connection._id;
-        self.user = {name: "anonymous user", verified: false};
+        self.user = {name: "anonymous user", verified: false, isSpeaking: false};
 
         self.initiator = initiator;
         self.hostid = initiator ? self.id : null;
         self.clientid = initiator ? null : self.id;
 
         self.isStreaming = false;
+        self.stream = null;
+
+        self.boundElement = null;
 
         self.connection.on('connect', function() {
             console.log("~~~~~Connected!~~~~~");
@@ -56,17 +63,39 @@ export default class PeerConnection {
         return this;
     }
 
+    //This peers stream
+    setStream(stream) {
+        var self = this;
+        self.stream = stream;
+
+        var speechEvents = hark(stream);
+
+        speechEvents.on('speaking', function() {
+            self.user.isSpeaking = true;
+            self.events.speaking.peer = self;
+            document.dispatchEvent(self.events.speaking);
+        });
+
+        speechEvents.on('stopped_speaking', function() {
+            self.user.isSpeaking = false;
+            self.events.stopped_speaking.peer = self;
+            document.dispatchEvent(self.events.stopped_speaking);
+        });
+    }
+
+    //Sends a local stream to this peer
     addStream(stream) {
         if(this.isStreaming) {
             console.log("ALREADY STREAMING");
         } else {
-            console.log(this.connection);
+            //console.log(this.connection);
             this.connection.addStream(stream);
             this.isStreaming = true;
         }
 
     }
 
+    //Removes a local stream from this peer
     removeStream(stream) {
         if(!this.isStreaming) {
             console.log("NOT STREAMING");
@@ -86,7 +115,8 @@ export default class PeerConnection {
         this.connection.clientid = id;
     }
     setUser(user) {
-        this.user = user;
+        this.user.name = user.name;
+        this.user.verified = user.verified;
     }
 
     signal(webRtcId) {

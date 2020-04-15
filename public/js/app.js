@@ -2395,6 +2395,8 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
 
 
 
@@ -2761,23 +2763,9 @@ __webpack_require__.r(__webpack_exports__);
       }
 
       stream.peerid = peerid;
-      stream.peeruser = vm.connections[peerid].user;
+      stream.peerConnection = vm.connections[peerid];
+      vm.connections[peerid].setStream(stream);
       vm.peerStreams.push(stream);
-
-      stream.inactive = function (e) {
-        console.log("ON INACTIVE");
-        console.log(e);
-      };
-
-      stream.onended = function (e) {
-        console.log("ON ENDED");
-        console.log(e);
-      };
-
-      stream.addEventListener('ended', function (e) {
-        console.log("ON INACTIVE");
-        console.log(e);
-      });
       /**
        * Fires twice. Once when the audio is removed and once when the video is removed
        */
@@ -3013,6 +3001,18 @@ __webpack_require__.r(__webpack_exports__);
       //Prompt for a name
       if (response.success) {
         vm.init();
+      }
+    });
+    document.addEventListener("speaking", function (e) {
+      if (typeof vm.connections[e.peer.hostid] != 'undefined') {
+        vm.connections[e.peer.hostid].user.isSpeaking = true;
+        vm.$forceUpdate();
+      }
+    });
+    document.addEventListener("stopped_speaking", function (e) {
+      if (typeof vm.connections[e.peer.hostid] != 'undefined') {
+        vm.connections[e.peer.hostid].user.isSpeaking = false;
+        vm.$forceUpdate();
       }
     });
   }
@@ -10447,7 +10447,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.btn[data-v-80d584ac] {\n        border-radius: 0px;\n}\n#message-box[data-v-80d584ac] {\n        border-radius:0px;\n}\n.btn-show-messages[data-v-80d584ac] {\n        z-index:1;\n}\n.no-video-connections[data-v-80d584ac] {\n        padding: 4vh;\n        text-align: center;\n}\n.btn-leave-chat[data-v-80d584ac] {\n        position: absolute;\n        width: 25%;\n        top: 0px;\n        left: 50%;\n        margin-top: 6px;\n        margin-left: -12.5%;\n}\n.video-connections[data-v-80d584ac] {\n        background: #eee;\n        color:#555;\n        padding: 1vh;\n        border-radius: 5px;\n        box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n        height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n        position: absolute;\n        /*Center the icons*/\n        left: 0;\n        right: 0;\n}\n#btn-local-video-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n        opacity: 0.75;\n}\n.remote-stream[data-v-80d584ac] {\n        background:#000;\n}\n\n    /*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n        top:unset;\n        bottom: unset;\n        right:unset;\n        left:unset;\n}\nvideo[data-v-80d584ac] {\n        border-radius: 5px;\n        box-shadow: 0px 1px 3px #000;\n}\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n        box-shadow: none;\n}\n    /**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n        display:block;\n        margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n    #local-video-container.local-video-sm[data-v-80d584ac] video {\n        margin-right:25px;\n        width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n    #local-video-container.local-video-md[data-v-80d584ac] video {\n        width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n    #local-video-container.local-video-lg[data-v-80d584ac] video {\n        width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n        margin-top:20px;\n        position:fixed;\n        right:2em;\n        border-radius:3px;\n        z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n        position: absolute;\n        z-index: 2;\n        display: block;\n        top: 0px;\n        left: 0px;\n        float: left;\n        color: #fff;\n        background: #000;\n        opacity: 0.5;\n        padding-right: 5px;\n        padding-left: 5px;\n}\n    /* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n    #local-video-container.local-video-overlay[data-v-80d584ac] video {\n        margin-right:0px;\n        bottom:0px;\n        right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\n    button.local-audio-overlay[data-v-80d584ac],\n    button.local-screenshare-overlay[data-v-80d584ac],\n    button.local-swapvideo-overlay[data-v-80d584ac] {\n        margin-top:0px !important;\n        right:0px !important;\n        z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n        top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n        top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n        top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n        top:15em !important;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n        z-index:1;\n}\n\n    /*Videos container shrink so messages and stuff shows correctly*/\n#videos.peer-video-fullscreen[data-v-80d584ac] .video-connections {\n            height:0px;\n}\n/*\n\n    @media screen and (max-height: 400px) {\n        #videos.peer-video-fullscreen >>> .video-connections {\n            min-height:10vh;\n        }\n    }\n\n    @media screen and (min-height: 401px) and (max-height: 799px) {\n        #videos.peer-video-fullscreen >>> .video-connections {\n            min-height:25vh;\n        }\n    }*/\n\n\n    /* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n        position:fixed !important;\n        background: #000;\n        z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n        position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n        margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n        transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n        opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n.btn[data-v-80d584ac] {\n        border-radius: 0px;\n}\n#message-box[data-v-80d584ac] {\n        border-radius:0px;\n}\n.btn-show-messages[data-v-80d584ac] {\n        z-index:1;\n}\n.no-video-connections[data-v-80d584ac] {\n        padding: 4vh;\n        text-align: center;\n}\n.btn-leave-chat[data-v-80d584ac] {\n        position: absolute;\n        width: 25%;\n        top: 0px;\n        left: 50%;\n        margin-top: 6px;\n        margin-left: -12.5%;\n}\n.video-connections[data-v-80d584ac] {\n        background: #eee;\n        color:#555;\n        padding: 1vh;\n        border-radius: 5px;\n        box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n        height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n        position: absolute;\n        /*Center the icons*/\n        left: 0;\n        right: 0;\n}\n#btn-local-video-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n        opacity: 0.75;\n}\n.remote-stream[data-v-80d584ac] {\n        background:#000;\n}\n\n    /*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n        top:unset;\n        bottom: unset;\n        right:unset;\n        left:unset;\n}\nvideo[data-v-80d584ac] {\n        border-radius: 5px;\n        box-shadow: 0px 1px 3px #000;\n}\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n        box-shadow: none;\n}\n.peer-is-speaking[data-v-80d584ac] {\n        border:2px solid #f00;\n}\n    /**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n        display:block;\n        margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n    #local-video-container.local-video-sm[data-v-80d584ac] video {\n        margin-right:25px;\n        width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n    #local-video-container.local-video-md[data-v-80d584ac] video {\n        width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n    #local-video-container.local-video-lg[data-v-80d584ac] video {\n        width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n        margin-top:20px;\n        position:fixed;\n        right:2em;\n        border-radius:3px;\n        z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n        position: absolute;\n        z-index: 2;\n        display: block;\n        top: 0px;\n        left: 0px;\n        float: left;\n        color: #fff;\n        background: #000;\n        opacity: 0.5;\n        padding-right: 5px;\n        padding-left: 5px;\n}\n    /* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n    #local-video-container.local-video-overlay[data-v-80d584ac] video {\n        margin-right:0px;\n        bottom:0px;\n        right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\n    button.local-audio-overlay[data-v-80d584ac],\n    button.local-screenshare-overlay[data-v-80d584ac],\n    button.local-swapvideo-overlay[data-v-80d584ac] {\n        margin-top:0px !important;\n        right:0px !important;\n        z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n        top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n        top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n        top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n        top:15em !important;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n        z-index:1;\n}\n\n    /*Videos container shrink so messages and stuff shows correctly*/\n#videos.peer-video-fullscreen[data-v-80d584ac] .video-connections {\n            height:0px;\n}\n/*\n\n    @media screen and (max-height: 400px) {\n        #videos.peer-video-fullscreen >>> .video-connections {\n            min-height:10vh;\n        }\n    }\n\n    @media screen and (min-height: 401px) and (max-height: 799px) {\n        #videos.peer-video-fullscreen >>> .video-connections {\n            min-height:25vh;\n        }\n    }*/\n\n\n    /* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n        position:fixed !important;\n        background: #000;\n        z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n        position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n        margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n        transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n        opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -15169,6 +15169,160 @@ module.exports = function getBrowserRTC () {
   }
   if (!wrtc.RTCPeerConnection) return null
   return wrtc
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/hark/hark.js":
+/*!***********************************!*\
+  !*** ./node_modules/hark/hark.js ***!
+  \***********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var WildEmitter = __webpack_require__(/*! wildemitter */ "./node_modules/wildemitter/wildemitter.js");
+
+function getMaxVolume (analyser, fftBins) {
+  var maxVolume = -Infinity;
+  analyser.getFloatFrequencyData(fftBins);
+
+  for(var i=4, ii=fftBins.length; i < ii; i++) {
+    if (fftBins[i] > maxVolume && fftBins[i] < 0) {
+      maxVolume = fftBins[i];
+    }
+  };
+
+  return maxVolume;
+}
+
+
+var audioContextType;
+if (typeof window !== 'undefined') {
+  audioContextType = window.AudioContext || window.webkitAudioContext;
+}
+// use a single audio context due to hardware limits
+var audioContext = null;
+module.exports = function(stream, options) {
+  var harker = new WildEmitter();
+
+  // make it not break in non-supported browsers
+  if (!audioContextType) return harker;
+
+  //Config
+  var options = options || {},
+      smoothing = (options.smoothing || 0.1),
+      interval = (options.interval || 50),
+      threshold = options.threshold,
+      play = options.play,
+      history = options.history || 10,
+      running = true;
+
+  // Ensure that just a single AudioContext is internally created
+  audioContext = options.audioContext || audioContext || new audioContextType();
+
+  var sourceNode, fftBins, analyser;
+
+  analyser = audioContext.createAnalyser();
+  analyser.fftSize = 512;
+  analyser.smoothingTimeConstant = smoothing;
+  fftBins = new Float32Array(analyser.frequencyBinCount);
+
+  if (stream.jquery) stream = stream[0];
+  if (stream instanceof HTMLAudioElement || stream instanceof HTMLVideoElement) {
+    //Audio Tag
+    sourceNode = audioContext.createMediaElementSource(stream);
+    if (typeof play === 'undefined') play = true;
+    threshold = threshold || -50;
+  } else {
+    //WebRTC Stream
+    sourceNode = audioContext.createMediaStreamSource(stream);
+    threshold = threshold || -50;
+  }
+
+  sourceNode.connect(analyser);
+  if (play) analyser.connect(audioContext.destination);
+
+  harker.speaking = false;
+
+  harker.suspend = function() {
+    return audioContext.suspend();
+  }
+  harker.resume = function() {
+    return audioContext.resume();
+  }
+  Object.defineProperty(harker, 'state', { get: function() {
+    return audioContext.state;
+  }});
+  audioContext.onstatechange = function() {
+    harker.emit('state_change', audioContext.state);
+  }
+
+  harker.setThreshold = function(t) {
+    threshold = t;
+  };
+
+  harker.setInterval = function(i) {
+    interval = i;
+  };
+
+  harker.stop = function() {
+    running = false;
+    harker.emit('volume_change', -100, threshold);
+    if (harker.speaking) {
+      harker.speaking = false;
+      harker.emit('stopped_speaking');
+    }
+    analyser.disconnect();
+    sourceNode.disconnect();
+  };
+  harker.speakingHistory = [];
+  for (var i = 0; i < history; i++) {
+      harker.speakingHistory.push(0);
+  }
+
+  // Poll the analyser node to determine if speaking
+  // and emit events if changed
+  var looper = function() {
+    setTimeout(function() {
+
+      //check if stop has been called
+      if(!running) {
+        return;
+      }
+
+      var currentVolume = getMaxVolume(analyser, fftBins);
+
+      harker.emit('volume_change', currentVolume, threshold);
+
+      var history = 0;
+      if (currentVolume > threshold && !harker.speaking) {
+        // trigger quickly, short history
+        for (var i = harker.speakingHistory.length - 3; i < harker.speakingHistory.length; i++) {
+          history += harker.speakingHistory[i];
+        }
+        if (history >= 2) {
+          harker.speaking = true;
+          harker.emit('speaking');
+        }
+      } else if (currentVolume < threshold && harker.speaking) {
+        for (var i = 0; i < harker.speakingHistory.length; i++) {
+          history += harker.speakingHistory[i];
+        }
+        if (history == 0) {
+          harker.speaking = false;
+          harker.emit('stopped_speaking');
+        }
+      }
+      harker.speakingHistory.shift();
+      harker.speakingHistory.push(0 + (currentVolume > threshold));
+
+      looper();
+    }, interval);
+  };
+  looper();
+
+  return harker;
 }
 
 
@@ -56349,10 +56503,10 @@ var render = function() {
                               [
                                 _vm._v(
                                   "\n                " +
-                                    _vm._s(stream.peeruser.name) +
+                                    _vm._s(stream.peerConnection.user.name) +
                                     "\n                "
                                 ),
-                                stream.peeruser.verified
+                                stream.peerConnection.user.verified
                                   ? _c("i", { staticClass: "fas fa-lock" })
                                   : _vm._e()
                               ]
@@ -56362,7 +56516,9 @@ var render = function() {
                               staticClass:
                                 "embed-responsive-item remote-stream",
                               class: {
-                                "peer-video-fullscreen": _vm.ui.inFullscreen
+                                "peer-video-fullscreen": _vm.ui.inFullscreen,
+                                "peer-is-speaking":
+                                  stream.peerConnection.user.isSpeaking
                               },
                               attrs: {
                                 poster:
@@ -69031,6 +69187,172 @@ module.exports = function(module) {
 
 /***/ }),
 
+/***/ "./node_modules/wildemitter/wildemitter.js":
+/*!*************************************************!*\
+  !*** ./node_modules/wildemitter/wildemitter.js ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+/*
+WildEmitter.js is a slim little event emitter by @henrikjoreteg largely based
+on @visionmedia's Emitter from UI Kit.
+
+Why? I wanted it standalone.
+
+I also wanted support for wildcard emitters like this:
+
+emitter.on('*', function (eventName, other, event, payloads) {
+
+});
+
+emitter.on('somenamespace*', function (eventName, payloads) {
+
+});
+
+Please note that callbacks triggered by wildcard registered events also get
+the event name as the first argument.
+*/
+
+module.exports = WildEmitter;
+
+function WildEmitter() { }
+
+WildEmitter.mixin = function (constructor) {
+    var prototype = constructor.prototype || constructor;
+
+    prototype.isWildEmitter= true;
+
+    // Listen on the given `event` with `fn`. Store a group name if present.
+    prototype.on = function (event, groupName, fn) {
+        this.callbacks = this.callbacks || {};
+        var hasGroup = (arguments.length === 3),
+            group = hasGroup ? arguments[1] : undefined,
+            func = hasGroup ? arguments[2] : arguments[1];
+        func._groupName = group;
+        (this.callbacks[event] = this.callbacks[event] || []).push(func);
+        return this;
+    };
+
+    // Adds an `event` listener that will be invoked a single
+    // time then automatically removed.
+    prototype.once = function (event, groupName, fn) {
+        var self = this,
+            hasGroup = (arguments.length === 3),
+            group = hasGroup ? arguments[1] : undefined,
+            func = hasGroup ? arguments[2] : arguments[1];
+        function on() {
+            self.off(event, on);
+            func.apply(this, arguments);
+        }
+        this.on(event, group, on);
+        return this;
+    };
+
+    // Unbinds an entire group
+    prototype.releaseGroup = function (groupName) {
+        this.callbacks = this.callbacks || {};
+        var item, i, len, handlers;
+        for (item in this.callbacks) {
+            handlers = this.callbacks[item];
+            for (i = 0, len = handlers.length; i < len; i++) {
+                if (handlers[i]._groupName === groupName) {
+                    //console.log('removing');
+                    // remove it and shorten the array we're looping through
+                    handlers.splice(i, 1);
+                    i--;
+                    len--;
+                }
+            }
+        }
+        return this;
+    };
+
+    // Remove the given callback for `event` or all
+    // registered callbacks.
+    prototype.off = function (event, fn) {
+        this.callbacks = this.callbacks || {};
+        var callbacks = this.callbacks[event],
+            i;
+
+        if (!callbacks) return this;
+
+        // remove all handlers
+        if (arguments.length === 1) {
+            delete this.callbacks[event];
+            return this;
+        }
+
+        // remove specific handler
+        i = callbacks.indexOf(fn);
+        if (i !== -1) {
+            callbacks.splice(i, 1);
+            if (callbacks.length === 0) {
+                delete this.callbacks[event];
+            }
+        }
+        return this;
+    };
+
+    /// Emit `event` with the given args.
+    // also calls any `*` handlers
+    prototype.emit = function (event) {
+        this.callbacks = this.callbacks || {};
+        var args = [].slice.call(arguments, 1),
+            callbacks = this.callbacks[event],
+            specialCallbacks = this.getWildcardCallbacks(event),
+            i,
+            len,
+            item,
+            listeners;
+
+        if (callbacks) {
+            listeners = callbacks.slice();
+            for (i = 0, len = listeners.length; i < len; ++i) {
+                if (!listeners[i]) {
+                    break;
+                }
+                listeners[i].apply(this, args);
+            }
+        }
+
+        if (specialCallbacks) {
+            len = specialCallbacks.length;
+            listeners = specialCallbacks.slice();
+            for (i = 0, len = listeners.length; i < len; ++i) {
+                if (!listeners[i]) {
+                    break;
+                }
+                listeners[i].apply(this, [event].concat(args));
+            }
+        }
+
+        return this;
+    };
+
+    // Helper for for finding special wildcard event handlers that match the event
+    prototype.getWildcardCallbacks = function (eventName) {
+        this.callbacks = this.callbacks || {};
+        var item,
+            split,
+            result = [];
+
+        for (item in this.callbacks) {
+            split = item.split('*');
+            if (item === '*' || (split.length === 2 && eventName.slice(0, split[0].length) === split[0])) {
+                result = result.concat(this.callbacks[item]);
+            }
+        }
+        return result;
+    };
+
+};
+
+WildEmitter.mixin(WildEmitter);
+
+
+/***/ }),
+
 /***/ "./node_modules/yeast/index.js":
 /*!*************************************!*\
   !*** ./node_modules/yeast/index.js ***!
@@ -69949,11 +70271,15 @@ var Message = /*#__PURE__*/function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return PeerConnection; });
+/* harmony import */ var hark__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! hark */ "./node_modules/hark/hark.js");
+/* harmony import */ var hark__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(hark__WEBPACK_IMPORTED_MODULE_0__);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+
 
 var PeerConnection = /*#__PURE__*/function () {
   function PeerConnection(server, initiator) {
@@ -69962,6 +70288,10 @@ var PeerConnection = /*#__PURE__*/function () {
     var Peer = __webpack_require__(/*! simple-peer */ "./node_modules/simple-peer/index.js");
 
     var self = this;
+    self.events = {
+      speaking: new Event('speaking'),
+      stopped_speaking: new Event('stopped_speaking')
+    };
     self.connection = new Peer({
       initiator: initiator,
       config: {
@@ -69978,12 +70308,15 @@ var PeerConnection = /*#__PURE__*/function () {
     self.id = self.connection._id;
     self.user = {
       name: "anonymous user",
-      verified: false
+      verified: false,
+      isSpeaking: false
     };
     self.initiator = initiator;
     self.hostid = initiator ? self.id : null;
     self.clientid = initiator ? null : self.id;
     self.isStreaming = false;
+    self.stream = null;
+    self.boundElement = null;
     self.connection.on('connect', function () {
       console.log("~~~~~Connected!~~~~~");
     });
@@ -70014,19 +70347,39 @@ var PeerConnection = /*#__PURE__*/function () {
       self.destroy();
     });
     return this;
-  }
+  } //This peers stream
+
 
   _createClass(PeerConnection, [{
+    key: "setStream",
+    value: function setStream(stream) {
+      var self = this;
+      self.stream = stream;
+      var speechEvents = hark__WEBPACK_IMPORTED_MODULE_0___default()(stream);
+      speechEvents.on('speaking', function () {
+        self.user.isSpeaking = true;
+        self.events.speaking.peer = self;
+        document.dispatchEvent(self.events.speaking);
+      });
+      speechEvents.on('stopped_speaking', function () {
+        self.user.isSpeaking = false;
+        self.events.stopped_speaking.peer = self;
+        document.dispatchEvent(self.events.stopped_speaking);
+      });
+    } //Sends a local stream to this peer
+
+  }, {
     key: "addStream",
     value: function addStream(stream) {
       if (this.isStreaming) {
         console.log("ALREADY STREAMING");
       } else {
-        console.log(this.connection);
+        //console.log(this.connection);
         this.connection.addStream(stream);
         this.isStreaming = true;
       }
-    }
+    } //Removes a local stream from this peer
+
   }, {
     key: "removeStream",
     value: function removeStream(stream) {
@@ -70052,7 +70405,8 @@ var PeerConnection = /*#__PURE__*/function () {
   }, {
     key: "setUser",
     value: function setUser(user) {
-      this.user = user;
+      this.user.name = user.name;
+      this.user.verified = user.verified;
     }
   }, {
     key: "signal",
