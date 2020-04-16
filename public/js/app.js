@@ -2525,19 +2525,30 @@ __webpack_require__.r(__webpack_exports__);
     },
     toggleScreenshare: function toggleScreenshare(e) {
       var vm = this;
-      var options = options = {
+      var options = {
         video: {
           cursor: "always"
-        }
+        },
+        audio: false
       };
 
       if (vm.stream.videoenabled && !vm.stream.screenshareenabled) {
+        console.log(options); //Even with audio:true getDisplayMedia doesn't return audio tracks
+
         navigator.mediaDevices.getDisplayMedia(options).then(function (stream) {
-          vm.stopLocalStream();
-          vm.stream.videoenabled = false;
-          vm.stream.screenshareenabled = true;
-          vm.stream.connection = stream;
-          vm.onLocalStream(stream);
+          //Get and add the audio tracks manually
+          navigator.mediaDevices.getUserMedia({
+            audio: true
+          }).then(function (audioStream) {
+            audioStream.getAudioTracks().forEach(function (track) {
+              stream.addTrack(track);
+            });
+            vm.stopLocalStream();
+            vm.stream.videoenabled = false;
+            vm.stream.screenshareenabled = true;
+            vm.stream.connection = stream;
+            vm.onLocalStream(stream);
+          });
         })["catch"](function (e) {
           vm.stream.screenshareenabled = false;
           console.log("Local Screenshare Stream Error!");
@@ -2821,7 +2832,7 @@ __webpack_require__.r(__webpack_exports__);
       //console.log(client.streams);
       //client.removeStream(vm.stream.connection);
 
-      if (vm.stream.videoenabled && !vm.connections[id].isStreaming) {
+      if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.connections[id].isStreaming) {
         console.log("+APPLYING STREAM");
         vm.connections[id].addStream(vm.stream.connection);
       }
@@ -2904,7 +2915,7 @@ __webpack_require__.r(__webpack_exports__);
             vm.ui.sound.play('connect');
             vm.outputConnections();
 
-            if (vm.stream.videoenabled) {
+            if (vm.stream.videoenabled || vm.stream.screenshareenabled) {
               console.log("Try and send a stream to " + this._id);
               vm.sendStream(this._id);
             }
@@ -2963,7 +2974,7 @@ __webpack_require__.r(__webpack_exports__);
             vm.ui.sound.play('connect');
             vm.outputConnections();
 
-            if (vm.stream.videoenabled) {
+            if (vm.stream.videoenabled || vm.stream.screenshareenabled) {
               console.log("Try and send a client stream to " + id);
               vm.sendStream(id);
             }
@@ -70354,18 +70365,21 @@ var PeerConnection = /*#__PURE__*/function () {
     key: "setStream",
     value: function setStream(stream) {
       var self = this;
-      self.stream = stream;
-      var speechEvents = hark__WEBPACK_IMPORTED_MODULE_0___default()(stream);
-      speechEvents.on('speaking', function () {
-        self.user.isSpeaking = true;
-        self.events.speaking.peer = self;
-        document.dispatchEvent(self.events.speaking);
-      });
-      speechEvents.on('stopped_speaking', function () {
-        self.user.isSpeaking = false;
-        self.events.stopped_speaking.peer = self;
-        document.dispatchEvent(self.events.stopped_speaking);
-      });
+      self.stream = stream; //Make sure there's audio tracks to bind to
+
+      if (stream.getAudioTracks().length > 0) {
+        var speechEvents = hark__WEBPACK_IMPORTED_MODULE_0___default()(stream);
+        speechEvents.on('speaking', function () {
+          self.user.isSpeaking = true;
+          self.events.speaking.peer = self;
+          document.dispatchEvent(self.events.speaking);
+        });
+        speechEvents.on('stopped_speaking', function () {
+          self.user.isSpeaking = false;
+          self.events.stopped_speaking.peer = self;
+          document.dispatchEvent(self.events.stopped_speaking);
+        });
+      }
     } //Sends a local stream to this peer
 
   }, {

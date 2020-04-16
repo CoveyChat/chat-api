@@ -68,19 +68,22 @@ export default class PeerConnection {
         var self = this;
         self.stream = stream;
 
-        var speechEvents = hark(stream);
+        //Make sure there's audio tracks to bind to
+        if(stream.getAudioTracks().length > 0) {
+            var speechEvents = hark(stream);
 
-        speechEvents.on('speaking', function() {
-            self.user.isSpeaking = true;
-            self.events.speaking.peer = self;
-            document.dispatchEvent(self.events.speaking);
-        });
+            speechEvents.on('speaking', function() {
+                self.user.isSpeaking = true;
+                self.events.speaking.peer = self;
+                document.dispatchEvent(self.events.speaking);
+            });
 
-        speechEvents.on('stopped_speaking', function() {
-            self.user.isSpeaking = false;
-            self.events.stopped_speaking.peer = self;
-            document.dispatchEvent(self.events.stopped_speaking);
-        });
+            speechEvents.on('stopped_speaking', function() {
+                self.user.isSpeaking = false;
+                self.events.stopped_speaking.peer = self;
+                document.dispatchEvent(self.events.stopped_speaking);
+            });
+        }
     }
 
     //Sends a local stream to this peer

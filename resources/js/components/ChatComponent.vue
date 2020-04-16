@@ -513,15 +513,25 @@ export default {
         },
         toggleScreenshare(e) {
             var vm = this;
-            var options = options = {video: {cursor: "always"}};
+            var options = {video: {cursor: "always"}, audio: false};
 
             if(vm.stream.videoenabled && !vm.stream.screenshareenabled) {
+                console.log(options);
+                //Even with audio:true getDisplayMedia doesn't return audio tracks
                 navigator.mediaDevices.getDisplayMedia(options).then(function(stream) {
-                    vm.stopLocalStream();
-                    vm.stream.videoenabled = false;
-                    vm.stream.screenshareenabled = true;
-                    vm.stream.connection = stream;
-                    vm.onLocalStream(stream);
+                    //Get and add the audio tracks manually
+                    navigator.mediaDevices.getUserMedia({audio: true}).then(function(audioStream) {
+                        audioStream.getAudioTracks().forEach(function(track){
+                            stream.addTrack(track);
+                        });
+
+                        vm.stopLocalStream();
+                        vm.stream.videoenabled = false;
+                        vm.stream.screenshareenabled = true;
+                        vm.stream.connection = stream;
+                        vm.onLocalStream(stream);
+                    });
+
 
                 }).catch((e) => {
                     vm.stream.screenshareenabled = false;
@@ -785,7 +795,7 @@ export default {
             //console.log(client.streams);
             //client.removeStream(vm.stream.connection);
 
-            if(vm.stream.videoenabled && !vm.connections[id].isStreaming) {
+            if((vm.stream.videoenabled  || vm.stream.screenshareenabled) && !vm.connections[id].isStreaming) {
                 console.log("+APPLYING STREAM");
                 vm.connections[id].addStream(vm.stream.connection);
             }
@@ -871,7 +881,7 @@ export default {
 
                         vm.outputConnections();
 
-                        if(vm.stream.videoenabled) {
+                        if(vm.stream.videoenabled || vm.stream.screenshareenabled) {
                             console.log("Try and send a stream to " + this._id);
                             vm.sendStream(this._id);
                         }
@@ -932,7 +942,7 @@ export default {
                         vm.ui.sound.play('connect');
 
                         vm.outputConnections();
-                        if(vm.stream.videoenabled) {
+                        if(vm.stream.videoenabled || vm.stream.screenshareenabled) {
                             console.log("Try and send a client stream to " + id);
                             vm.sendStream(id);
                         }
