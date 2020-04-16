@@ -6,7 +6,7 @@
 <!-- CSRF Token -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<title>{{ config('app.name', 'Bevy Chat') }} - For the birds</title>
+<title>{{ config('app.name', 'Bevy Chat') }} - Meetings made easy</title>
 
 <script type="text/javascript">
     window.addEventListener("error", function (e) {

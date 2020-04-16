@@ -156,9 +156,19 @@
         v-bind:showMessagesFullscreen="ui.showMessagesFullscreen">
     </message-log-component>
 
-    <div class="flex-column message-box" v-if="user.active" v-bind:class="{ 'peer-video-fullscreen': (ui.inFullscreen && ui.showMessagesFullscreen) }">
+    <div class="flex-column message-box"
+        v-if="user.active"
+        v-bind:class="{
+            'peer-video-fullscreen': (ui.inFullscreen && ui.showMessagesFullscreen),
+            'chat-disabled': (Object.keys(connections).length == 0)}">
         <div class="input-group">
-            <input type="text" v-model="message" class="form-control" placeholder="Type a message" id="message-box" v-on:keyup.enter="sendMessage" />
+            <input type="text"
+                v-model="message"
+                id="message-box"
+                class="form-control"
+                :placeholder="(Object.keys(connections).length == 0 ? 'Nobody is here' : 'Type a message')"
+                :disabled="(Object.keys(connections).length == 0)"
+                v-on:keyup.enter="sendMessage" />
             <div class="input-group-btn">
                 <button class="btn btn-primary" type="button"  id="send" v-on:click="sendMessage">
                     <span class="sr-only">Send Message</span>
@@ -184,6 +194,12 @@
     .no-video-connections {
         padding: 4vh;
         text-align: center;
+    }
+    .chat-disabled >>> input {
+        opacity:.5;
+    }
+    .chat-disabled >>> button {
+        opacity:.5;
     }
     .btn-leave-chat {
         position: absolute;
@@ -593,6 +609,9 @@ export default {
         },
         outputConnections () {
             var vm = this;
+
+            //Update for anything that's binding to Object.keys
+            vm.$forceUpdate();
 
             var networkChartData = {nodes:[{id: 'me', name: 'Me'}], links:[]};
 
