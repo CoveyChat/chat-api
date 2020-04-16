@@ -121,7 +121,7 @@
             v-bind:inFullscreen="ui.inFullscreen">
         </network-graph-component>
 
-        <div id="videos" class="container" v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }">
+        <div id="peer-video-container" class="container" v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }">
             <div class="row justify-content-center video-connections flex-fill">
             <div v-if="peerStreams.length == 0" class="no-video-connections">
                 <h1><i class="fas fa-broadcast-tower"></i><i class="fas fa-slash tower-slash"></i></h1>
@@ -130,25 +130,11 @@
             <div v-for="stream in peerStreams"
                 :key="stream.id"
                 class="col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3">
-                <div
-                    class="peer-video-details"
-                    v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }">
-                    {{stream.peerConnection.user.name}}
-                    <i class="fas fa-lock" v-if="stream.peerConnection.user.verified"></i>
-                </div>
-                <video :srcObject.prop="stream"
-                    v-on:webkitfullscreenchange="fullscreenVideo"
-                    v-on:mozfullscreenchange="fullscreenVideo"
-                    v-on:fullscreenchange="fullscreenVideo"
-                    v-on:click="onDoubleClickCheck"
-                    v-on:play="setDefaultVolume"
 
-                    poster = "https://bevy.chat/img/video_poster.png"
-                    autoplay="autoplay"
-                    volume="1"
-                    class="embed-responsive-item remote-stream"
-                    v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen, 'peer-is-speaking': stream.peerConnection.user.isSpeaking }"
-                ></video>
+                <peer-video-component
+                v-bind:stream="stream"
+                v-on:fullscreenVideo="ui.inFullscreen = !ui.inFullscreen">
+                </peer-video-component>
             </div>
             </div>
         </div>
@@ -269,9 +255,6 @@
         opacity: 0.75;
     }
 
-    .remote-stream {
-        background:#000;
-    }
 
     /*Remove any previous positions*/
     .is-draggable {
@@ -288,9 +271,7 @@
     video.peer-video-fullscreen {
         box-shadow: none;
     }
-    .peer-is-speaking {
-        border:2px solid #f00;
-    }
+
     /**Adjust the slash since font awesome doesn't offer a video slash option */
     #btn-local-screenshare-toggle >>> .fa-slash {
         display:block;
@@ -317,19 +298,7 @@
         border-radius:3px;
         z-index: 2147483646;
     }
-    .peer-video-details {
-        position: absolute;
-        z-index: 2;
-        display: block;
-        top: 0px;
-        left: 0px;
-        float: left;
-        color: #fff;
-        background: #000;
-        opacity: 0.5;
-        padding-right: 5px;
-        padding-left: 5px;
-    }
+
     /* When fullscreened, shift things around*/
     #local-video-container.local-video-overlay,
     #local-video-container.local-video-overlay >>> video {
@@ -364,34 +333,11 @@
     }
 
     /*Videos container shrink so messages and stuff shows correctly*/
-    #videos.peer-video-fullscreen >>> .video-connections {
+    #peer-videos-container.peer-video-fullscreen >>> .video-connections {
             height:0px;
-        }
-/*
-
-    @media screen and (max-height: 400px) {
-        #videos.peer-video-fullscreen >>> .video-connections {
-            min-height:10vh;
-        }
     }
-
-    @media screen and (min-height: 401px) and (max-height: 799px) {
-        #videos.peer-video-fullscreen >>> .video-connections {
-            min-height:25vh;
-        }
-    }*/
-
 
     /* Main Video Fullscreen */
-    video.peer-video-fullscreen {
-        position:fixed !important;
-        background: #000;
-        z-index: 1;
-    }
-    .peer-video-details.peer-video-fullscreen {
-        position:fixed;
-    }
-
     #user-prompt {
         margin-top:10%;
     }
@@ -471,24 +417,6 @@ export default {
                 //Go back to the homepage
                 window.location.href = '/';
             });
-        },
-        onDoubleClickCheck(e) {
-            var vm = this;
-
-            //Play the video if you touched it
-            //Chrome disables auto-play if you don't interact with the document first
-            e.target.play();
-
-            //Clicked again within 1s, trigger fullscreen
-            if(vm.ui.dblClickTimer != null && Date.now() - 1000 <= vm.ui.dblClickTimer) {
-                vm.ui.dblClickTimer = null;
-                vm.fullscreenVideo(e);
-            } else {
-                vm.ui.dblClickTimer = Date.now();
-            }
-        },
-        setDefaultVolume(e) {
-            e.target.volume = 1;
         },
         swapVideoFeed(e) {
             var vm = this;
@@ -577,21 +505,6 @@ export default {
             if(e.target.offsetLeft > (window.screen.width - 100)) {
                 e.target.style.left = (window.screen.width - 100) + "px";
             }
-        },
-        fullscreenVideo(e) {
-            var vm = this;
-            //Don't actually fullscreen. Just make the video... Bigger
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            }
-
-            //Going fullscreen
-            if(!vm.ui.inFullscreen) {
-                vm.ui.inFullscreen = true;
-            } else {
-                vm.ui.inFullscreen = false;
-            }
-
         },
         setAnonUser(e) {
             var vm = this;
@@ -985,19 +898,6 @@ mounted() {
         }
     });
 
-    document.addEventListener("speaking", function(e) {
-        if(typeof vm.connections[e.peer.hostid] != 'undefined') {
-            vm.connections[e.peer.hostid].user.isSpeaking = true;
-            vm.$forceUpdate();
-        }
-    });
-
-    document.addEventListener("stopped_speaking", function(e) {
-        if(typeof vm.connections[e.peer.hostid] != 'undefined') {
-            vm.connections[e.peer.hostid].user.isSpeaking = false;
-            vm.$forceUpdate();
-        }
-    });
 }
 }
 

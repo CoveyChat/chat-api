@@ -2343,60 +2343,6 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
 
 
 
@@ -2483,22 +2429,6 @@ __webpack_require__.r(__webpack_exports__);
 
         window.location.href = '/';
       });
-    },
-    onDoubleClickCheck: function onDoubleClickCheck(e) {
-      var vm = this; //Play the video if you touched it
-      //Chrome disables auto-play if you don't interact with the document first
-
-      e.target.play(); //Clicked again within 1s, trigger fullscreen
-
-      if (vm.ui.dblClickTimer != null && Date.now() - 1000 <= vm.ui.dblClickTimer) {
-        vm.ui.dblClickTimer = null;
-        vm.fullscreenVideo(e);
-      } else {
-        vm.ui.dblClickTimer = Date.now();
-      }
-    },
-    setDefaultVolume: function setDefaultVolume(e) {
-      e.target.volume = 1;
     },
     swapVideoFeed: function swapVideoFeed(e) {
       var vm = this;
@@ -2595,20 +2525,6 @@ __webpack_require__.r(__webpack_exports__);
 
       if (e.target.offsetLeft > window.screen.width - 100) {
         e.target.style.left = window.screen.width - 100 + "px";
-      }
-    },
-    fullscreenVideo: function fullscreenVideo(e) {
-      var vm = this; //Don't actually fullscreen. Just make the video... Bigger
-
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } //Going fullscreen
-
-
-      if (!vm.ui.inFullscreen) {
-        vm.ui.inFullscreen = true;
-      } else {
-        vm.ui.inFullscreen = false;
       }
     },
     setAnonUser: function setAnonUser(e) {
@@ -3012,18 +2928,6 @@ __webpack_require__.r(__webpack_exports__);
       //Prompt for a name
       if (response.success) {
         vm.init();
-      }
-    });
-    document.addEventListener("speaking", function (e) {
-      if (typeof vm.connections[e.peer.hostid] != 'undefined') {
-        vm.connections[e.peer.hostid].user.isSpeaking = true;
-        vm.$forceUpdate();
-      }
-    });
-    document.addEventListener("stopped_speaking", function (e) {
-      if (typeof vm.connections[e.peer.hostid] != 'undefined') {
-        vm.connections[e.peer.hostid].user.isSpeaking = false;
-        vm.$forceUpdate();
       }
     });
   }
@@ -3608,6 +3512,132 @@ __webpack_require__.r(__webpack_exports__);
         return d.y + 5;
       }).style("font-size", "15px").style("font-weight", "bold").style("fill", "#fff");
     }
+  }
+});
+
+/***/ }),
+
+/***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/PeerVideoComponent.vue?vue&type=script&lang=js&":
+/*!*****************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/PeerVideoComponent.vue?vue&type=script&lang=js& ***!
+  \*****************************************************************************************************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: "PeerVideoComponent",
+  props: {
+    stream: MediaStream
+  },
+  data: function data() {
+    return {
+      ui: {
+        inFullscreen: false,
+        dblClickTimer: null
+      }
+    };
+  },
+  methods: {
+    onDoubleClickCheck: function onDoubleClickCheck(e) {
+      var vm = this; //Play the video if you touched it
+      //Chrome disables auto-play if you don't interact with the document first
+
+      e.target.play(); //Clicked again within 1s, trigger fullscreen
+
+      if (vm.ui.dblClickTimer != null && Date.now() - 1000 <= vm.ui.dblClickTimer) {
+        vm.ui.dblClickTimer = null;
+        vm.ui.inFullscreen = !vm.ui.inFullscreen;
+        vm.$emit('fullscreenVideo');
+      } else {
+        vm.ui.dblClickTimer = Date.now();
+      }
+    },
+    setDefaultVolume: function setDefaultVolume(e) {
+      e.target.volume = 1;
+    }
+  },
+  mounted: function mounted() {
+    console.log('Peer Video Component mounted.');
+    var vm = this;
+    document.addEventListener("speaking", function (e) {
+      //Check to see if this this the right video that's speaking
+      if (vm.stream.peerConnection.hostid == e.peer.hostid) {
+        vm.stream.peerConnection.user.isSpeaking = true;
+        vm.$forceUpdate();
+      }
+    });
+    document.addEventListener("stopped_speaking", function (e) {
+      //Check to see if this this the right video that's speaking
+      if (vm.stream.peerConnection.hostid == e.peer.hostid) {
+        vm.stream.peerConnection.user.isSpeaking = false;
+        vm.$forceUpdate();
+      }
+    });
   }
 });
 
@@ -10458,7 +10488,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.btn[data-v-80d584ac] {\n        border-radius: 0px;\n}\n#message-box[data-v-80d584ac] {\n        border-radius:0px;\n}\n.btn-show-messages[data-v-80d584ac] {\n        z-index:1;\n}\n.no-video-connections[data-v-80d584ac] {\n        padding: 4vh;\n        text-align: center;\n}\n.btn-leave-chat[data-v-80d584ac] {\n        position: absolute;\n        width: 25%;\n        top: 0px;\n        left: 50%;\n        margin-top: 6px;\n        margin-left: -12.5%;\n}\n.video-connections[data-v-80d584ac] {\n        background: #eee;\n        color:#555;\n        padding: 1vh;\n        border-radius: 5px;\n        box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n        height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n        position: absolute;\n        /*Center the icons*/\n        left: 0;\n        right: 0;\n}\n#btn-local-video-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n        right:10px;\n        border-radius: 2em !important;\n        width: 4em;\n        height: 4em;\n        position: fixed;\n        z-index:2147483647;\n        margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n        opacity: 0.75;\n}\n.remote-stream[data-v-80d584ac] {\n        background:#000;\n}\n\n    /*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n        top:unset;\n        bottom: unset;\n        right:unset;\n        left:unset;\n}\nvideo[data-v-80d584ac] {\n        border-radius: 5px;\n        box-shadow: 0px 1px 3px #000;\n}\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n        box-shadow: none;\n}\n.peer-is-speaking[data-v-80d584ac] {\n        border:2px solid #f00;\n}\n    /**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n        display:block;\n        margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n    #local-video-container.local-video-sm[data-v-80d584ac] video {\n        margin-right:25px;\n        width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n    #local-video-container.local-video-md[data-v-80d584ac] video {\n        width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n    #local-video-container.local-video-lg[data-v-80d584ac] video {\n        width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n        margin-top:20px;\n        position:fixed;\n        right:2em;\n        border-radius:3px;\n        z-index: 2147483646;\n}\n.peer-video-details[data-v-80d584ac] {\n        position: absolute;\n        z-index: 2;\n        display: block;\n        top: 0px;\n        left: 0px;\n        float: left;\n        color: #fff;\n        background: #000;\n        opacity: 0.5;\n        padding-right: 5px;\n        padding-left: 5px;\n}\n    /* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n    #local-video-container.local-video-overlay[data-v-80d584ac] video {\n        margin-right:0px;\n        bottom:0px;\n        right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\n    button.local-audio-overlay[data-v-80d584ac],\n    button.local-screenshare-overlay[data-v-80d584ac],\n    button.local-swapvideo-overlay[data-v-80d584ac] {\n        margin-top:0px !important;\n        right:0px !important;\n        z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n        top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n        top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n        top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n        top:15em !important;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n        z-index:1;\n}\n\n    /*Videos container shrink so messages and stuff shows correctly*/\n#videos.peer-video-fullscreen[data-v-80d584ac] .video-connections {\n            height:0px;\n}\n/*\n\n    @media screen and (max-height: 400px) {\n        #videos.peer-video-fullscreen >>> .video-connections {\n            min-height:10vh;\n        }\n    }\n\n    @media screen and (min-height: 401px) and (max-height: 799px) {\n        #videos.peer-video-fullscreen >>> .video-connections {\n            min-height:25vh;\n        }\n    }*/\n\n\n    /* Main Video Fullscreen */\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n        position:fixed !important;\n        background: #000;\n        z-index: 1;\n}\n.peer-video-details.peer-video-fullscreen[data-v-80d584ac] {\n        position:fixed;\n}\n#user-prompt[data-v-80d584ac] {\n        margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n        transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n        opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n.btn[data-v-80d584ac] {\n    border-radius: 0px;\n}\n#message-box[data-v-80d584ac] {\n    border-radius:0px;\n}\n.btn-show-messages[data-v-80d584ac] {\n    z-index:1;\n}\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.btn-leave-chat[data-v-80d584ac] {\n    position: absolute;\n    width: 25%;\n    top: 0px;\n    left: 50%;\n    margin-top: 6px;\n    margin-left: -12.5%;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    box-shadow: none;\n}\n\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n\n/* When fullscreened, shift things around*/\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\nbutton.local-audio-overlay[data-v-80d584ac],\nbutton.local-screenshare-overlay[data-v-80d584ac],\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    top:15em !important;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n    z-index:1;\n}\n\n/*Videos container shrink so messages and stuff shows correctly*/\n#peer-videos-container.peer-video-fullscreen[data-v-80d584ac] .video-connections {\n        height:0px;\n}\n\n/* Main Video Fullscreen */\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -10535,6 +10565,25 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 // module
 exports.push([module.i, "\n#active-network-chart {\n    height: 150px;\n}\n#active-network-chart.peer-video-fullscreen {\n    /*Set the height to 0 so the width calculations can still work if the orientation changes*/\n    /*Otherwise setting to display-none will set the width to NaN*/\n    height: 0px;\n    overflow: hidden;\n}\n.link {\n    stroke: #aaa;\n}\n.node text {\n    stroke:#333;\n    cursor:pointer;\n}\n.node circle{\n    stroke:#fff;\n    stroke-width:3px;\n    fill:#555;\n}\n", ""]);
+
+// exports
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/PeerVideoComponent.vue?vue&type=style&index=0&id=e32dd722&scoped=true&lang=css&":
+/*!************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader??ref--6-1!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/PeerVideoComponent.vue?vue&type=style&index=0&id=e32dd722&scoped=true&lang=css& ***!
+  \************************************************************************************************************************************************************************************************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loader/lib/css-base.js */ "./node_modules/css-loader/lib/css-base.js")(false);
+// imports
+
+
+// module
+exports.push([module.i, "\n.remote-stream[data-v-e32dd722] {\n    background:#000;\n}\n.peer-video-details[data-v-e32dd722] {\n    position: absolute;\n    z-index: 1;\n    display: block;\n    top: 0px;\n    left: 0px;\n    float: left;\n    color: #fff;\n    background: #000;\n    opacity: 0.5;\n    padding-right: 5px;\n    padding-left: 5px;\n}\n\n\n/**\n  * Styles for fullscreen mode\n  */\n.peer-video-details.peer-video-fullscreen[data-v-e32dd722] {\n    position:fixed;\n    z-index:3;\n}\nvideo.peer-video-fullscreen[data-v-e32dd722] {\n    position:fixed !important;\n    background: #000;\n    z-index: 2;\n}\n.peer-is-speaking[data-v-e32dd722] {\n    border:1px solid #f00;\n}\n\n", ""]);
 
 // exports
 
@@ -55480,6 +55529,36 @@ if(false) {}
 
 /***/ }),
 
+/***/ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/PeerVideoComponent.vue?vue&type=style&index=0&id=e32dd722&scoped=true&lang=css&":
+/*!****************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/style-loader!./node_modules/css-loader??ref--6-1!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/PeerVideoComponent.vue?vue&type=style&index=0&id=e32dd722&scoped=true&lang=css& ***!
+  \****************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+var content = __webpack_require__(/*! !../../../node_modules/css-loader??ref--6-1!../../../node_modules/vue-loader/lib/loaders/stylePostLoader.js!../../../node_modules/postcss-loader/src??ref--6-2!../../../node_modules/vue-loader/lib??vue-loader-options!./PeerVideoComponent.vue?vue&type=style&index=0&id=e32dd722&scoped=true&lang=css& */ "./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/PeerVideoComponent.vue?vue&type=style&index=0&id=e32dd722&scoped=true&lang=css&");
+
+if(typeof content === 'string') content = [[module.i, content, '']];
+
+var transform;
+var insertInto;
+
+
+
+var options = {"hmr":true}
+
+options.transform = transform
+options.insertInto = undefined;
+
+var update = __webpack_require__(/*! ../../../node_modules/style-loader/lib/addStyles.js */ "./node_modules/style-loader/lib/addStyles.js")(content, options);
+
+if(content.locals) module.exports = content.locals;
+
+if(false) {}
+
+/***/ }),
+
 /***/ "./node_modules/style-loader/lib/addStyles.js":
 /*!****************************************************!*\
   !*** ./node_modules/style-loader/lib/addStyles.js ***!
@@ -56476,7 +56555,7 @@ var render = function() {
                 {
                   staticClass: "container",
                   class: { "peer-video-fullscreen": _vm.ui.inFullscreen },
-                  attrs: { id: "videos" }
+                  attrs: { id: "peer-video-container" }
                 },
                 [
                   _c(
@@ -56503,50 +56582,16 @@ var render = function() {
                               "col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3"
                           },
                           [
-                            _c(
-                              "div",
-                              {
-                                staticClass: "peer-video-details",
-                                class: {
-                                  "peer-video-fullscreen": _vm.ui.inFullscreen
-                                }
-                              },
-                              [
-                                _vm._v(
-                                  "\n                " +
-                                    _vm._s(stream.peerConnection.user.name) +
-                                    "\n                "
-                                ),
-                                stream.peerConnection.user.verified
-                                  ? _c("i", { staticClass: "fas fa-lock" })
-                                  : _vm._e()
-                              ]
-                            ),
-                            _vm._v(" "),
-                            _c("video", {
-                              staticClass:
-                                "embed-responsive-item remote-stream",
-                              class: {
-                                "peer-video-fullscreen": _vm.ui.inFullscreen,
-                                "peer-is-speaking":
-                                  stream.peerConnection.user.isSpeaking
-                              },
-                              attrs: {
-                                poster:
-                                  "https://bevy.chat/img/video_poster.png",
-                                autoplay: "autoplay",
-                                volume: "1"
-                              },
-                              domProps: { srcObject: stream },
+                            _c("peer-video-component", {
+                              attrs: { stream: stream },
                               on: {
-                                webkitfullscreenchange: _vm.fullscreenVideo,
-                                mozfullscreenchange: _vm.fullscreenVideo,
-                                fullscreenchange: _vm.fullscreenVideo,
-                                click: _vm.onDoubleClickCheck,
-                                play: _vm.setDefaultVolume
+                                fullscreenVideo: function($event) {
+                                  _vm.ui.inFullscreen = !_vm.ui.inFullscreen
+                                }
                               }
                             })
-                          ]
+                          ],
+                          1
                         )
                       })
                     ],
@@ -57033,6 +57078,63 @@ var render = function() {
     class: { "peer-video-fullscreen": _vm.inFullscreen },
     attrs: { id: "active-network-chart" }
   })
+}
+var staticRenderFns = []
+render._withStripped = true
+
+
+
+/***/ }),
+
+/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/PeerVideoComponent.vue?vue&type=template&id=e32dd722&scoped=true&":
+/*!*********************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/PeerVideoComponent.vue?vue&type=template&id=e32dd722&scoped=true& ***!
+  \*********************************************************************************************************************************************************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "render", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return staticRenderFns; });
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", { staticClass: "peer-stream-container" }, [
+    _c(
+      "div",
+      {
+        staticClass: "peer-video-details",
+        class: { "peer-video-fullscreen": _vm.ui.inFullscreen }
+      },
+      [
+        _vm._v(
+          "\n        " +
+            _vm._s(_vm.stream.peerConnection.user.name) +
+            "\n        "
+        ),
+        _vm.stream.peerConnection.user.verified
+          ? _c("i", { staticClass: "fas fa-lock" })
+          : _vm._e()
+      ]
+    ),
+    _vm._v(" "),
+    _c("video", {
+      staticClass: "embed-responsive-item remote-stream",
+      class: {
+        "peer-video-fullscreen": _vm.ui.inFullscreen,
+        "peer-is-speaking": _vm.stream.peerConnection.user.isSpeaking
+      },
+      attrs: {
+        poster: "https://bevy.chat/img/video_poster.png",
+        autoplay: "autoplay",
+        volume: "1"
+      },
+      domProps: { srcObject: _vm.stream },
+      on: { click: _vm.onDoubleClickCheck, play: _vm.setDefaultVolume }
+    })
+  ])
 }
 var staticRenderFns = []
 render._withStripped = true
@@ -69542,7 +69644,8 @@ var map = {
 	"./CopyComponent.vue": "./resources/js/components/CopyComponent.vue",
 	"./MessageLogComponent.vue": "./resources/js/components/MessageLogComponent.vue",
 	"./ModalComponent.vue": "./resources/js/components/ModalComponent.vue",
-	"./NetworkGraphComponent.vue": "./resources/js/components/NetworkGraphComponent.vue"
+	"./NetworkGraphComponent.vue": "./resources/js/components/NetworkGraphComponent.vue",
+	"./PeerVideoComponent.vue": "./resources/js/components/PeerVideoComponent.vue"
 };
 
 
@@ -70066,6 +70169,93 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_NetworkGraphComponent_vue_vue_type_template_id_2114b942___WEBPACK_IMPORTED_MODULE_0__["render"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_NetworkGraphComponent_vue_vue_type_template_id_2114b942___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
+
+
+
+/***/ }),
+
+/***/ "./resources/js/components/PeerVideoComponent.vue":
+/*!********************************************************!*\
+  !*** ./resources/js/components/PeerVideoComponent.vue ***!
+  \********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _PeerVideoComponent_vue_vue_type_template_id_e32dd722_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./PeerVideoComponent.vue?vue&type=template&id=e32dd722&scoped=true& */ "./resources/js/components/PeerVideoComponent.vue?vue&type=template&id=e32dd722&scoped=true&");
+/* harmony import */ var _PeerVideoComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./PeerVideoComponent.vue?vue&type=script&lang=js& */ "./resources/js/components/PeerVideoComponent.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport *//* harmony import */ var _PeerVideoComponent_vue_vue_type_style_index_0_id_e32dd722_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./PeerVideoComponent.vue?vue&type=style&index=0&id=e32dd722&scoped=true&lang=css& */ "./resources/js/components/PeerVideoComponent.vue?vue&type=style&index=0&id=e32dd722&scoped=true&lang=css&");
+/* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
+
+
+
+
+
+
+/* normalize component */
+
+var component = Object(_node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_3__["default"])(
+  _PeerVideoComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__["default"],
+  _PeerVideoComponent_vue_vue_type_template_id_e32dd722_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"],
+  _PeerVideoComponent_vue_vue_type_template_id_e32dd722_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
+  false,
+  null,
+  "e32dd722",
+  null
+  
+)
+
+/* hot reload */
+if (false) { var api; }
+component.options.__file = "resources/js/components/PeerVideoComponent.vue"
+/* harmony default export */ __webpack_exports__["default"] = (component.exports);
+
+/***/ }),
+
+/***/ "./resources/js/components/PeerVideoComponent.vue?vue&type=script&lang=js&":
+/*!*********************************************************************************!*\
+  !*** ./resources/js/components/PeerVideoComponent.vue?vue&type=script&lang=js& ***!
+  \*********************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_PeerVideoComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib??ref--4-0!../../../node_modules/vue-loader/lib??vue-loader-options!./PeerVideoComponent.vue?vue&type=script&lang=js& */ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/PeerVideoComponent.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport */ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_PeerVideoComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__["default"]); 
+
+/***/ }),
+
+/***/ "./resources/js/components/PeerVideoComponent.vue?vue&type=style&index=0&id=e32dd722&scoped=true&lang=css&":
+/*!*****************************************************************************************************************!*\
+  !*** ./resources/js/components/PeerVideoComponent.vue?vue&type=style&index=0&id=e32dd722&scoped=true&lang=css& ***!
+  \*****************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_PeerVideoComponent_vue_vue_type_style_index_0_id_e32dd722_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/style-loader!../../../node_modules/css-loader??ref--6-1!../../../node_modules/vue-loader/lib/loaders/stylePostLoader.js!../../../node_modules/postcss-loader/src??ref--6-2!../../../node_modules/vue-loader/lib??vue-loader-options!./PeerVideoComponent.vue?vue&type=style&index=0&id=e32dd722&scoped=true&lang=css& */ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/PeerVideoComponent.vue?vue&type=style&index=0&id=e32dd722&scoped=true&lang=css&");
+/* harmony import */ var _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_PeerVideoComponent_vue_vue_type_style_index_0_id_e32dd722_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_PeerVideoComponent_vue_vue_type_style_index_0_id_e32dd722_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_PeerVideoComponent_vue_vue_type_style_index_0_id_e32dd722_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__) if(__WEBPACK_IMPORT_KEY__ !== 'default') (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_PeerVideoComponent_vue_vue_type_style_index_0_id_e32dd722_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_PeerVideoComponent_vue_vue_type_style_index_0_id_e32dd722_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0___default.a); 
+
+/***/ }),
+
+/***/ "./resources/js/components/PeerVideoComponent.vue?vue&type=template&id=e32dd722&scoped=true&":
+/*!***************************************************************************************************!*\
+  !*** ./resources/js/components/PeerVideoComponent.vue?vue&type=template&id=e32dd722&scoped=true& ***!
+  \***************************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_PeerVideoComponent_vue_vue_type_template_id_e32dd722_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./PeerVideoComponent.vue?vue&type=template&id=e32dd722&scoped=true& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/PeerVideoComponent.vue?vue&type=template&id=e32dd722&scoped=true&");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_PeerVideoComponent_vue_vue_type_template_id_e32dd722_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_PeerVideoComponent_vue_vue_type_template_id_e32dd722_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
 
 
 
