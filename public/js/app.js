@@ -2359,6 +2359,7 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
 
 
 
@@ -3630,7 +3631,12 @@ __webpack_require__.r(__webpack_exports__);
       if (vm.ui.dblClickTimer != null && Date.now() - 1000 <= vm.ui.dblClickTimer) {
         vm.ui.dblClickTimer = null;
         vm.ui.inFullscreen = !vm.ui.inFullscreen;
-        vm.$emit('fullscreenVideo');
+
+        if (vm.ui.inFullscreen) {
+          vm.$emit('openFullscreen');
+        } else {
+          vm.$emit('closeFullscreen');
+        }
       } else {
         vm.ui.dblClickTimer = Date.now();
       }
@@ -3638,6 +3644,10 @@ __webpack_require__.r(__webpack_exports__);
     setDefaultVolume: function setDefaultVolume(e) {
       e.target.volume = 1;
     }
+  },
+  beforeDestroy: function beforeDestroy() {
+    var vm = this;
+    vm.$emit('closeFullscreen');
   },
   mounted: function mounted() {
     console.log('Peer Video Component mounted.');
@@ -56603,8 +56613,11 @@ var render = function() {
                             _c("peer-video-component", {
                               attrs: { stream: stream },
                               on: {
-                                fullscreenVideo: function($event) {
-                                  _vm.ui.inFullscreen = !_vm.ui.inFullscreen
+                                openFullscreen: function($event) {
+                                  _vm.ui.inFullscreen = true
+                                },
+                                closeFullscreen: function($event) {
+                                  _vm.ui.inFullscreen = false
                                 }
                               }
                             })

@@ -133,7 +133,8 @@
 
                 <peer-video-component
                 v-bind:stream="stream"
-                v-on:fullscreenVideo="ui.inFullscreen = !ui.inFullscreen">
+                v-on:openFullscreen="ui.inFullscreen = true"
+                v-on:closeFullscreen="ui.inFullscreen = false">
                 </peer-video-component>
             </div>
             </div>

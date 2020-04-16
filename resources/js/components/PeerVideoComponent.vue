@@ -85,7 +85,11 @@ export default {
             if(vm.ui.dblClickTimer != null && Date.now() - 1000 <= vm.ui.dblClickTimer) {
                 vm.ui.dblClickTimer = null;
                 vm.ui.inFullscreen = !vm.ui.inFullscreen;
-                vm.$emit('fullscreenVideo');
+                if(vm.ui.inFullscreen) {
+                    vm.$emit('openFullscreen');
+                } else {
+                    vm.$emit('closeFullscreen');
+                }
             } else {
                 vm.ui.dblClickTimer = Date.now();
             }
@@ -93,6 +97,10 @@ export default {
         setDefaultVolume(e) {
             e.target.volume = 1;
         }
+    },
+    beforeDestroy() {
+        var vm = this;
+        vm.$emit('closeFullscreen');
     },
     mounted() {
         console.log('Peer Video Component mounted.');
