@@ -3608,6 +3608,9 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "PeerVideoComponent",
   props: {
@@ -57160,7 +57163,8 @@ var render = function() {
       staticClass: "embed-responsive-item remote-stream",
       class: {
         "peer-video-fullscreen": _vm.ui.inFullscreen,
-        "peer-is-speaking": _vm.stream.peerConnection.user.isSpeaking
+        "peer-is-speaking":
+          _vm.stream.peerConnection.user.isSpeaking && !_vm.ui.inFullscreen
       },
       attrs: {
         poster: "https://bevy.chat/img/video_poster.png",

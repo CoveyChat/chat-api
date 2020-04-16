@@ -14,7 +14,10 @@
             autoplay="autoplay"
             volume="1"
             class="embed-responsive-item remote-stream"
-            v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen, 'peer-is-speaking': stream.peerConnection.user.isSpeaking }"
+            v-bind:class="{
+                'peer-video-fullscreen': ui.inFullscreen,
+                'peer-is-speaking': stream.peerConnection.user.isSpeaking && !ui.inFullscreen
+            }"
         ></video>
 
     </div>
