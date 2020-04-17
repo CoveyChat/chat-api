@@ -372,7 +372,7 @@ import SoundEffect from '../models/SoundEffect.js';
 import User from '../models/User.js';
 import Message from '../models/Message.js';
 import PeerConnection from '../models/PeerConnection.js';
-import ModalComponent from './ModalComponent.vue'
+import Modal from '../models/Modal.js';
 
 export default {
     data: function () {
@@ -391,46 +391,28 @@ export default {
     methods: {
         confirmLeave(e) {
             var vm = this;
-            console.log("Confirm leave");
-            const Confirmation = Vue.extend(ModalComponent);
-            var modal = new Confirmation({propsData: {
+
+            var options = {
+                props: {
                     close: {text: "Go back"},
                     confirm: {
                         text: "Leave",
                         class: "btn btn-danger"
-                    }}
-            });
+                    }
+                },
+                header: "<h1>Confirm Leave</h1>",
+                body: "Are you sure you want to leave this chat?"
+            };
 
-            /*var modal = Vue.extend(ModalComponent)
-            const modal = new Vue( Object.assign({}, ModalComponent, {
-                propsData: {
-                    confirm: {
-                        text: "leave",
-                        class: "btn btn-danger"
-                    }}
-            }));*/
-
-            modal.$slots.header = ['Confirm'];
-            modal.$slots.body = ['Are you sure you want to leave this chat?'];
-            modal.$mount();
-            vm.$refs.modalcontainer.appendChild(modal.$el)
-
-            modal.$on('close', function(e) {
-                modal.$destroy();
-                modal.$el.remove();
-            });
+            var modal = new Modal(vm.$refs.modalcontainer, options);
 
             modal.$on('confirm', function(e) {
-                modal.$destroy();
-                modal.$el.remove();
-
                 //Let everyone know I'm leaving so they don't sit then hanging
                 for(var id in vm.connections) {
                     //If we're streaming to them then kill it
                     vm.connections[id].removeStream(vm.stream.connection);
                     vm.connections[id].destroy();
                 }
-                //vm.server.signal.close();
                 //Go back to the homepage
                 window.location.href = '/';
             });
@@ -576,7 +558,13 @@ export default {
 
                             vm.onLocalStream(stream);
                         }).catch((e) => {
-                            alert("Something went horrible wrong when getting your video feed.\nYou should probably screencap this and send it to Jake\n\n\nError: " + JSON.stringify(e) + "\n\nOptions: " + JSON.stringify(options));
+                            //They have devices but are probably blocked
+                            var modal = new Modal(vm.$refs.modalcontainer, {
+                                header: "<h1>Uh oh!</h1>",
+                                body: "<p>Could not start your video feed. Did you block the browser permission?</p>" +
+                                        "<p>Click the <i class='fas fa-lock'></i><span class='sr-only'>lock</span> icon in the URL to check your permissions and reload this page.</p>"
+                            });
+
                             console.log("Local Video Stream Error!");
                             console.log(e);
                         });

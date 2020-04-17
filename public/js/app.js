@@ -1991,7 +1991,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _models_User_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../models/User.js */ "./resources/js/models/User.js");
 /* harmony import */ var _models_Message_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../models/Message.js */ "./resources/js/models/Message.js");
 /* harmony import */ var _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../models/PeerConnection.js */ "./resources/js/models/PeerConnection.js");
-/* harmony import */ var _ModalComponent_vue__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./ModalComponent.vue */ "./resources/js/components/ModalComponent.vue");
+/* harmony import */ var _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../models/Modal.js */ "./resources/js/models/Modal.js");
 //
 //
 //
@@ -2402,10 +2402,8 @@ __webpack_require__.r(__webpack_exports__);
   methods: {
     confirmLeave: function confirmLeave(e) {
       var vm = this;
-      console.log("Confirm leave");
-      var Confirmation = Vue.extend(_ModalComponent_vue__WEBPACK_IMPORTED_MODULE_4__["default"]);
-      var modal = new Confirmation({
-        propsData: {
+      var options = {
+        props: {
           close: {
             text: "Go back"
           },
@@ -2413,35 +2411,18 @@ __webpack_require__.r(__webpack_exports__);
             text: "Leave",
             "class": "btn btn-danger"
           }
-        }
-      });
-      /*var modal = Vue.extend(ModalComponent)
-      const modal = new Vue( Object.assign({}, ModalComponent, {
-          propsData: {
-              confirm: {
-                  text: "leave",
-                  class: "btn btn-danger"
-              }}
-      }));*/
-
-      modal.$slots.header = ['Confirm'];
-      modal.$slots.body = ['Are you sure you want to leave this chat?'];
-      modal.$mount();
-      vm.$refs.modalcontainer.appendChild(modal.$el);
-      modal.$on('close', function (e) {
-        modal.$destroy();
-        modal.$el.remove();
-      });
+        },
+        header: "<h1>Confirm Leave</h1>",
+        body: "Are you sure you want to leave this chat?"
+      };
+      var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](vm.$refs.modalcontainer, options);
       modal.$on('confirm', function (e) {
-        modal.$destroy();
-        modal.$el.remove(); //Let everyone know I'm leaving so they don't sit then hanging
-
+        //Let everyone know I'm leaving so they don't sit then hanging
         for (var id in vm.connections) {
           //If we're streaming to them then kill it
           vm.connections[id].removeStream(vm.stream.connection);
           vm.connections[id].destroy();
-        } //vm.server.signal.close();
-        //Go back to the homepage
+        } //Go back to the homepage
 
 
         window.location.href = '/';
@@ -2607,7 +2588,11 @@ __webpack_require__.r(__webpack_exports__);
               vm.stream.screenshareenabled = false;
               vm.onLocalStream(stream);
             })["catch"](function (e) {
-              alert("Something went horrible wrong when getting your video feed.\nYou should probably screencap this and send it to Jake\n\n\nError: " + JSON.stringify(e) + "\n\nOptions: " + JSON.stringify(options));
+              //They have devices but are probably blocked
+              var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](vm.$refs.modalcontainer, {
+                header: "<h1>Uh oh!</h1>",
+                body: "<p>Could not start your video feed. Did you block the browser permission?</p>" + "<p>Click the <i class='fas fa-lock'></i><span class='sr-only'>lock</span> icon in the URL to check your permissions and reload this page.</p>"
+              });
               console.log("Local Video Stream Error!");
               console.log(e);
             });
@@ -3325,8 +3310,17 @@ __webpack_require__.r(__webpack_exports__);
     return {};
   },
   methods: {},
+  beforeMount: function beforeMount() {
+    var vm = this; //Make sure the props are valid
+
+    if (typeof vm.close == 'undefined') {
+      vm.close = {
+        "class": null,
+        text: null
+      };
+    }
+  },
   mounted: function mounted() {
-    console.log('Modal Component mounted.');
     var vm = this;
   }
 });
@@ -70497,6 +70491,78 @@ var Message = /*#__PURE__*/function () {
 
   return Message;
 }();
+
+
+
+/***/ }),
+
+/***/ "./resources/js/models/Modal.js":
+/*!**************************************!*\
+  !*** ./resources/js/models/Modal.js ***!
+  \**************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Modal; });
+/* harmony import */ var _components_ModalComponent_vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/ModalComponent.vue */ "./resources/js/components/ModalComponent.vue");
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+
+
+var Modal = function Modal(target, options) {
+  _classCallCheck(this, Modal);
+
+  if (typeof options.props == 'undefined') {
+    options.props = {};
+  }
+
+  var ModalWindow = Vue.extend(_components_ModalComponent_vue__WEBPACK_IMPORTED_MODULE_0__["default"]);
+  var modal = new ModalWindow({
+    propsData: options.props
+  });
+  console.log(modal);
+
+  if (typeof options.header != 'undefined') {
+    var headerNode = modal.$createElement('div', {
+      domProps: {
+        innerHTML: options.header
+      }
+    });
+    modal.$slots.header = [headerNode];
+  }
+
+  if (typeof options.body != 'undefined') {
+    var bodyNode = modal.$createElement('div', {
+      domProps: {
+        innerHTML: options.body
+      }
+    });
+    modal.$slots.body = [bodyNode];
+  }
+
+  if (typeof options.footer != 'undefined') {
+    var footerNode = modal.$createElement('div', {
+      domProps: {
+        innerHTML: options.footer
+      }
+    });
+    modal.$slots.footer = [footerNode];
+  }
+
+  modal.$mount();
+  target.appendChild(modal.$el);
+  modal.$on('close', function (e) {
+    modal.$destroy();
+    modal.$el.remove();
+  });
+  modal.$on('confirm', function (e) {
+    modal.$destroy();
+    modal.$el.remove();
+  });
+  return modal;
+};
 
 
 

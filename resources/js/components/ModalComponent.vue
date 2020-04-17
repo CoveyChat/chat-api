@@ -122,11 +122,18 @@ export default {
     methods: {
 
     },
-mounted() {
-    console.log('Modal Component mounted.');
-    var vm = this;
+    beforeMount() {
+        var vm = this;
 
-}
+        //Make sure the props are valid
+        if(typeof vm.close == 'undefined') {
+            vm.close = {class:null, text:null};
+        }
+    },
+    mounted() {
+        var vm = this;
+
+    }
 }
 
 </script>
