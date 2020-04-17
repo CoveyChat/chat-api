@@ -10,9 +10,20 @@
             font-size: 5em;
         }
 
+        @media screen and (max-width: 425px) {
+            .links > a {
+                padding:0 15px;
+            }
+        }
+
+        @media screen and (min-width: 426px) {
+            .links > a {
+                padding: 0 25px;
+            }
+        }
+
         .links > a {
             color: #636b6f;
-            padding: 0 25px;
             font-size: 13px;
             font-weight: 600;
             letter-spacing: .1rem;
@@ -29,7 +40,7 @@
 
 </head>
 <body>
-    <div class="container-fluid">
+    <div id="app" class="container-fluid">
         <div class="row">
             <div class="col-md-12 text-right links">
                 @auth
