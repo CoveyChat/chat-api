@@ -2385,7 +2385,7 @@ __webpack_require__.r(__webpack_exports__);
       },
       peerStreams: [],
       server: {
-        ip: 'devbevy.chat',
+        ip: 'bevy.chat',
         port: 1337,
         signal: null
       },

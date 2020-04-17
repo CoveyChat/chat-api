@@ -16946,7 +16946,7 @@ readers do not read off random characters that represent icons */
 html,
 body,
 #app {
-  height: 100vh;
+  height: 100%;
 }
 
 .form-control-xl {
