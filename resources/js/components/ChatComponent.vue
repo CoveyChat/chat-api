@@ -19,7 +19,9 @@
             </div>
         </div>
     </div>
-    <div class="chat-container pl-5 pr-5 flex-row flex-fill"  v-if="user.active">
+    <div class="chat-container pl-5 pr-5 flex-row flex-fill"
+        v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }"
+        v-if="user.active">
         <button class="btn-leave-chat btn btn-danger" v-on:click="confirmLeave">
             <i class="fas fa-sign-out-alt"></i>
             <span class="sr-only">Leave Chat</span>
@@ -190,7 +192,7 @@
         border-radius:0px;
     }
     .btn-show-messages {
-        z-index:1;
+        z-index:3;
     }
     .no-video-connections {
         padding: 4vh;
@@ -317,6 +319,9 @@
     }
 
     /* When fullscreened, shift things around*/
+    .chat-container.peer-video-fullscreen {
+        height:0px !important;
+    }
     #local-video-container.local-video-overlay,
     #local-video-container.local-video-overlay >>> video {
         margin-right:0px;
@@ -346,7 +351,7 @@
     }
 
     .message-box.peer-video-fullscreen {
-        z-index:1;
+        z-index:3;
     }
 
     /*Videos container shrink so messages and stuff shows correctly*/
@@ -384,7 +389,7 @@ export default {
             user: {active: false},
             stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
             peerStreams: [],
-            server: {ip:'bevy.chat', port:1337, signal: null},
+            server: {ip:'devbevy.chat', port:1337, signal: null},
             ui: {videoenabled: true, anonUsername: '', inFullscreen: false, showMessagesFullscreen: false, dblClickTimer: null, sound: null}
         }
     },

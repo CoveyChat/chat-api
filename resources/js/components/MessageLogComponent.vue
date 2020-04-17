@@ -45,7 +45,7 @@
     }
 
     #messages.peer-video-fullscreen {
-        z-index:1;
+        z-index:3;
     }
     .btn-show-messages {
         border-radius:0px;
