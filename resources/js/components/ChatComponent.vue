@@ -384,7 +384,7 @@ export default {
             user: {active: false},
             stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
             peerStreams: [],
-            server: {ip:'bevy.chat', port:1337, signal: null},
+            server: {ip:'devbevy.chat', port:1337, signal: null},
             ui: {videoenabled: true, anonUsername: '', inFullscreen: false, showMessagesFullscreen: false, dblClickTimer: null, sound: null}
         }
     },
@@ -517,14 +517,19 @@ export default {
         toggleAudio(e) {
             var vm = this;
             if((vm.stream.videoenabled || vm.stream.screenshareenabled) && vm.stream.audioenabled) {
-                vm.stream.connection.getAudioTracks().forEach(function(track){track.enabled = false;});
-                console.log("Muted");
                 vm.stream.audioenabled = false;
+                vm.setLocalAudio(vm.stream.connection, false);
             } else if((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.stream.audioenabled) {
-                vm.stream.connection.getAudioTracks().forEach(function(track){track.enabled = true;});
-                console.log("Not Muted");
                 vm.stream.audioenabled = true;
+                vm.setLocalAudio(vm.stream.connection, true);
             }
+        },
+        setLocalAudio(stream, enabled) {
+            var vm = this;
+            stream.getAudioTracks().forEach(function(track){track.enabled = enabled;});
+        },
+        enableLocalAudio(stream) {
+            var vm = this;
         },
         toggleVideo(e) {
             var vm = this;
@@ -683,6 +688,9 @@ export default {
 
             console.log("Local stream created - Set stream vars and tell everyone to retry");
             vm.stream.connection = stream;
+
+            //Set this new streams audio settings
+            vm.setLocalAudio(stream, vm.stream.audioenabled);
 
             //New Local stream! Send it off  to all the peers
             for(var id in vm.connections) {

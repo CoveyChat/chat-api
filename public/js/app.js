@@ -2385,7 +2385,7 @@ __webpack_require__.r(__webpack_exports__);
       },
       peerStreams: [],
       server: {
-        ip: 'bevy.chat',
+        ip: 'devbevy.chat',
         port: 1337,
         signal: null
       },
@@ -2538,18 +2538,21 @@ __webpack_require__.r(__webpack_exports__);
       var vm = this;
 
       if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && vm.stream.audioenabled) {
-        vm.stream.connection.getAudioTracks().forEach(function (track) {
-          track.enabled = false;
-        });
-        console.log("Muted");
         vm.stream.audioenabled = false;
+        vm.setLocalAudio(vm.stream.connection, false);
       } else if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.stream.audioenabled) {
-        vm.stream.connection.getAudioTracks().forEach(function (track) {
-          track.enabled = true;
-        });
-        console.log("Not Muted");
         vm.stream.audioenabled = true;
+        vm.setLocalAudio(vm.stream.connection, true);
       }
+    },
+    setLocalAudio: function setLocalAudio(stream, enabled) {
+      var vm = this;
+      stream.getAudioTracks().forEach(function (track) {
+        track.enabled = enabled;
+      });
+    },
+    enableLocalAudio: function enableLocalAudio(stream) {
+      var vm = this;
     },
     toggleVideo: function toggleVideo(e) {
       var vm = this;
@@ -2726,7 +2729,9 @@ __webpack_require__.r(__webpack_exports__);
     onLocalStream: function onLocalStream(stream) {
       var vm = this;
       console.log("Local stream created - Set stream vars and tell everyone to retry");
-      vm.stream.connection = stream; //New Local stream! Send it off  to all the peers
+      vm.stream.connection = stream; //Set this new streams audio settings
+
+      vm.setLocalAudio(stream, vm.stream.audioenabled); //New Local stream! Send it off  to all the peers
 
       for (var id in vm.connections) {
         if (vm.connections[id].connection == null || !vm.connections[id].connection.connected || vm.connections[id].connection.destroyed) {
