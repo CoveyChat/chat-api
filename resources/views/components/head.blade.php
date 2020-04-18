@@ -1,7 +1,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
 
-<link rel="icon" href="{{ URL::asset('/img/favicon.png') }}" type="image/x-icon"/>
+<link rel="apple-touch-icon" sizes="180x180" href="{{ URL::asset('/img/icons/apple-touch-icon.png') }}">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ URL::asset('/img/icons/favicon-32x32.png') }}">
+<link rel="icon" type="image/png" sizes="16x16" href="{{ URL::asset('/img/icons/favicon-16x16.png') }}">
+<link rel="manifest" href="{{ URL::asset('/img/icons/site.webmanifest') }}">
+<link rel="mask-icon" href="{{ URL::asset('/img/icons/safari-pinned-tab.svg" color="#5e77e3') }}">
+<link rel="shortcut icon" href="{{ URL::asset('/img/icons/favicon.ico') }}">
+<meta name="msapplication-TileColor" content="#99ef9f') }}">
+<meta name="msapplication-config" content="{{ URL::asset('/img/icons/browserconfig.xml') }}">
+<meta name="theme-color" content="#99ef9f">
 
 <!-- CSRF Token -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
