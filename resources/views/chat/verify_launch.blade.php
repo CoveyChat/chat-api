@@ -4,7 +4,7 @@
 <div class="row">
     <div class="offset-md-4 col-md-4 ">
         <div class="card card-body p-5">
-            <form method="POST" action="{{ route('chat_launch', ['chat' => $chat]) }}">
+            <form method="POST" action="{{ route('chat_launch', ['chat' => $chat->id]) }}">
                 @csrf
 
                 @if(!empty($messages))

@@ -2371,6 +2371,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 /* harmony default export */ __webpack_exports__["default"] = ({
+  props: {
+    chatName: String
+  },
   data: function data() {
     return {
       message: '',
@@ -2485,7 +2488,11 @@ __webpack_require__.r(__webpack_exports__);
         })["catch"](function (e) {
           vm.stream.screenshareenabled = false;
           console.log("Local Screenshare Stream Error!");
-          console.log(e); //vm.toggleVideo({'message': "toggling back to local video from screenshare"});
+          console.log(e);
+          var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](vm.$refs.modalcontainer, {
+            header: "<h1>Not supported</h1>",
+            body: "<p>Could not start a screenshare. It seems your device does not support this functionality.</p>"
+          }); //vm.toggleVideo({'message': "toggling back to local video from screenshare"});
         });
       } else if (vm.stream.screenshareenabled) {
         console.log("Turning screenshare off");
@@ -56311,73 +56318,93 @@ var render = function() {
             },
             [
               _c("div", { staticClass: "row" }, [
-                _c("div", { staticClass: "offset-md-4 col-md-4 " }, [
-                  _c(
-                    "div",
-                    { staticClass: "card card-body p-5" },
-                    [
-                      _c("input", {
-                        directives: [
-                          {
-                            name: "model",
-                            rawName: "v-model",
-                            value: _vm.ui.anonUsername,
-                            expression: "ui.anonUsername"
-                          }
-                        ],
-                        staticClass: "form-control form-control-xl text-center",
-                        attrs: { type: "text", placeholder: "Enter your name" },
-                        domProps: { value: _vm.ui.anonUsername },
-                        on: {
-                          keyup: function($event) {
-                            if (
-                              !$event.type.indexOf("key") &&
-                              _vm._k(
-                                $event.keyCode,
-                                "enter",
-                                13,
-                                $event.key,
-                                "Enter"
-                              )
-                            ) {
-                              return null
-                            }
-                            return _vm.setAnonUser($event)
-                          },
-                          input: function($event) {
-                            if ($event.target.composing) {
-                              return
-                            }
-                            _vm.$set(
-                              _vm.ui,
-                              "anonUsername",
-                              $event.target.value
-                            )
-                          }
-                        }
-                      }),
-                      _vm._v(" "),
-                      _c("transition", { attrs: { name: "fade" } }, [
-                        _vm.ui.anonUsername.length >= 1
-                          ? _c(
-                              "button",
-                              {
-                                staticClass:
-                                  "btn btn-lg btn-outline-primary btn-block mt-3",
-                                on: { click: _vm.setAnonUser }
+                _c(
+                  "div",
+                  {
+                    staticClass:
+                      "col-sm-12 offset-md-3 col-md-6 offset-lg-4 col-lg-4 "
+                  },
+                  [
+                    _c(
+                      "div",
+                      { staticClass: "card card-body p-5 text-center" },
+                      [
+                        _c("h1", [_vm._v(_vm._s(_vm.chatName))]),
+                        _vm._v(" "),
+                        _c("br"),
+                        _vm._v(" "),
+                        _c(
+                          "p",
+                          [
+                            _c("input", {
+                              directives: [
+                                {
+                                  name: "model",
+                                  rawName: "v-model",
+                                  value: _vm.ui.anonUsername,
+                                  expression: "ui.anonUsername"
+                                }
+                              ],
+                              staticClass:
+                                "form-control form-control-xl text-center",
+                              attrs: {
+                                type: "text",
+                                placeholder: "Enter your name"
                               },
-                              [
-                                _vm._v(
-                                  "\n                    Start Chatting\n                "
-                                )
-                              ]
-                            )
-                          : _vm._e()
-                      ])
-                    ],
-                    1
-                  )
-                ])
+                              domProps: { value: _vm.ui.anonUsername },
+                              on: {
+                                keyup: function($event) {
+                                  if (
+                                    !$event.type.indexOf("key") &&
+                                    _vm._k(
+                                      $event.keyCode,
+                                      "enter",
+                                      13,
+                                      $event.key,
+                                      "Enter"
+                                    )
+                                  ) {
+                                    return null
+                                  }
+                                  return _vm.setAnonUser($event)
+                                },
+                                input: function($event) {
+                                  if ($event.target.composing) {
+                                    return
+                                  }
+                                  _vm.$set(
+                                    _vm.ui,
+                                    "anonUsername",
+                                    $event.target.value
+                                  )
+                                }
+                              }
+                            }),
+                            _vm._v(" "),
+                            _c("transition", { attrs: { name: "fade" } }, [
+                              _vm.ui.anonUsername.length >= 1
+                                ? _c(
+                                    "button",
+                                    {
+                                      staticClass:
+                                        "btn btn-lg btn-outline-primary btn-block mt-3",
+                                      on: { click: _vm.setAnonUser }
+                                    },
+                                    [
+                                      _vm._v(
+                                        "\n                        Start Chatting\n                    "
+                                      )
+                                    ]
+                                  )
+                                : _vm._e()
+                            ])
+                          ],
+                          1
+                        )
+                      ]
+                    )
+                  ]
+                )
               ])
             ]
           )
@@ -56387,7 +56414,7 @@ var render = function() {
         ? _c(
             "div",
             {
-              staticClass: "chat-container pl-5 pr-5 flex-row flex-fill",
+              staticClass: "chat-container flex-row flex-fill",
               class: { "peer-video-fullscreen": _vm.ui.inFullscreen }
             },
             [
@@ -56591,7 +56618,7 @@ var render = function() {
               _c(
                 "div",
                 {
-                  staticClass: "container",
+                  staticClass: "container-fluid",
                   class: { "peer-video-fullscreen": _vm.ui.inFullscreen },
                   attrs: { id: "peer-video-container" }
                 },
@@ -56617,7 +56644,7 @@ var render = function() {
                           {
                             key: stream.id,
                             staticClass:
-                              "col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3"
+                              "col-sm-6 col-md-6 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3"
                           },
                           [
                             _c("peer-video-component", {

@@ -16955,5 +16955,18 @@ body,
 
 .navbar {
   box-shadow: none !important;
+  background: #5e77e3;
+}
+
+.nav-link {
+  color: #fff !important;
+}
+
+.nav-link:hover {
+  color: #d5dbf5 !important;
+}
+
+.nav-link:active {
+  color: #f0f2fc !important;
 }
 

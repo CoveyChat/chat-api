@@ -1,5 +1,4 @@
 @extends('layouts.flexapp')
-
 @section('content')
-<chat-component></chat-component>
+<chat-component chat-name="{{$chat->name}}"></chat-component>
 @endsection

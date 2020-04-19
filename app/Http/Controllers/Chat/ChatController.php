@@ -52,9 +52,9 @@ class ChatController extends Controller
     public function launch(Chat $chat)
     {
         if(empty($chat->password)) {
-            return view('chat.launch');
+            return view('chat.launch', ['chat' => $chat]);
         } else {
-            return view('chat.verify_launch', ['chat' => $chat->id]);
+            return view('chat.verify_launch', ['chat' => $chat]);
         }
     }
 

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    @component('components.head')
+    @component('components.head', ['chat'=>$chat])
         <strong>Whoops!</strong> Something went wrong!
     @endcomponent
 </head>
@@ -9,7 +9,7 @@
     <div id="app" class="d-flex flex-column">
         <compat-component></compat-component>
         <div class="d-flex flex-column">
-            <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
+            <nav class="navbar navbar-expand-md navbar-dark shadow-sm">
                 <div class="container-fluid">
                     <a class="navbar-brand" href="{{ url('/') }}">
                         <img src='{{URL::asset('img/logo.png')}}' alt='BevyChat Logo' height="30" class="d-inline-block align-top" />

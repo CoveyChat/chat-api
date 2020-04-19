@@ -3,23 +3,27 @@
     <div ref="modalcontainer"></div>
     <div id="user-prompt" v-if="!user.active" name="fade" class="flex-row flex-grow-1">
         <div class="row">
-            <div class="offset-md-4 col-md-4 ">
-                <div class="card card-body p-5">
-                    <input type="text"
-                    class="form-control form-control-xl text-center"
-                    placeholder="Enter your name"
-                    v-model="ui.anonUsername"
-                    v-on:keyup.enter="setAnonUser" />
-                    <transition name="fade">
-                    <button class="btn btn-lg btn-outline-primary btn-block mt-3" v-on:click="setAnonUser" v-if="ui.anonUsername.length >= 1">
-                        Start Chatting
-                    </button>
-                    </transition>
+            <div class="col-sm-12 offset-md-3 col-md-6 offset-lg-4 col-lg-4 ">
+                <div class="card card-body p-5 text-center">
+                    <h1>{{chatName}}</h1>
+                    <br />
+                    <p>
+                        <input type="text"
+                        class="form-control form-control-xl text-center"
+                        placeholder="Enter your name"
+                        v-model="ui.anonUsername"
+                        v-on:keyup.enter="setAnonUser" />
+                        <transition name="fade">
+                        <button class="btn btn-lg btn-outline-primary btn-block mt-3" v-on:click="setAnonUser" v-if="ui.anonUsername.length >= 1">
+                            Start Chatting
+                        </button>
+                        </transition>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
-    <div class="chat-container pl-5 pr-5 flex-row flex-fill"
+    <div class="chat-container flex-row flex-fill"
         v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }"
         v-if="user.active">
         <button class="btn-leave-chat btn btn-danger" v-on:click="confirmLeave">
@@ -111,10 +115,6 @@
                     v-bind="stream.local"
                     v-if="stream.videoenabled || stream.screenshareenabled"
                 ></video>
-
-
-
-
         </div>
 
         <network-graph-component
@@ -123,7 +123,7 @@
             v-bind:inFullscreen="ui.inFullscreen">
         </network-graph-component>
 
-        <div id="peer-video-container" class="container" v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }">
+        <div id="peer-video-container" class="container-fluid" v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }">
             <div class="row justify-content-center video-connections flex-fill">
             <div v-if="peerStreams.length == 0" class="no-video-connections">
                 <h1><i class="fas fa-broadcast-tower"></i><i class="fas fa-slash tower-slash"></i></h1>
@@ -131,7 +131,7 @@
             </div>
             <div v-for="stream in peerStreams"
                 :key="stream.id"
-                class="col-md-6 col-sm-12 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3">
+                class="col-sm-6 col-md-6 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3">
 
                 <peer-video-component
                 v-bind:stream="stream"
@@ -380,6 +380,9 @@ import PeerConnection from '../models/PeerConnection.js';
 import Modal from '../models/Modal.js';
 
 export default {
+    props: {
+        chatName: String
+    },
     data: function () {
         return {
             message: '',
@@ -469,6 +472,10 @@ export default {
                     vm.stream.screenshareenabled = false;
                     console.log("Local Screenshare Stream Error!");
                     console.log(e);
+                    var modal = new Modal(vm.$refs.modalcontainer, {
+                        header: "<h1>Not supported</h1>",
+                        body: "<p>Could not start a screenshare. It seems your device does not support this functionality.</p>"
+                    });
                     //vm.toggleVideo({'message': "toggling back to local video from screenshare"});
                 });
             } else if(vm.stream.screenshareenabled) {
