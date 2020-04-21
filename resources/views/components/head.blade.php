@@ -25,7 +25,7 @@
             console.log(e);
             return false;
     });
-qq
+
     try {
         //Backfills for Mozilla / Safari
         navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia ||
