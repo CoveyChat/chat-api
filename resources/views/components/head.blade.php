@@ -18,11 +18,14 @@
 
 <script type="text/javascript">
     window.addEventListener("error", function (e) {
-            alert("Error occurred: " + e.error.message);
-            document.write(e.error.message);
+            var msg = "Oh no! Some unexpected error occurred!\n\nTake a screenshot and send this to Jake:\n" + e.error.message +
+            "\nLine: " + e.lineno + " Col: " + e.colno + "\nStack: " + e.error.stack;
+
+            alert(msg);
+            console.log(e);
             return false;
     });
-
+qq
     try {
         //Backfills for Mozilla / Safari
         navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia ||
