@@ -414,7 +414,7 @@ export default {
             user: {active: false},
             stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
             peerStreams: [],
-            server: {ip:'bevy.chat', port:1337, signal: null},
+            server: {ip:'devbevy.chat', port:1337, signal: null},
             ui: {videoenabled: true, anonUsername: '', fullscreen: {active: false, target:null, rebind:false}, showMessagesFullscreen: false, dblClickTimer: null, sound: null}
         }
     },
@@ -498,25 +498,34 @@ export default {
         },
         toggleScreenshare(e) {
             var vm = this;
-            var options = {video: {cursor: "always"}, audio: false};
+            var options = {video: {cursor: "always"}, audio: vm.user.devices.audio.length > 0};
 
             if(vm.stream.videoenabled && !vm.stream.screenshareenabled) {
                 //console.log(options);
                 //Even with audio:true getDisplayMedia doesn't return audio tracks
                 navigator.mediaDevices.getDisplayMedia(options).then(function(stream) {
-                    //Get and add the audio tracks manually
-                    navigator.mediaDevices.getUserMedia({audio: true}).then(function(audioStream) {
-                        audioStream.getAudioTracks().forEach(function(track){
-                            stream.addTrack(track);
-                        });
+                    //Make sure they have a mic
+                    if(options.audio) {
+                        //Get and add the audio tracks manually
+                        navigator.mediaDevices.getUserMedia({audio: true}).then(function(audioStream) {
+                            audioStream.getAudioTracks().forEach(function(track){
+                                stream.addTrack(track);
+                            });
 
+                            vm.stopLocalStream();
+                            vm.stream.videoenabled = false;
+                            vm.stream.screenshareenabled = true;
+                            vm.stream.connection = stream;
+                            vm.onLocalStream(stream);
+                        });
+                    } else {
+                        //Just start the screen capture with no audio
                         vm.stopLocalStream();
                         vm.stream.videoenabled = false;
                         vm.stream.screenshareenabled = true;
                         vm.stream.connection = stream;
                         vm.onLocalStream(stream);
-                    });
-
+                    }
 
                 }).catch((e) => {
                     vm.stream.screenshareenabled = false;
@@ -601,18 +610,21 @@ export default {
                 return;
             }
 
-            vm.user.discoverDevices(function() {
+            vm.user.discoverDevices(function(availableDevices) {
                 //Turn off screensharing and swap back to video
                 if(!vm.stream.videoenabled && vm.stream.screenshareenabled) {
                     vm.stopLocalStream();
                     vm.stream.screenshareenabled = false;
                 }
 
+                //console.log("Available Devices:");
+                //console.log(availableDevices);
+
                 if(!vm.stream.videoenabled) {
                     console.log("Turning on camera...");
                     var options = {
-                            video: true,
-                            audio: true
+                            video: availableDevices.video.length > 0,
+                            audio: availableDevices.audio.length > 0
                         };
                     if(vm.user.devices.active.video != null) {
                         console.log("Turning video on with camera id " + vm.user.devices.active.video);

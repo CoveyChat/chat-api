@@ -2415,7 +2415,7 @@ __webpack_require__.r(__webpack_exports__);
       },
       peerStreams: [],
       server: {
-        ip: 'bevy.chat',
+        ip: 'devbevy.chat',
         port: 1337,
         signal: null
       },
@@ -2515,26 +2515,36 @@ __webpack_require__.r(__webpack_exports__);
         video: {
           cursor: "always"
         },
-        audio: false
+        audio: vm.user.devices.audio.length > 0
       };
 
       if (vm.stream.videoenabled && !vm.stream.screenshareenabled) {
         //console.log(options);
         //Even with audio:true getDisplayMedia doesn't return audio tracks
         navigator.mediaDevices.getDisplayMedia(options).then(function (stream) {
-          //Get and add the audio tracks manually
-          navigator.mediaDevices.getUserMedia({
-            audio: true
-          }).then(function (audioStream) {
-            audioStream.getAudioTracks().forEach(function (track) {
-              stream.addTrack(track);
+          //Make sure they have a mic
+          if (options.audio) {
+            //Get and add the audio tracks manually
+            navigator.mediaDevices.getUserMedia({
+              audio: true
+            }).then(function (audioStream) {
+              audioStream.getAudioTracks().forEach(function (track) {
+                stream.addTrack(track);
+              });
+              vm.stopLocalStream();
+              vm.stream.videoenabled = false;
+              vm.stream.screenshareenabled = true;
+              vm.stream.connection = stream;
+              vm.onLocalStream(stream);
             });
+          } else {
+            //Just start the screen capture with no audio
             vm.stopLocalStream();
             vm.stream.videoenabled = false;
             vm.stream.screenshareenabled = true;
             vm.stream.connection = stream;
             vm.onLocalStream(stream);
-          });
+          }
         })["catch"](function (e) {
           vm.stream.screenshareenabled = false;
           console.log("Local Screenshare Stream Error!");
@@ -2624,18 +2634,21 @@ __webpack_require__.r(__webpack_exports__);
         return;
       }
 
-      vm.user.discoverDevices(function () {
+      vm.user.discoverDevices(function (availableDevices) {
         //Turn off screensharing and swap back to video
         if (!vm.stream.videoenabled && vm.stream.screenshareenabled) {
           vm.stopLocalStream();
           vm.stream.screenshareenabled = false;
         }
 
+        console.log("Available Devices:");
+        console.log(availableDevices);
+
         if (!vm.stream.videoenabled) {
           console.log("Turning on camera...");
           var options = {
-            video: true,
-            audio: true
+            video: availableDevices.video.length > 0,
+            audio: availableDevices.audio.length > 0
           };
 
           if (vm.user.devices.active.video != null) {
@@ -71056,7 +71069,7 @@ var User = /*#__PURE__*/function () {
               }
             }
 
-            cb();
+            cb(self.devices);
           });
         } catch (e) {
           //navigator.mediaDevices does not exist

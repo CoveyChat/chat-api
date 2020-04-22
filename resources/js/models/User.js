@@ -81,7 +81,7 @@ export default class User {
                         }
                     }
 
-                    cb();
+                    cb(self.devices);
                 });
             } catch (e) {
                 //navigator.mediaDevices does not exist
