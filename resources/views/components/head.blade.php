@@ -7,9 +7,9 @@
 <link rel="manifest" href="{{ URL::asset('/img/icons/site.webmanifest') }}">
 <link rel="mask-icon" href="{{ URL::asset('/img/icons/safari-pinned-tab.svg" color="#5e77e3') }}">
 <link rel="shortcut icon" href="{{ URL::asset('/img/icons/favicon.ico') }}">
-<meta name="msapplication-TileColor" content="#99ef9f') }}">
+<meta name="msapplication-TileColor" content="#5e77e3">
 <meta name="msapplication-config" content="{{ URL::asset('/img/icons/browserconfig.xml') }}">
-<meta name="theme-color" content="#99ef9f">
+<meta name="theme-color" content="#5e77e3">
 
 <!-- CSRF Token -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
