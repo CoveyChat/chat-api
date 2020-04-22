@@ -2446,7 +2446,10 @@ __webpack_require__.r(__webpack_exports__);
           if (vm.ui.fullscreen.rebind) {
             vm.ui.fullscreen.target = null;
             vm.ui.fullscreen.active = false;
-            vm.ui.fullscreen.rebind = false;
+            vm.ui.fullscreen.rebind = false; //Force update the connections just incase
+            //For some reason if it times out the network chart is empty?
+
+            vm.outputConnections();
           }
         }, 1000);
       }
