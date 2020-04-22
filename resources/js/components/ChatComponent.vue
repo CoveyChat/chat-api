@@ -3,7 +3,7 @@
     <div ref="modalcontainer"></div>
     <div class="peer-video-rebinding-wait-container">
         <div  class="peer-video-rebinding-wait text-center"
-            v-if="(ui.fullscreen.target !== null && ui.fullscreen.rebind)">
+            v-if="(ui.fullscreen.target !== null && ui.fullscreen.wait)">
             <h1><i class="fas fa-video-slash"></i></h1>
             <span class="sr-only">Connection Lost</span>
         </div>
@@ -414,8 +414,8 @@ export default {
             user: {active: false},
             stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
             peerStreams: [],
-            server: {ip:'devbevy.chat', port:1337, signal: null},
-            ui: {videoenabled: true, anonUsername: '', fullscreen: {active: false, target:null, rebind:false}, showMessagesFullscreen: false, dblClickTimer: null, sound: null}
+            server: {ip:'bevy.chat', port:1337, signal: null},
+            ui: {videoenabled: true, anonUsername: '', fullscreen: {active: false, target:null, wait:false}, showMessagesFullscreen: false, dblClickTimer: null, sound: null}
         }
     },
     methods: {
@@ -423,29 +423,45 @@ export default {
             //If the video stream is getting destroyed, wait 1s to see if it comes back
             //Possibly with a different camera or something
             var vm = this;
-
-            /*console.log("-closeFullscreenOnDestroy ---------");
+            vm.ui.fullscreen.wait = true;
+            console.log("-closeFullscreenOnDestroy ---------");
             console.log(e);
             console.log(JSON.stringify(vm.ui.fullscreen));
-            console.log("------------------------------------");*/
+            console.log("------------------------------------");
 
             //If the fullscreen that closed was the one we were looking at
-            if(vm.ui.fullscreen.target == e.peerid) {
+            //if(vm.ui.fullscreen.target == e.peerid) {
                 //Mark that we want to rebind this peer
-                vm.ui.fullscreen.rebind = true;
+                //vm.ui.fullscreen.rebind = true;
 
                 //Wait 1s to actually close the fullscreen
                 setTimeout(function() {
+                    var rebound = false;
+
+                    //Confirm that we rebound to something
+                    for(var i=0; i < vm.peerStreams.length; i++) {
+                        //Duplicate stream! Ignore it
+                        if(vm.peerStreams[i].peerid == e.peerid) {
+                            console.log("Was rebound!");
+                            console.log(vm.peerStreams[i]);
+                            rebound = true;
+                            break;
+                        }
+                    }
+
                     //Still waiting for a rebind but expired. Close the fullscreen
-                    if(vm.ui.fullscreen.rebind) {
+                    if(!rebound) {
+                        console.log("Not rebound!");
                         vm.ui.fullscreen.target = null;
                         vm.ui.fullscreen.active = false;
-                        vm.ui.fullscreen.rebind = false;
+                        vm.ui.fullscreen.wait = false;
 
                         //vm.$forceUpdate();
+                    } else {
+                        vm.ui.fullscreen.wait = false;
                     }
                 }, 1000);
-            }
+            //}
         },
         confirmLeave(e) {
             var vm = this;
@@ -724,6 +740,7 @@ export default {
                 //Duplicate stream! Ignore it
                 if(vm.peerStreams[i].id == stream.id) {
                     //This stream already existed on this id. Remove it before we re-add it
+                    console.log("Remove duplicate stream");
                     vm.connections[peerid].removeStream(vm.peerStreams[i]);
                     vm.peerStreams.splice(i, 1);
                 }
@@ -732,22 +749,24 @@ export default {
             stream.peerid = peerid;
             stream.peerConnection = vm.connections[peerid];
 
-            //console.log("On peer Stream ----------------------------");
-            //console.log("Peer id: " + JSON.stringify(peerid));
-            //console.log(stream.peerConnection);
-            //console.log(JSON.stringify(vm.ui.fullscreen));
-            //console.log("--------------------------------------------");
+            console.log("On peer Stream ----------------------------");
+            console.log("Peer id: " + JSON.stringify(peerid));
+            console.log(stream.peerConnection);
+            console.log(JSON.stringify(vm.ui.fullscreen));
+
 
             //We want to rebind a fullscreen stream on a specific target/hostid
-            if(vm.ui.fullscreen.rebind && vm.ui.fullscreen.target == peerid) {
+            //if(vm.ui.fullscreen.rebind && vm.ui.fullscreen.target == peerid) {
+            if(vm.ui.fullscreen.target == peerid) {
+                console.log("Rebind!");
                 //We found our stream so we don't want to rebind anymore
-                vm.ui.fullscreen.rebind = false;
                 stream.startFullscreen = true;
                 vm.$forceUpdate();
             } else {
+                console.log("Don't bind!");
                 stream.startFullscreen = false;
             }
-
+            console.log("--------------------------------------------");
             vm.connections[peerid].setStream(stream);
             vm.peerStreams.push(stream);
 
@@ -764,15 +783,14 @@ export default {
 
                     //See if this is the video we want to delete
                     if(vm.peerStreams[i].id == e.srcElement.id) {
+                        console.log("Remove track----------");
+                        //console.log("Set rebind flag")
+                        console.log(JSON.stringify(vm.ui.fullscreen));
+                        console.log(e.target.peerid);
+                        console.log("------------------------");
                         //This was the target stream, set the rebind flag
                         if(e.target.peerid == vm.ui.fullscreen.target) {
-                            //console.log("Remove track----------");
-                            //console.log("Set rebind flag")
-                            //console.log(JSON.stringify(vm.ui.fullscreen));
-                            //console.log(e.target.peerid);
-                            //console.log("------------------------");
-
-                            vm.ui.fullscreen.rebind = true;
+                            vm.ui.fullscreen.wait = true;
                         }
 
 

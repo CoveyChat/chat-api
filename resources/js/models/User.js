@@ -89,7 +89,7 @@ export default class User {
                 console.log(e);
             }
         } else {
-            cb();
+            cb(self.devices);
         }
     }
 

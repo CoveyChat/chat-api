@@ -2415,7 +2415,7 @@ __webpack_require__.r(__webpack_exports__);
       },
       peerStreams: [],
       server: {
-        ip: 'devbevy.chat',
+        ip: 'bevy.chat',
         port: 1337,
         signal: null
       },
@@ -2425,7 +2425,7 @@ __webpack_require__.r(__webpack_exports__);
         fullscreen: {
           active: false,
           target: null,
-          rebind: false
+          wait: false
         },
         showMessagesFullscreen: false,
         dblClickTimer: null,
@@ -2438,25 +2438,39 @@ __webpack_require__.r(__webpack_exports__);
       //If the video stream is getting destroyed, wait 1s to see if it comes back
       //Possibly with a different camera or something
       var vm = this;
-      /*console.log("-closeFullscreenOnDestroy ---------");
+      vm.ui.fullscreen.wait = true;
+      console.log("-closeFullscreenOnDestroy ---------");
       console.log(e);
       console.log(JSON.stringify(vm.ui.fullscreen));
-      console.log("------------------------------------");*/
-      //If the fullscreen that closed was the one we were looking at
+      console.log("------------------------------------"); //If the fullscreen that closed was the one we were looking at
+      //if(vm.ui.fullscreen.target == e.peerid) {
+      //Mark that we want to rebind this peer
+      //vm.ui.fullscreen.rebind = true;
+      //Wait 1s to actually close the fullscreen
 
-      if (vm.ui.fullscreen.target == e.peerid) {
-        //Mark that we want to rebind this peer
-        vm.ui.fullscreen.rebind = true; //Wait 1s to actually close the fullscreen
+      setTimeout(function () {
+        var rebound = false; //Confirm that we rebound to something
 
-        setTimeout(function () {
-          //Still waiting for a rebind but expired. Close the fullscreen
-          if (vm.ui.fullscreen.rebind) {
-            vm.ui.fullscreen.target = null;
-            vm.ui.fullscreen.active = false;
-            vm.ui.fullscreen.rebind = false; //vm.$forceUpdate();
+        for (var i = 0; i < vm.peerStreams.length; i++) {
+          //Duplicate stream! Ignore it
+          if (vm.peerStreams[i].peerid == e.peerid) {
+            console.log("Was rebound!");
+            console.log(vm.peerStreams[i]);
+            rebound = true;
+            break;
           }
-        }, 1000);
-      }
+        } //Still waiting for a rebind but expired. Close the fullscreen
+
+
+        if (!rebound) {
+          console.log("Not rebound!");
+          vm.ui.fullscreen.target = null;
+          vm.ui.fullscreen.active = false;
+          vm.ui.fullscreen.wait = false; //vm.$forceUpdate();
+        } else {
+          vm.ui.fullscreen.wait = false;
+        }
+      }, 1000); //}
     },
     confirmLeave: function confirmLeave(e) {
       var vm = this;
@@ -2639,10 +2653,9 @@ __webpack_require__.r(__webpack_exports__);
         if (!vm.stream.videoenabled && vm.stream.screenshareenabled) {
           vm.stopLocalStream();
           vm.stream.screenshareenabled = false;
-        }
+        } //console.log("Available Devices:");
+        //console.log(availableDevices);
 
-        console.log("Available Devices:");
-        console.log(availableDevices);
 
         if (!vm.stream.videoenabled) {
           console.log("Turning on camera...");
@@ -2770,28 +2783,31 @@ __webpack_require__.r(__webpack_exports__);
         //Duplicate stream! Ignore it
         if (vm.peerStreams[i].id == stream.id) {
           //This stream already existed on this id. Remove it before we re-add it
+          console.log("Remove duplicate stream");
           vm.connections[peerid].removeStream(vm.peerStreams[i]);
           vm.peerStreams.splice(i, 1);
         }
       }
 
       stream.peerid = peerid;
-      stream.peerConnection = vm.connections[peerid]; //console.log("On peer Stream ----------------------------");
-      //console.log("Peer id: " + JSON.stringify(peerid));
-      //console.log(stream.peerConnection);
-      //console.log(JSON.stringify(vm.ui.fullscreen));
-      //console.log("--------------------------------------------");
-      //We want to rebind a fullscreen stream on a specific target/hostid
+      stream.peerConnection = vm.connections[peerid];
+      console.log("On peer Stream ----------------------------");
+      console.log("Peer id: " + JSON.stringify(peerid));
+      console.log(stream.peerConnection);
+      console.log(JSON.stringify(vm.ui.fullscreen)); //We want to rebind a fullscreen stream on a specific target/hostid
+      //if(vm.ui.fullscreen.rebind && vm.ui.fullscreen.target == peerid) {
 
-      if (vm.ui.fullscreen.rebind && vm.ui.fullscreen.target == peerid) {
-        //We found our stream so we don't want to rebind anymore
-        vm.ui.fullscreen.rebind = false;
+      if (vm.ui.fullscreen.target == peerid) {
+        console.log("Rebind!"); //We found our stream so we don't want to rebind anymore
+
         stream.startFullscreen = true;
         vm.$forceUpdate();
       } else {
+        console.log("Don't bind!");
         stream.startFullscreen = false;
       }
 
+      console.log("--------------------------------------------");
       vm.connections[peerid].setStream(stream);
       vm.peerStreams.push(stream);
       /**
@@ -2808,14 +2824,14 @@ __webpack_require__.r(__webpack_exports__);
 
 
           if (vm.peerStreams[i].id == e.srcElement.id) {
-            //This was the target stream, set the rebind flag
+            console.log("Remove track----------"); //console.log("Set rebind flag")
+
+            console.log(JSON.stringify(vm.ui.fullscreen));
+            console.log(e.target.peerid);
+            console.log("------------------------"); //This was the target stream, set the rebind flag
+
             if (e.target.peerid == vm.ui.fullscreen.target) {
-              //console.log("Remove track----------");
-              //console.log("Set rebind flag")
-              //console.log(JSON.stringify(vm.ui.fullscreen));
-              //console.log(e.target.peerid);
-              //console.log("------------------------");
-              vm.ui.fullscreen.rebind = true;
+              vm.ui.fullscreen.wait = true;
             }
 
             vm.peerStreams.splice(i, 1);
@@ -56414,7 +56430,7 @@ var render = function() {
       _c("div", { ref: "modalcontainer" }),
       _vm._v(" "),
       _c("div", { staticClass: "peer-video-rebinding-wait-container" }, [
-        _vm.ui.fullscreen.target !== null && _vm.ui.fullscreen.rebind
+        _vm.ui.fullscreen.target !== null && _vm.ui.fullscreen.wait
           ? _c(
               "div",
               { staticClass: "peer-video-rebinding-wait text-center" },
@@ -57318,7 +57334,15 @@ var render = function() {
         _vm._v(
           "\n        " +
             _vm._s(_vm.stream.peerConnection.user.name) +
-            "\n        "
+            " - PId: #" +
+            _vm._s(_vm.stream.peerid) +
+            "# - Id: #" +
+            _vm._s(_vm.stream.peerConnection.id) +
+            "# - Hst: " +
+            _vm._s(_vm.stream.peerConnection.hostid) +
+            "# - Cl: " +
+            _vm._s(_vm.stream.peerConnection.clientid) +
+            "#\n        "
         ),
         _vm.stream.peerConnection.user.verified
           ? _c("i", { staticClass: "fas fa-lock" })
@@ -71077,7 +71101,7 @@ var User = /*#__PURE__*/function () {
           console.log(e);
         }
       } else {
-        cb();
+        cb(self.devices);
       }
     }
   }, {
