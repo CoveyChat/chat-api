@@ -3,7 +3,9 @@
         <div
             class="peer-video-details"
             v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }">
-            {{stream.peerConnection.user.name}} - PId: #{{stream.peerid}}# - Id: #{{stream.peerConnection.id}}# - Hst: {{stream.peerConnection.hostid}}# - Cl: {{stream.peerConnection.clientid}}#
+            {{stream.peerConnection.user.name}}
+            <!-- - PId: #{{stream.peerid}}# - Id: #{{stream.peerConnection.id}}# - Hst: {{stream.peerConnection.hostid}}# - Cl: {{stream.peerConnection.clientid}}#
+            -->
             <i class="fas fa-lock" v-if="stream.peerConnection.user.verified"></i>
         </div>
         <video :srcObject.prop="stream"

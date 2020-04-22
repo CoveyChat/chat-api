@@ -3729,6 +3729,8 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "PeerVideoComponent",
   props: {
@@ -57334,16 +57336,9 @@ var render = function() {
         _vm._v(
           "\n        " +
             _vm._s(_vm.stream.peerConnection.user.name) +
-            " - PId: #" +
-            _vm._s(_vm.stream.peerid) +
-            "# - Id: #" +
-            _vm._s(_vm.stream.peerConnection.id) +
-            "# - Hst: " +
-            _vm._s(_vm.stream.peerConnection.hostid) +
-            "# - Cl: " +
-            _vm._s(_vm.stream.peerConnection.clientid) +
-            "#\n        "
+            "\n        "
         ),
+        _vm._v(" "),
         _vm.stream.peerConnection.user.verified
           ? _c("i", { staticClass: "fas fa-lock" })
           : _vm._e()
