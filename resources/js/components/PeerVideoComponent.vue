@@ -116,7 +116,7 @@ export default {
     },
     beforeDestroy() {
         var vm = this;
-        vm.$emit('closeFullscreenOnDestroy', vm.stream.peerConnection);
+        vm.$emit('closeFullscreenOnDestroy', vm.stream);
     },
     mounted() {
         console.log('Peer Video Component mounted.');

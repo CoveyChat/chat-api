@@ -133,6 +133,8 @@
 
             },
             update(data) {
+                //console.log("Recieved");
+                //console.log(data);
                 var vm = this;
                 vm.connections = data;
 

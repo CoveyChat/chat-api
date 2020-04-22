@@ -1,10 +1,12 @@
 <template>
     <div class="d-flex flex-column w-100">
     <div ref="modalcontainer"></div>
-    <div  class="peer-video-rebinding-wait text-center"
-        v-if="ui.fullscreen.target !== null && ui.fullscreen.rebind">
-        <h1><i class="fas fa-video-slash"></i></h1>
-        <span class="sr-only">Connection Lost</span>
+    <div class="peer-video-rebinding-wait-container">
+        <div  class="peer-video-rebinding-wait text-center"
+            v-if="(ui.fullscreen.target !== null && ui.fullscreen.rebind)">
+            <h1><i class="fas fa-video-slash"></i></h1>
+            <span class="sr-only">Connection Lost</span>
+        </div>
     </div>
     <div id="user-prompt" v-if="!user.active" name="fade" class="flex-row flex-grow-1">
         <div class="row">
@@ -422,8 +424,13 @@ export default {
             //Possibly with a different camera or something
             var vm = this;
 
+            /*console.log("-closeFullscreenOnDestroy ---------");
+            console.log(e);
+            console.log(JSON.stringify(vm.ui.fullscreen));
+            console.log("------------------------------------");*/
+
             //If the fullscreen that closed was the one we were looking at
-            if(vm.ui.fullscreen.target == e.hostid) {
+            if(vm.ui.fullscreen.target == e.peerid) {
                 //Mark that we want to rebind this peer
                 vm.ui.fullscreen.rebind = true;
 
@@ -435,9 +442,7 @@ export default {
                         vm.ui.fullscreen.active = false;
                         vm.ui.fullscreen.rebind = false;
 
-                        //Force update the connections just incase
-                        //For some reason if it times out the network chart is empty?
-                        vm.outputConnections();
+                        //vm.$forceUpdate();
                     }
                 }, 1000);
             }
@@ -496,7 +501,7 @@ export default {
             var options = {video: {cursor: "always"}, audio: false};
 
             if(vm.stream.videoenabled && !vm.stream.screenshareenabled) {
-                console.log(options);
+                //console.log(options);
                 //Even with audio:true getDisplayMedia doesn't return audio tracks
                 navigator.mediaDevices.getDisplayMedia(options).then(function(stream) {
                     //Get and add the audio tracks manually
@@ -666,8 +671,6 @@ export default {
 
             var networkChartData = {nodes:[{id: 'me', name: 'Me'}], links:[]};
 
-            //var txtConnections = document.getElementById('connections');
-            //txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
 
             for(var id in vm.connections) {
                 var peer = vm.connections[id];
@@ -692,7 +695,8 @@ export default {
                 }
 
             }
-
+            //console.log("Sending");
+            //console.log(networkChartData);
             vm.$refs.networkGraph.update(networkChartData);
 
         },
@@ -701,17 +705,26 @@ export default {
          */
         onPeerStream(stream, peerid) {
             var vm = this;
-            console.log("On peer stream called");
+            //console.log("On peer stream called @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+
             //Check for duplicates incase buttons are spammed
             for(var i=0; i < vm.peerStreams.length; i++) {
                 //Duplicate stream! Ignore it
                 if(vm.peerStreams[i].id == stream.id) {
-                    return;
+                    //This stream already existed on this id. Remove it before we re-add it
+                    vm.connections[peerid].removeStream(vm.peerStreams[i]);
+                    vm.peerStreams.splice(i, 1);
                 }
             }
 
             stream.peerid = peerid;
             stream.peerConnection = vm.connections[peerid];
+
+            //console.log("On peer Stream ----------------------------");
+            //console.log("Peer id: " + JSON.stringify(peerid));
+            //console.log(stream.peerConnection);
+            //console.log(JSON.stringify(vm.ui.fullscreen));
+            //console.log("--------------------------------------------");
 
             //We want to rebind a fullscreen stream on a specific target/hostid
             if(vm.ui.fullscreen.rebind && vm.ui.fullscreen.target == peerid) {
@@ -724,14 +737,12 @@ export default {
             }
 
             vm.connections[peerid].setStream(stream);
-
             vm.peerStreams.push(stream);
 
             /**
              * Fires twice. Once when the audio is removed and once when the video is removed
              */
             stream.onremovetrack = function(e) {
-                console.log("Peer track removed");
                 //Find and remove this stream
                 for(var i=0; i<vm.peerStreams.length; i++) {
                     //Already deleted. This event fires twice (once for video removal and once for audio removal)
@@ -741,6 +752,18 @@ export default {
 
                     //See if this is the video we want to delete
                     if(vm.peerStreams[i].id == e.srcElement.id) {
+                        //This was the target stream, set the rebind flag
+                        if(e.target.peerid == vm.ui.fullscreen.target) {
+                            //console.log("Remove track----------");
+                            //console.log("Set rebind flag")
+                            //console.log(JSON.stringify(vm.ui.fullscreen));
+                            //console.log(e.target.peerid);
+                            //console.log("------------------------");
+
+                            vm.ui.fullscreen.rebind = true;
+                        }
+
+
                         vm.peerStreams.splice(i, 1);
                         break;
                     }

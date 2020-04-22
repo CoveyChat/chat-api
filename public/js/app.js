@@ -2385,6 +2385,8 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
 
 
 
@@ -2435,9 +2437,14 @@ __webpack_require__.r(__webpack_exports__);
     closeFullscreenOnDestroy: function closeFullscreenOnDestroy(e) {
       //If the video stream is getting destroyed, wait 1s to see if it comes back
       //Possibly with a different camera or something
-      var vm = this; //If the fullscreen that closed was the one we were looking at
+      var vm = this;
+      /*console.log("-closeFullscreenOnDestroy ---------");
+      console.log(e);
+      console.log(JSON.stringify(vm.ui.fullscreen));
+      console.log("------------------------------------");*/
+      //If the fullscreen that closed was the one we were looking at
 
-      if (vm.ui.fullscreen.target == e.hostid) {
+      if (vm.ui.fullscreen.target == e.peerid) {
         //Mark that we want to rebind this peer
         vm.ui.fullscreen.rebind = true; //Wait 1s to actually close the fullscreen
 
@@ -2446,10 +2453,7 @@ __webpack_require__.r(__webpack_exports__);
           if (vm.ui.fullscreen.rebind) {
             vm.ui.fullscreen.target = null;
             vm.ui.fullscreen.active = false;
-            vm.ui.fullscreen.rebind = false; //Force update the connections just incase
-            //For some reason if it times out the network chart is empty?
-
-            vm.outputConnections();
+            vm.ui.fullscreen.rebind = false; //vm.$forceUpdate();
           }
         }, 1000);
       }
@@ -2515,8 +2519,8 @@ __webpack_require__.r(__webpack_exports__);
       };
 
       if (vm.stream.videoenabled && !vm.stream.screenshareenabled) {
-        console.log(options); //Even with audio:true getDisplayMedia doesn't return audio tracks
-
+        //console.log(options);
+        //Even with audio:true getDisplayMedia doesn't return audio tracks
         navigator.mediaDevices.getDisplayMedia(options).then(function (stream) {
           //Get and add the audio tracks manually
           navigator.mediaDevices.getUserMedia({
@@ -2702,8 +2706,7 @@ __webpack_require__.r(__webpack_exports__);
           name: 'Me'
         }],
         links: []
-      }; //var txtConnections = document.getElementById('connections');
-      //txtConnections.textContent = "(" + Object.keys(cons).length + ") open \n";
+      };
 
       for (var id in vm.connections) {
         var peer = vm.connections[id];
@@ -2736,7 +2739,9 @@ __webpack_require__.r(__webpack_exports__);
             target: peer.hostid
           }); //txtConnections.textContent += peer.id + " ---> " + peer.hostid + "\n";
         }
-      }
+      } //console.log("Sending");
+      //console.log(networkChartData);
+
 
       vm.$refs.networkGraph.update(networkChartData);
     },
@@ -2745,18 +2750,25 @@ __webpack_require__.r(__webpack_exports__);
      * When a peer opens a stream, show the new connection
      */
     onPeerStream: function onPeerStream(stream, peerid) {
-      var vm = this;
-      console.log("On peer stream called"); //Check for duplicates incase buttons are spammed
+      var vm = this; //console.log("On peer stream called @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+      //Check for duplicates incase buttons are spammed
 
       for (var i = 0; i < vm.peerStreams.length; i++) {
         //Duplicate stream! Ignore it
         if (vm.peerStreams[i].id == stream.id) {
-          return;
+          //This stream already existed on this id. Remove it before we re-add it
+          vm.connections[peerid].removeStream(vm.peerStreams[i]);
+          vm.peerStreams.splice(i, 1);
         }
       }
 
       stream.peerid = peerid;
-      stream.peerConnection = vm.connections[peerid]; //We want to rebind a fullscreen stream on a specific target/hostid
+      stream.peerConnection = vm.connections[peerid]; //console.log("On peer Stream ----------------------------");
+      //console.log("Peer id: " + JSON.stringify(peerid));
+      //console.log(stream.peerConnection);
+      //console.log(JSON.stringify(vm.ui.fullscreen));
+      //console.log("--------------------------------------------");
+      //We want to rebind a fullscreen stream on a specific target/hostid
 
       if (vm.ui.fullscreen.rebind && vm.ui.fullscreen.target == peerid) {
         //We found our stream so we don't want to rebind anymore
@@ -2774,8 +2786,7 @@ __webpack_require__.r(__webpack_exports__);
        */
 
       stream.onremovetrack = function (e) {
-        console.log("Peer track removed"); //Find and remove this stream
-
+        //Find and remove this stream
         for (var i = 0; i < vm.peerStreams.length; i++) {
           //Already deleted. This event fires twice (once for video removal and once for audio removal)
           if (typeof vm.peerStreams[i] == 'undefined' || typeof e.srcElement == 'undefined') {
@@ -2784,6 +2795,16 @@ __webpack_require__.r(__webpack_exports__);
 
 
           if (vm.peerStreams[i].id == e.srcElement.id) {
+            //This was the target stream, set the rebind flag
+            if (e.target.peerid == vm.ui.fullscreen.target) {
+              //console.log("Remove track----------");
+              //console.log("Set rebind flag")
+              //console.log(JSON.stringify(vm.ui.fullscreen));
+              //console.log(e.target.peerid);
+              //console.log("------------------------");
+              vm.ui.fullscreen.rebind = true;
+            }
+
             vm.peerStreams.splice(i, 1);
             break;
           }
@@ -3504,6 +3525,8 @@ __webpack_require__.r(__webpack_exports__);
       vm.update(vm.connections);
     },
     update: function update(data) {
+      //console.log("Recieved");
+      //console.log(data);
       var vm = this;
       vm.connections = data; // Make a shallow copy to protect against mutation, while
       // recycling old nodes to preserve position and velocity.
@@ -3729,7 +3752,7 @@ __webpack_require__.r(__webpack_exports__);
   },
   beforeDestroy: function beforeDestroy() {
     var vm = this;
-    vm.$emit('closeFullscreenOnDestroy', vm.stream.peerConnection);
+    vm.$emit('closeFullscreenOnDestroy', vm.stream);
   },
   mounted: function mounted() {
     console.log('Peer Video Component mounted.');
@@ -56377,13 +56400,21 @@ var render = function() {
     [
       _c("div", { ref: "modalcontainer" }),
       _vm._v(" "),
-      _vm.ui.fullscreen.target !== null && _vm.ui.fullscreen.rebind
-        ? _c("div", { staticClass: "peer-video-rebinding-wait text-center" }, [
-            _vm._m(0),
-            _vm._v(" "),
-            _c("span", { staticClass: "sr-only" }, [_vm._v("Connection Lost")])
-          ])
-        : _vm._e(),
+      _c("div", { staticClass: "peer-video-rebinding-wait-container" }, [
+        _vm.ui.fullscreen.target !== null && _vm.ui.fullscreen.rebind
+          ? _c(
+              "div",
+              { staticClass: "peer-video-rebinding-wait text-center" },
+              [
+                _vm._m(0),
+                _vm._v(" "),
+                _c("span", { staticClass: "sr-only" }, [
+                  _vm._v("Connection Lost")
+                ])
+              ]
+            )
+          : _vm._e()
+      ]),
       _vm._v(" "),
       !_vm.user.active
         ? _c(
