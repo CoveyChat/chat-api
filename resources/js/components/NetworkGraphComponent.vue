@@ -79,7 +79,6 @@
                 var vm = this;
 
                 vm.color = d3.scaleOrdinal(d3.schemeTableau10);
-                console.log("Network Graph Mounted!");
 
                 // set the dimensions and margins of the graph
                 var margin = {top: 10, right: 30, bottom: 30, left: 40};

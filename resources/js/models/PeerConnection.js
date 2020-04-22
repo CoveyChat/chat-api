@@ -33,15 +33,15 @@ export default class PeerConnection {
         self.boundElement = null;
 
         self.connection.on('connect', function() {
-            console.log("~~~~~Connected!~~~~~");
+            //console.log("~~~~~Connected!~~~~~");
         });
 
         self.connection.on('signal', function (webRtcId) {
             if(self.connection.initiator) {
-                console.log('Got initiator signal, sending off to client');
+                //console.log('Got initiator signal, sending off to client');
                 self.server.emit('sendtoclient', {webRtcId: webRtcId, hostid: self.hostid, clientid: self.clientid});
             } else {
-                console.log('Got client signal, sending off to host');
+                //console.log('Got client signal, sending off to host');
 
                 //Got a response from the initiator
                 self.server.emit('sendtohost', {webRtcId:webRtcId, hostid: self.hostid, clientid: self.clientid});
@@ -89,7 +89,7 @@ export default class PeerConnection {
     //Sends a local stream to this peer
     addStream(stream) {
         if(this.isStreaming) {
-            console.log("ALREADY STREAMING");
+            //console.log("ALREADY STREAMING");
         } else {
             //console.log(this.connection);
             this.connection.addStream(stream);
@@ -101,7 +101,7 @@ export default class PeerConnection {
     //Removes a local stream from this peer
     removeStream(stream) {
         if(!this.isStreaming) {
-            console.log("NOT STREAMING");
+            //console.log("NOT STREAMING");
         } else {
             this.connection.removeStream(stream);
             this.isStreaming = false;

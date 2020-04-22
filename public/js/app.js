@@ -2365,6 +2365,26 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -2400,7 +2420,11 @@ __webpack_require__.r(__webpack_exports__);
       ui: {
         videoenabled: true,
         anonUsername: '',
-        inFullscreen: false,
+        fullscreen: {
+          active: false,
+          target: null,
+          rebind: false
+        },
         showMessagesFullscreen: false,
         dblClickTimer: null,
         sound: null
@@ -2408,6 +2432,25 @@ __webpack_require__.r(__webpack_exports__);
     };
   },
   methods: {
+    closeFullscreenOnDestroy: function closeFullscreenOnDestroy(e) {
+      //If the video stream is getting destroyed, wait 1s to see if it comes back
+      //Possibly with a different camera or something
+      var vm = this; //If the fullscreen that closed was the one we were looking at
+
+      if (vm.ui.fullscreen.target == e.hostid) {
+        //Mark that we want to rebind this peer
+        vm.ui.fullscreen.rebind = true; //Wait 1s to actually close the fullscreen
+
+        setTimeout(function () {
+          //Still waiting for a rebind but expired. Close the fullscreen
+          if (vm.ui.fullscreen.rebind) {
+            vm.ui.fullscreen.target = null;
+            vm.ui.fullscreen.active = false;
+            vm.ui.fullscreen.rebind = false;
+          }
+        }, 1000);
+      }
+    },
     confirmLeave: function confirmLeave(e) {
       var vm = this;
       var options = {
@@ -2699,7 +2742,8 @@ __webpack_require__.r(__webpack_exports__);
      * When a peer opens a stream, show the new connection
      */
     onPeerStream: function onPeerStream(stream, peerid) {
-      var vm = this; //Check for duplicates incase buttons are spammed
+      var vm = this;
+      console.log("On peer stream called"); //Check for duplicates incase buttons are spammed
 
       for (var i = 0; i < vm.peerStreams.length; i++) {
         //Duplicate stream! Ignore it
@@ -2709,7 +2753,17 @@ __webpack_require__.r(__webpack_exports__);
       }
 
       stream.peerid = peerid;
-      stream.peerConnection = vm.connections[peerid];
+      stream.peerConnection = vm.connections[peerid]; //We want to rebind a fullscreen stream on a specific target/hostid
+
+      if (vm.ui.fullscreen.rebind && vm.ui.fullscreen.target == peerid) {
+        //We found our stream so we don't want to rebind anymore
+        vm.ui.fullscreen.rebind = false;
+        stream.startFullscreen = true;
+        vm.$forceUpdate();
+      } else {
+        stream.startFullscreen = false;
+      }
+
       vm.connections[peerid].setStream(stream);
       vm.peerStreams.push(stream);
       /**
@@ -2717,7 +2771,7 @@ __webpack_require__.r(__webpack_exports__);
        */
 
       stream.onremovetrack = function (e) {
-        console.log("ON REMOVE TRACK!"); //Find and remove this stream
+        console.log("Peer track removed"); //Find and remove this stream
 
         for (var i = 0; i < vm.peerStreams.length; i++) {
           //Already deleted. This event fires twice (once for video removal and once for audio removal)
@@ -2763,14 +2817,14 @@ __webpack_require__.r(__webpack_exports__);
         console.log(vm.connections[id]);
         return false;
       } //client.send("Sending stream to " + client._id);
-
-
-      console.log("+Sending stream to " + id); //console.log(vm.stream.connection.getTracks());
+      //console.log("+Sending stream to " + id)
+      //console.log(vm.stream.connection.getTracks());
       //console.log(client.streams);
       //client.removeStream(vm.stream.connection);
 
+
       if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.connections[id].isStreaming) {
-        console.log("+APPLYING STREAM");
+        //console.log("+APPLYING STREAM");
         vm.connections[id].addStream(vm.stream.connection);
       }
     },
@@ -2841,14 +2895,13 @@ __webpack_require__.r(__webpack_exports__);
        */
 
       vm.server.signal.on('inithosts', function (numHosts) {
-        console.log("init (" + numHosts + ") hosts");
-
+        //console.log("init (" + numHosts + ") hosts");
         for (var i = 0; i < numHosts; i++) {
           var peer = new _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__["default"](vm.server.signal, true);
           var id = peer.id;
           vm.connections[id] = peer;
-          console.log("NEW HOST PEER " + id);
           vm.connections[id].connection.on('connect', function () {
+            console.log("Connection established between host -> client");
             vm.ui.sound.play('connect');
             vm.outputConnections();
 
@@ -2868,7 +2921,7 @@ __webpack_require__.r(__webpack_exports__);
             vm.recieveMessage(vm.connections[this._id].user, data);
           });
           vm.connections[id].connection.on('stream', function (stream) {
-            console.log("ON PEER STREAM");
+            //console.log("Recieved peer stream");
             vm.onPeerStream(stream, this._id);
           });
         }
@@ -2880,7 +2933,7 @@ __webpack_require__.r(__webpack_exports__);
       vm.server.signal.on('sendtohost', function (obj) {
         //Prevent signals to bad hosts that have closed
         if (typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].connection.destroyed) {
-          console.log("host - binding returned client info");
+          //console.log("host - binding returned client info");
           vm.connections[obj.hostid].signal(obj.webRtcId);
           vm.connections[obj.hostid].setUser(obj.user);
           vm.connections[obj.hostid].setClientId(obj.clientid);
@@ -2895,19 +2948,19 @@ __webpack_require__.r(__webpack_exports__);
        */
 
       vm.server.signal.on('initclient', function (obj) {
-        console.log("Got request to init a client for host " + obj.hostid);
+        //console.log("Got request to init a client for host " + obj.hostid);
         var id = obj.hostid; //Key to the host id since it can possibly reqest to init a bunch of times during the handshake
 
         if (typeof vm.connections[id] == 'undefined') {
-          console.log("Init a peer for host " + id);
+          //console.log("Init a peer for host " + id);
           var peer = new _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__["default"](vm.server.signal, false);
           vm.connections[id] = peer;
           vm.connections[id].setHostId(obj.hostid);
           vm.connections[id].setUser(obj.user);
           vm.connections[id].connection.on('connect', function () {
-            console.log("CONNECTED TO CLIENT~~");
-            console.log(this);
-            console.log(vm.connections[id].user);
+            console.log("Connection established between client -> host"); //console.log(this);
+            //console.log(vm.connections[id].user);
+
             vm.ui.sound.play('connect');
             vm.outputConnections();
 
@@ -2930,9 +2983,9 @@ __webpack_require__.r(__webpack_exports__);
             vm.onPeerStream(stream, id);
           });
         } //Use the remote host id so that the client is overridden if it re-signals
+        //console.log("Signal host (" + obj.hostid + ") connection to client");
 
 
-        console.log("Signal host (" + obj.hostid + ") connection to client");
         vm.connections[id].signal(obj.webRtcId);
       });
     }
@@ -3426,8 +3479,7 @@ __webpack_require__.r(__webpack_exports__);
   methods: {
     init: function init() {
       var vm = this;
-      vm.color = d3.scaleOrdinal(d3.schemeTableau10);
-      console.log("Network Graph Mounted!"); // set the dimensions and margins of the graph
+      vm.color = d3.scaleOrdinal(d3.schemeTableau10); // set the dimensions and margins of the graph
 
       var margin = {
         top: 10,
@@ -3625,7 +3677,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "PeerVideoComponent",
   props: {
-    stream: MediaStream
+    stream: MediaStream,
+    startFullscreen: Boolean
   },
   data: function data() {
     return {
@@ -3634,6 +3687,18 @@ __webpack_require__.r(__webpack_exports__);
         dblClickTimer: null
       }
     };
+  },
+  watch: {
+    startFullscreen: {
+      immediate: true,
+      handler: function handler(newVal) {
+        var vm = this;
+
+        if (newVal) {
+          vm.ui.inFullscreen = true;
+        }
+      }
+    }
   },
   methods: {
     onDoubleClickCheck: function onDoubleClickCheck(e) {
@@ -3647,9 +3712,9 @@ __webpack_require__.r(__webpack_exports__);
         vm.ui.inFullscreen = !vm.ui.inFullscreen;
 
         if (vm.ui.inFullscreen) {
-          vm.$emit('openFullscreen');
+          vm.$emit('openFullscreen', vm.stream.peerConnection);
         } else {
-          vm.$emit('closeFullscreen');
+          vm.$emit('closeFullscreen', vm.stream.peerConnection);
         }
       } else {
         vm.ui.dblClickTimer = Date.now();
@@ -3661,7 +3726,7 @@ __webpack_require__.r(__webpack_exports__);
   },
   beforeDestroy: function beforeDestroy() {
     var vm = this;
-    vm.$emit('closeFullscreen');
+    vm.$emit('closeFullscreenOnDestroy', vm.stream.peerConnection);
   },
   mounted: function mounted() {
     console.log('Peer Video Component mounted.');
@@ -10530,7 +10595,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.btn[data-v-80d584ac] {\n    border-radius: 0px;\n}\n#message-box[data-v-80d584ac] {\n    border-radius:0px;\n}\n.btn-show-messages[data-v-80d584ac] {\n    z-index:3;\n}\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.chat-disabled[data-v-80d584ac] input {\n    opacity:.5;\n}\n.chat-disabled[data-v-80d584ac] button {\n    opacity:.5;\n}\n.btn-leave-chat[data-v-80d584ac] {\n    position: absolute;\n    width: 25%;\n    top: 0px;\n    left: 50%;\n    margin-top: 6px;\n    margin-left: -12.5%;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    box-shadow: none;\n}\n\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n\n/* When fullscreened, shift things around*/\n.chat-container.peer-video-fullscreen[data-v-80d584ac] {\n    height:0px !important;\n}\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\nbutton.local-audio-overlay[data-v-80d584ac],\nbutton.local-screenshare-overlay[data-v-80d584ac],\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    top:15em !important;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n    z-index:3;\n}\n\n/*Videos container shrink so messages and stuff shows correctly*/\n#peer-videos-container.peer-video-fullscreen[data-v-80d584ac] .video-connections {\n        height:0px;\n}\n\n/* Main Video Fullscreen */\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n.btn[data-v-80d584ac] {\n    border-radius: 0px;\n}\n.peer-video-rebinding-wait[data-v-80d584ac] {\n    z-index:2147483647;\n    background:#000;\n    color:#fff;\n    position: fixed;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    right: 0;\n}\n.peer-video-rebinding-wait[data-v-80d584ac] h1 {\n    margin-top:50vh;\n}\n#message-box[data-v-80d584ac] {\n    border-radius:0px;\n}\n.btn-show-messages[data-v-80d584ac] {\n    z-index:3;\n}\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.chat-disabled[data-v-80d584ac] input {\n    opacity:.5;\n}\n.chat-disabled[data-v-80d584ac] button {\n    opacity:.5;\n}\n.btn-leave-chat[data-v-80d584ac] {\n    position: absolute;\n    width: 25%;\n    top: 0px;\n    left: 50%;\n    margin-top: 6px;\n    margin-left: -12.5%;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    box-shadow: none;\n}\n\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n\n/* When fullscreened, shift things around*/\n.chat-container.peer-video-fullscreen[data-v-80d584ac] {\n    height:0px !important;\n}\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\nbutton.local-audio-overlay[data-v-80d584ac],\nbutton.local-screenshare-overlay[data-v-80d584ac],\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    top:15em !important;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n    z-index:3;\n}\n\n/*Videos container shrink so messages and stuff shows correctly*/\n#peer-videos-container.peer-video-fullscreen[data-v-80d584ac] .video-connections {\n        height:0px;\n}\n\n/* Main Video Fullscreen */\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -56309,6 +56374,14 @@ var render = function() {
     [
       _c("div", { ref: "modalcontainer" }),
       _vm._v(" "),
+      _vm.ui.fullscreen.target !== null && _vm.ui.fullscreen.rebind
+        ? _c("div", { staticClass: "peer-video-rebinding-wait text-center" }, [
+            _vm._m(0),
+            _vm._v(" "),
+            _c("span", { staticClass: "sr-only" }, [_vm._v("Connection Lost")])
+          ])
+        : _vm._e(),
+      _vm._v(" "),
       !_vm.user.active
         ? _c(
             "div",
@@ -56415,7 +56488,7 @@ var render = function() {
             "div",
             {
               staticClass: "chat-container flex-row flex-fill",
-              class: { "peer-video-fullscreen": _vm.ui.inFullscreen }
+              class: { "peer-video-fullscreen": _vm.ui.fullscreen.active }
             },
             [
               _c(
@@ -56438,7 +56511,7 @@ var render = function() {
                       staticClass: "btn btn-primary float-right",
                       class: {
                         "btn-off": !_vm.stream.videoenabled,
-                        "local-video-overlay": _vm.ui.inFullscreen
+                        "local-video-overlay": _vm.ui.fullscreen.active
                       },
                       attrs: { type: "button", id: "btn-local-video-toggle" },
                       on: { click: _vm.toggleVideo }
@@ -56474,7 +56547,7 @@ var render = function() {
                       staticClass: "btn btn-danger float-right",
                       class: {
                         "btn-off": !_vm.stream.audioenabled,
-                        "local-audio-overlay": _vm.ui.inFullscreen
+                        "local-audio-overlay": _vm.ui.fullscreen.active
                       },
                       attrs: { type: "button", id: "btn-local-audio-toggle" },
                       on: { click: _vm.toggleAudio }
@@ -56510,7 +56583,7 @@ var render = function() {
                       staticClass: "btn btn-success float-right",
                       class: {
                         "btn-off": !_vm.stream.screenshareenabled,
-                        "local-screenshare-overlay": _vm.ui.inFullscreen
+                        "local-screenshare-overlay": _vm.ui.fullscreen.active
                       },
                       attrs: {
                         type: "button",
@@ -56552,7 +56625,7 @@ var render = function() {
                     {
                       staticClass: "btn btn-primary float-right",
                       class: {
-                        "local-swapvideo-overlay": _vm.ui.inFullscreen
+                        "local-swapvideo-overlay": _vm.ui.fullscreen.active
                       },
                       attrs: {
                         type: "button",
@@ -56575,7 +56648,7 @@ var render = function() {
                 {
                   directives: [{ name: "draggable", rawName: "v-draggable" }],
                   class: {
-                    "local-video-overlay": _vm.ui.inFullscreen,
+                    "local-video-overlay": _vm.ui.fullscreen.active,
                     "local-video-sm": _vm.stream.localsize == "sm",
                     "local-video-md": _vm.stream.localsize == "md",
                     "local-video-lg": _vm.stream.localsize == "lg"
@@ -56612,14 +56685,14 @@ var render = function() {
               _c("network-graph-component", {
                 ref: "networkGraph",
                 staticClass: "mb-3",
-                attrs: { inFullscreen: _vm.ui.inFullscreen }
+                attrs: { inFullscreen: _vm.ui.fullscreen.active }
               }),
               _vm._v(" "),
               _c(
                 "div",
                 {
                   staticClass: "container-fluid",
-                  class: { "peer-video-fullscreen": _vm.ui.inFullscreen },
+                  class: { "peer-video-fullscreen": _vm.ui.fullscreen.active },
                   attrs: { id: "peer-video-container" }
                 },
                 [
@@ -56632,7 +56705,7 @@ var render = function() {
                     [
                       _vm.peerStreams.length == 0
                         ? _c("div", { staticClass: "no-video-connections" }, [
-                            _vm._m(0),
+                            _vm._m(1),
                             _vm._v(" "),
                             _c("p", [_vm._v("Nobody is streaming")])
                           ])
@@ -56648,14 +56721,21 @@ var render = function() {
                           },
                           [
                             _c("peer-video-component", {
-                              attrs: { stream: stream },
+                              attrs: {
+                                stream: stream,
+                                startFullscreen: stream.startFullscreen
+                              },
                               on: {
                                 openFullscreen: function($event) {
-                                  _vm.ui.inFullscreen = true
+                                  _vm.ui.fullscreen.active = true
+                                  _vm.ui.fullscreen.target = stream.peerid
                                 },
                                 closeFullscreen: function($event) {
-                                  _vm.ui.inFullscreen = false
-                                }
+                                  _vm.ui.fullscreen.active = false
+                                  _vm.ui.fullscreen.target = null
+                                },
+                                closeFullscreenOnDestroy:
+                                  _vm.closeFullscreenOnDestroy
                               }
                             })
                           ],
@@ -56672,7 +56752,7 @@ var render = function() {
           )
         : _vm._e(),
       _vm._v(" "),
-      _vm.ui.inFullscreen
+      _vm.ui.fullscreen.active
         ? _c("div", { staticClass: "d-flex" }, [
             _c(
               "button",
@@ -56707,7 +56787,7 @@ var render = function() {
         ? _c("message-log-component", {
             attrs: {
               chatLog: _vm.chatLog,
-              inFullscreen: _vm.ui.inFullscreen,
+              inFullscreen: _vm.ui.fullscreen.active,
               showMessagesFullscreen: _vm.ui.showMessagesFullscreen
             }
           })
@@ -56720,7 +56800,7 @@ var render = function() {
               staticClass: "flex-column message-box",
               class: {
                 "peer-video-fullscreen":
-                  _vm.ui.inFullscreen && _vm.ui.showMessagesFullscreen,
+                  _vm.ui.fullscreen.active && _vm.ui.showMessagesFullscreen,
                 "chat-disabled": Object.keys(_vm.connections).length == 0
               }
             },
@@ -56791,6 +56871,12 @@ var render = function() {
   )
 }
 var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("h1", [_c("i", { staticClass: "fas fa-video-slash" })])
+  },
   function() {
     var _vm = this
     var _h = _vm.$createElement
@@ -70664,20 +70750,19 @@ var PeerConnection = /*#__PURE__*/function () {
     self.isStreaming = false;
     self.stream = null;
     self.boundElement = null;
-    self.connection.on('connect', function () {
-      console.log("~~~~~Connected!~~~~~");
+    self.connection.on('connect', function () {//console.log("~~~~~Connected!~~~~~");
     });
     self.connection.on('signal', function (webRtcId) {
       if (self.connection.initiator) {
-        console.log('Got initiator signal, sending off to client');
+        //console.log('Got initiator signal, sending off to client');
         self.server.emit('sendtoclient', {
           webRtcId: webRtcId,
           hostid: self.hostid,
           clientid: self.clientid
         });
       } else {
-        console.log('Got client signal, sending off to host'); //Got a response from the initiator
-
+        //console.log('Got client signal, sending off to host');
+        //Got a response from the initiator
         self.server.emit('sendtohost', {
           webRtcId: webRtcId,
           hostid: self.hostid,
@@ -70721,8 +70806,7 @@ var PeerConnection = /*#__PURE__*/function () {
   }, {
     key: "addStream",
     value: function addStream(stream) {
-      if (this.isStreaming) {
-        console.log("ALREADY STREAMING");
+      if (this.isStreaming) {//console.log("ALREADY STREAMING");
       } else {
         //console.log(this.connection);
         this.connection.addStream(stream);
@@ -70733,8 +70817,7 @@ var PeerConnection = /*#__PURE__*/function () {
   }, {
     key: "removeStream",
     value: function removeStream(stream) {
-      if (!this.isStreaming) {
-        console.log("NOT STREAMING");
+      if (!this.isStreaming) {//console.log("NOT STREAMING");
       } else {
         this.connection.removeStream(stream);
         this.isStreaming = false;

@@ -69,12 +69,25 @@
 export default {
     name: "PeerVideoComponent",
     props: {
-        stream: MediaStream
+        stream: MediaStream,
+        startFullscreen: Boolean
     },
     data: function () {
         return {
             ui: {inFullscreen: false, dblClickTimer: null}
         }
+    },
+    watch: {
+        startFullscreen: {
+            immediate: true,
+            handler(newVal) {
+                var vm = this;
+                if(newVal) {
+                    vm.ui.inFullscreen = true;
+                }
+            }
+        }
+
     },
     methods: {
         onDoubleClickCheck(e) {
@@ -89,9 +102,9 @@ export default {
                 vm.ui.dblClickTimer = null;
                 vm.ui.inFullscreen = !vm.ui.inFullscreen;
                 if(vm.ui.inFullscreen) {
-                    vm.$emit('openFullscreen');
+                    vm.$emit('openFullscreen', vm.stream.peerConnection);
                 } else {
-                    vm.$emit('closeFullscreen');
+                    vm.$emit('closeFullscreen', vm.stream.peerConnection);
                 }
             } else {
                 vm.ui.dblClickTimer = Date.now();
@@ -103,7 +116,7 @@ export default {
     },
     beforeDestroy() {
         var vm = this;
-        vm.$emit('closeFullscreen');
+        vm.$emit('closeFullscreenOnDestroy', vm.stream.peerConnection);
     },
     mounted() {
         console.log('Peer Video Component mounted.');

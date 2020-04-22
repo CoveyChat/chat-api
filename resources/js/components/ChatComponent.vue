@@ -1,6 +1,11 @@
 <template>
     <div class="d-flex flex-column w-100">
     <div ref="modalcontainer"></div>
+    <div  class="peer-video-rebinding-wait text-center"
+        v-if="ui.fullscreen.target !== null && ui.fullscreen.rebind">
+        <h1><i class="fas fa-video-slash"></i></h1>
+        <span class="sr-only">Connection Lost</span>
+    </div>
     <div id="user-prompt" v-if="!user.active" name="fade" class="flex-row flex-grow-1">
         <div class="row">
             <div class="col-sm-12 offset-md-3 col-md-6 offset-lg-4 col-lg-4 ">
@@ -24,7 +29,7 @@
         </div>
     </div>
     <div class="chat-container flex-row flex-fill"
-        v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }"
+        v-bind:class="{ 'peer-video-fullscreen': ui.fullscreen.active }"
         v-if="user.active">
         <button class="btn-leave-chat btn btn-danger" v-on:click="confirmLeave">
             <i class="fas fa-sign-out-alt"></i>
@@ -37,7 +42,7 @@
             id="btn-local-video-toggle"
             v-bind:class="{
                 'btn-off': !stream.videoenabled,
-                'local-video-overlay': ui.inFullscreen
+                'local-video-overlay': ui.fullscreen.active
             }"
             v-on:click="toggleVideo"
             v-if="ui.videoenabled">
@@ -54,7 +59,7 @@
             id="btn-local-audio-toggle"
             v-bind:class="{
                 'btn-off': !stream.audioenabled,
-                'local-audio-overlay': ui.inFullscreen
+                'local-audio-overlay': ui.fullscreen.active
             }"
             v-if="stream.videoenabled || stream.screenshareenabled"
             v-on:click="toggleAudio">
@@ -71,7 +76,7 @@
             id="btn-local-screenshare-toggle"
             v-bind:class="{
                 'btn-off': !stream.screenshareenabled,
-                'local-screenshare-overlay': ui.inFullscreen
+                'local-screenshare-overlay': ui.fullscreen.active
             }"
             v-if="stream.videoenabled || stream.screenshareenabled"
             v-on:click="toggleScreenshare">
@@ -88,7 +93,7 @@
             type="button"
             id="btn-local-swapvideo-toggle"
             v-bind:class="{
-                'local-swapvideo-overlay': ui.inFullscreen
+                'local-swapvideo-overlay': ui.fullscreen.active
             }"
             v-if="stream.videoenabled && user.devices.video.length > 1"
             v-on:click="swapVideoFeed">
@@ -99,7 +104,7 @@
 
         <div id="local-video-container" v-draggable v-on:draggable-onclick="adjustLocalVideoSize"
             v-bind:class="{
-                        'local-video-overlay': ui.inFullscreen,
+                        'local-video-overlay': ui.fullscreen.active,
                         'local-video-sm': stream.localsize =='sm',
                         'local-video-md': stream.localsize =='md',
                         'local-video-lg': stream.localsize =='lg'
@@ -120,10 +125,10 @@
         <network-graph-component
             ref="networkGraph"
             class="mb-3"
-            v-bind:inFullscreen="ui.inFullscreen">
+            v-bind:inFullscreen="ui.fullscreen.active">
         </network-graph-component>
 
-        <div id="peer-video-container" class="container-fluid" v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }">
+        <div id="peer-video-container" class="container-fluid" v-bind:class="{ 'peer-video-fullscreen': ui.fullscreen.active }">
             <div class="row justify-content-center video-connections flex-fill">
             <div v-if="peerStreams.length == 0" class="no-video-connections">
                 <h1><i class="fas fa-broadcast-tower"></i><i class="fas fa-slash tower-slash"></i></h1>
@@ -135,15 +140,17 @@
 
                 <peer-video-component
                 v-bind:stream="stream"
-                v-on:openFullscreen="ui.inFullscreen = true"
-                v-on:closeFullscreen="ui.inFullscreen = false">
+                v-bind:startFullscreen="stream.startFullscreen"
+                v-on:openFullscreen=" ui.fullscreen.active = true; ui.fullscreen.target = stream.peerid;"
+                v-on:closeFullscreen="ui.fullscreen.active = false; ui.fullscreen.target = null;"
+                v-on:closeFullscreenOnDestroy="closeFullscreenOnDestroy">
                 </peer-video-component>
             </div>
             </div>
         </div>
     </div>
 
-    <div class="d-flex" v-if="ui.inFullscreen">
+    <div class="d-flex" v-if="ui.fullscreen.active">
         <button class="btn btn-md btn-primary btn-show-messages"
             v-bind:class="{'btn-off': !ui.showMessagesFullscreen}"
             v-on:click="ui.showMessagesFullscreen = !ui.showMessagesFullscreen">
@@ -155,14 +162,14 @@
 
     <message-log-component
         v-bind:chatLog="chatLog" v-if="user.active"
-        v-bind:inFullscreen="ui.inFullscreen"
+        v-bind:inFullscreen="ui.fullscreen.active"
         v-bind:showMessagesFullscreen="ui.showMessagesFullscreen">
     </message-log-component>
 
     <div class="flex-column message-box"
         v-if="user.active"
         v-bind:class="{
-            'peer-video-fullscreen': (ui.inFullscreen && ui.showMessagesFullscreen),
+            'peer-video-fullscreen': (ui.fullscreen.active && ui.showMessagesFullscreen),
             'chat-disabled': (Object.keys(connections).length == 0)}">
         <div class="input-group">
             <input type="text"
@@ -187,6 +194,19 @@
 <style scoped>
     .btn {
         border-radius: 0px;
+    }
+    .peer-video-rebinding-wait {
+        z-index:2147483647;
+        background:#000;
+        color:#fff;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+    .peer-video-rebinding-wait >>> h1 {
+        margin-top:50vh;
     }
     #message-box {
         border-radius:0px;
@@ -393,10 +413,31 @@ export default {
             stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
             peerStreams: [],
             server: {ip:'bevy.chat', port:1337, signal: null},
-            ui: {videoenabled: true, anonUsername: '', inFullscreen: false, showMessagesFullscreen: false, dblClickTimer: null, sound: null}
+            ui: {videoenabled: true, anonUsername: '', fullscreen: {active: false, target:null, rebind:false}, showMessagesFullscreen: false, dblClickTimer: null, sound: null}
         }
     },
     methods: {
+        closeFullscreenOnDestroy(e) {
+            //If the video stream is getting destroyed, wait 1s to see if it comes back
+            //Possibly with a different camera or something
+            var vm = this;
+
+            //If the fullscreen that closed was the one we were looking at
+            if(vm.ui.fullscreen.target == e.hostid) {
+                //Mark that we want to rebind this peer
+                vm.ui.fullscreen.rebind = true;
+
+                //Wait 1s to actually close the fullscreen
+                setTimeout(function() {
+                    //Still waiting for a rebind but expired. Close the fullscreen
+                    if(vm.ui.fullscreen.rebind) {
+                        vm.ui.fullscreen.target = null;
+                        vm.ui.fullscreen.active = false;
+                        vm.ui.fullscreen.rebind = false;
+                    }
+                }, 1000);
+            }
+        },
         confirmLeave(e) {
             var vm = this;
 
@@ -656,7 +697,7 @@ export default {
          */
         onPeerStream(stream, peerid) {
             var vm = this;
-
+            console.log("On peer stream called");
             //Check for duplicates incase buttons are spammed
             for(var i=0; i < vm.peerStreams.length; i++) {
                 //Duplicate stream! Ignore it
@@ -667,6 +708,17 @@ export default {
 
             stream.peerid = peerid;
             stream.peerConnection = vm.connections[peerid];
+
+            //We want to rebind a fullscreen stream on a specific target/hostid
+            if(vm.ui.fullscreen.rebind && vm.ui.fullscreen.target == peerid) {
+                //We found our stream so we don't want to rebind anymore
+                vm.ui.fullscreen.rebind = false;
+                stream.startFullscreen = true;
+                vm.$forceUpdate();
+            } else {
+                stream.startFullscreen = false;
+            }
+
             vm.connections[peerid].setStream(stream);
 
             vm.peerStreams.push(stream);
@@ -675,7 +727,7 @@ export default {
              * Fires twice. Once when the audio is removed and once when the video is removed
              */
             stream.onremovetrack = function(e) {
-                console.log("ON REMOVE TRACK!");
+                console.log("Peer track removed");
                 //Find and remove this stream
                 for(var i=0; i<vm.peerStreams.length; i++) {
                     //Already deleted. This event fires twice (once for video removal and once for audio removal)
@@ -731,13 +783,13 @@ export default {
             }
 
             //client.send("Sending stream to " + client._id);
-            console.log("+Sending stream to " + id)
+            //console.log("+Sending stream to " + id)
             //console.log(vm.stream.connection.getTracks());
             //console.log(client.streams);
             //client.removeStream(vm.stream.connection);
 
             if((vm.stream.videoenabled  || vm.stream.screenshareenabled) && !vm.connections[id].isStreaming) {
-                console.log("+APPLYING STREAM");
+                //console.log("+APPLYING STREAM");
                 vm.connections[id].addStream(vm.stream.connection);
             }
 
@@ -809,15 +861,16 @@ export default {
              * for every client in the mesh that it needs to connec tto
              */
             vm.server.signal.on('inithosts', function (numHosts) {
-                console.log("init (" + numHosts + ") hosts");
+                //console.log("init (" + numHosts + ") hosts");
 
                 for(var i=0;i<numHosts;i++) {
 
                     var peer = new PeerConnection(vm.server.signal, true);
                     var id = peer.id;
                     vm.connections[id] = peer;
-                    console.log("NEW HOST PEER " + id);
+
                     vm.connections[id].connection.on('connect', function() {
+                        console.log("Connection established between host -> client");
                         vm.ui.sound.play('connect');
 
                         vm.outputConnections();
@@ -837,7 +890,7 @@ export default {
                     });
 
                     vm.connections[id].connection.on('stream', function(stream) {
-                        console.log("ON PEER STREAM");
+                        //console.log("Recieved peer stream");
                         vm.onPeerStream(stream, this._id);
                     });
                 }
@@ -849,7 +902,7 @@ export default {
             vm.server.signal.on('sendtohost', function (obj) {
                 //Prevent signals to bad hosts that have closed
                 if(typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].connection.destroyed) {
-                    console.log("host - binding returned client info");
+                    //console.log("host - binding returned client info");
                     vm.connections[obj.hostid].signal(obj.webRtcId);
                     vm.connections[obj.hostid].setUser(obj.user);
                     vm.connections[obj.hostid].setClientId(obj.clientid);
@@ -864,12 +917,12 @@ export default {
              * If there's no open client for this match host one will be created
              */
             vm.server.signal.on('initclient', function (obj) {
-                console.log("Got request to init a client for host " + obj.hostid);
+                //console.log("Got request to init a client for host " + obj.hostid);
                 var id=obj.hostid;
 
                 //Key to the host id since it can possibly reqest to init a bunch of times during the handshake
                 if(typeof vm.connections[id] == 'undefined') {
-                    console.log("Init a peer for host " + id);
+                    //console.log("Init a peer for host " + id);
                     var peer = new PeerConnection(vm.server.signal, false);
 
                     vm.connections[id] = peer;
@@ -877,9 +930,9 @@ export default {
                     vm.connections[id].setUser(obj.user);
 
                     vm.connections[id].connection.on('connect', function() {
-                        console.log("CONNECTED TO CLIENT~~");
-                        console.log(this);
-                        console.log(vm.connections[id].user);
+                        console.log("Connection established between client -> host");
+                        //console.log(this);
+                        //console.log(vm.connections[id].user);
                         vm.ui.sound.play('connect');
 
                         vm.outputConnections();
@@ -902,7 +955,7 @@ export default {
                 //Use the remote host id so that the client is overridden if it re-signals
 
 
-                console.log("Signal host (" + obj.hostid + ") connection to client");
+                //console.log("Signal host (" + obj.hostid + ") connection to client");
                 vm.connections[id].signal(obj.webRtcId);
 
 
