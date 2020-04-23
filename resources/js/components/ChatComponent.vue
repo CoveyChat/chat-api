@@ -175,8 +175,9 @@
     #message-box {
         border-radius:0px;
     }
+    /*Place this infront of the rebinding thing*/
     .btn-show-messages {
-        z-index:3;
+        z-index:2147483621;
     }
     .no-video-connections {
         padding: 4vh;
