@@ -1,10 +1,16 @@
 import hark from 'hark';
+import adapter from 'webrtc-adapter';
+import sdpTransform from 'sdp-transform';
 
 export default class PeerConnection {
 
     constructor(server, initiator) {
         var Peer = require('simple-peer');
         var self = this;
+
+        self.videoBitrate = 125;
+        self.audioBitrate = 64;
+
         self.events = {
             speaking: new Event('speaking'),
             stopped_speaking: new Event('stopped_speaking')
@@ -16,6 +22,63 @@ export default class PeerConnection {
                     {urls: 'stun:bevy.chat'},
                     {urls: 'turn:bevy.chat', username: 'bevychat', credential: 'bevychatturntest'}
                 ]
+            },
+            sdpTransform: function (sdp) {
+                var sdpObj = sdpTransform.parse(sdp);
+
+                //Go through all the media and apply the bitrate changes
+                for(var i=0;i<sdpObj.media.length;i++) {
+                    var mediaItem = sdpObj.media[i];
+                    var newBitrate = 0;
+                    if(mediaItem.type == 'audio') {
+                        newBitrate = self.audioBitrate;
+                        continue;
+                    } else if(mediaItem.type == 'video') {
+                        newBitrate = self.videoBitrate;
+                    } else {
+                        //Not an audio/video media item. Skip it
+                        continue;
+                    }
+
+                    //Go through all the rtp settings and apply the new rate
+                    for(var j=0;j<sdpObj.media[i].rtp.length;j++) {
+                        //Convert to kbps
+                        sdpObj.media[i].rtp[j].rate = newBitrate * 1000;
+                    }
+
+                }
+
+                var updatedSdp = sdpTransform.write(sdpObj);
+
+                /*
+                //var sdp2 = self.setMediaBitrate(sdp, 'video', self.videoBandwidth);
+                //sdp2 = setMediaBitrate(sdp2, 'audio', self.audioBandwidth);
+                console.log("SDP");
+                //console.log(self.connection._wrtc.RTCPeerConnection);
+                var rawCon = self.connection._pc;
+                var senders = rawCon.getSenders();
+                //console.log(self.connection._wrtc.getRTCPeerConnection());
+                if(senders.length > 0) {
+                    console.log(rawCon);
+                    console.log(rawCon.getSenders());
+                    console.log(senders[0].getParameters());
+                    console.log(senders[0]);
+                    const parameters = senders[0].getParameters();
+
+                    if (!parameters.encodings || parameters.encodings.length == 0) {
+                        parameters.encodings = [{maxBitrate: null}];
+                    }
+                    console.log(parameters.encodings[0]);
+                    parameters.encodings[0].maxBitrate = 10 * 1000
+                    senders[0].setParameters(parameters)
+                    .then(() => {
+                        console.log("Sent??");
+                    })
+                    .catch(e => console.error(e));
+                }
+                */
+
+                return updatedSdp;
             }
         });
         self.server = server;
@@ -33,7 +96,7 @@ export default class PeerConnection {
         self.boundElement = null;
 
         self.connection.on('connect', function() {
-            //console.log("~~~~~Connected!~~~~~");
+            console.log("~~~~~Connected!~~~~~");
         });
 
         self.connection.on('signal', function (webRtcId) {
@@ -57,6 +120,7 @@ export default class PeerConnection {
 
         self.connection.on('error', function(err) {
             console.log("Connection error - " + self.id);
+            console.log(err);
             self.destroy();
         });
 
