@@ -64,7 +64,7 @@
                 'btn-off': !screenshareEnabled,
                 'local-screenshare-overlay': inFullscreen
             }"
-            v-if="(videoEnabled || screenshareEnabled) && screenshareAccess"
+            v-if="(videoEnabled || screenshareEnabled) && !isMobile"
             @click="$emit('toggleScreenshare')">
 
             <span class="sr-only" v-if="!screenshareEnabled">Enable Screenshare</span>
@@ -135,7 +135,7 @@ export default {
     props: {
         inFullscreen: Boolean,
         deviceAccess: Boolean,
-        screenshareAccess: Boolean,
+        isMobile: Boolean,
         videoEnabled: Boolean,
         audioEnabled: Boolean,
         screenshareEnabled: Boolean,

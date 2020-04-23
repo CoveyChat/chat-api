@@ -11,7 +11,8 @@ export default class User {
         self.verified
         self.active;
         self.devices = {video: [], audio: [], active: {video: null, audio: null}};
-        self.preferredBandwidth = 'low';
+        self.isMobile = (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent));
+        self.preferredBandwidth = (self.isMobile ? 'low' : 'high'); //Low quality for mobile, high for desktop
 
         this.transport = axios.create({
             withCredentials: true

@@ -2323,7 +2323,6 @@ __webpack_require__.r(__webpack_exports__);
       },
       ui: {
         deviceAccess: true,
-        screenshareAccess: false,
         anonUsername: '',
         fullscreen: {
           active: false,
@@ -3010,9 +3009,7 @@ __webpack_require__.r(__webpack_exports__);
     var vm = this;
     vm.ui.sound = new _models_SoundEffect_js__WEBPACK_IMPORTED_MODULE_0__["default"](); //Hide the video button since they don't support mediaDevices
 
-    vm.ui.deviceAccess = typeof navigator.mediaDevices != 'undefined'; //If not a mobile device, enable screenshare
-
-    vm.ui.screenshareAccess = !/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
+    vm.ui.deviceAccess = typeof navigator.mediaDevices != 'undefined';
     vm.user = new _models_User_js__WEBPACK_IMPORTED_MODULE_1__["default"](); //Discover and set the devices before we init stuff
 
     vm.user.discoverDevices(function (devices) {
@@ -3220,7 +3217,7 @@ __webpack_require__.r(__webpack_exports__);
   props: {
     inFullscreen: Boolean,
     deviceAccess: Boolean,
-    screenshareAccess: Boolean,
+    isMobile: Boolean,
     videoEnabled: Boolean,
     audioEnabled: Boolean,
     screenshareEnabled: Boolean,
@@ -60366,7 +60363,7 @@ var render = function() {
                 attrs: {
                   inFullscreen: _vm.ui.fullscreen.active,
                   deviceAccess: _vm.ui.deviceAccess,
-                  screenshareAccess: _vm.ui.screenshareAccess,
+                  isMobile: _vm.user.isMobile,
                   videoEnabled: _vm.stream.videoenabled,
                   audioEnabled: _vm.stream.audioenabled,
                   screenshareEnabled: _vm.stream.screenshareenabled,
@@ -60824,7 +60821,7 @@ var render = function() {
           )
         : _vm._e(),
       _vm._v(" "),
-      (_vm.videoEnabled || _vm.screenshareEnabled) && _vm.screenshareAccess
+      (_vm.videoEnabled || _vm.screenshareEnabled) && !_vm.isMobile
         ? _c(
             "button",
             {
@@ -78368,7 +78365,9 @@ var User = /*#__PURE__*/function () {
         audio: null
       }
     };
-    self.preferredBandwidth = 'low';
+    self.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
+    self.preferredBandwidth = self.isMobile ? 'low' : 'high'; //Low quality for mobile, high for desktop
+
     this.transport = axios.create({
       withCredentials: true
     }); //Used to determine if the user object has been instantiated

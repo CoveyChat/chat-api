@@ -45,7 +45,7 @@
         <controls-component
             v-bind:inFullscreen="ui.fullscreen.active"
             v-bind:deviceAccess="ui.deviceAccess"
-            v-bind:screenshareAccess="ui.screenshareAccess"
+            v-bind:isMobile="user.isMobile"
             v-bind:videoEnabled="stream.videoenabled"
             v-bind:audioEnabled="stream.audioenabled"
             v-bind:screenshareEnabled="stream.screenshareenabled"
@@ -319,7 +319,6 @@ export default {
             server: {ip:'bevy.chat', port:1337, signal: null},
             ui: {
                 deviceAccess: true,
-                screenshareAccess: false,
                 anonUsername: '',
                 fullscreen: {active: false, target:null, wait:false},
                 showMessagesFullscreen: false,
@@ -994,8 +993,6 @@ mounted() {
     vm.ui.sound = new SoundEffect();
     //Hide the video button since they don't support mediaDevices
     vm.ui.deviceAccess = typeof navigator.mediaDevices != 'undefined';
-    //If not a mobile device, enable screenshare
-    vm.ui.screenshareAccess = !(/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent));
 
     vm.user = new User();
 
