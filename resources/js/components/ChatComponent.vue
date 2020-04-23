@@ -44,7 +44,7 @@
 
         <controls-component
             v-bind:inFullscreen="ui.fullscreen.active"
-            v-bind:videoAvailable="ui.videoenabled"
+            v-bind:deviceAccess="ui.deviceAccess"
             v-bind:videoEnabled="stream.videoenabled"
             v-bind:audioEnabled="stream.audioenabled"
             v-bind:screenshareEnabled="stream.screenshareenabled"
@@ -250,10 +250,11 @@
     #local-video-container.local-video-lg >>> video {
         width:300px;
     }
+    /* Initial position */
     #local-video-container {
         margin-top:20px;
         position:fixed;
-        right:2em;
+        right:5em;
         border-radius:3px;
         z-index: 2147483646;
     }
@@ -312,7 +313,7 @@ export default {
             stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
             peerStreams: [],
             server: {ip:'bevy.chat', port:1337, signal: null},
-            ui: {videoenabled: true, anonUsername: '', fullscreen: {active: false, target:null, wait:false}, showMessagesFullscreen: false, dblClickTimer: null, sound: null}
+            ui: {deviceAccess: true, anonUsername: '', fullscreen: {active: false, target:null, wait:false}, showMessagesFullscreen: false, dblClickTimer: null, sound: null}
         }
     },
     methods: {
@@ -321,23 +322,45 @@ export default {
             var options = {
                 props: {
                     close: {text: "Save and close"},
-                    userPreferred: vm.user.preferredBandwidth
+                    userPreferredBandwidth: vm.user.preferredBandwidth,
+                    userDevices: vm.user.devices //Use a cloned value so we don't pre-emptively update stuff
                 }
             };
 
             var modal = new Modal(vm.$refs.modalcontainer, options, 'settings');
 
+            //Store the old settings to check against because vue binding already applied them
+            var oldSettings = {video: vm.user.devices.active.video, audio: vm.user.devices.active.audio};
+
             modal.$on('close', function(preferred) {
-                //It's the same so don't bother
-                if(vm.user.preferredBandwidth == preferred) {
+                //We changed our audio / video device. Restart the stream stuff
+                if(oldSettings.video != preferred.video
+                || oldSettings.audio != preferred.audio) {
+
+                    vm.user.devices.active.video = preferred.video;
+                    vm.user.devices.active.audio = preferred.audio;
+                    vm.user.preferredBandwidth = preferred.bandwidth;
+
+                    //If we're currently streaming, turn it off
+                    if(vm.stream.videoenabled) {
+                        vm.stopLocalStream();
+                        vm.stream.videoenabled = false;
+                        vm.stream.screenshareenabled = false;
+                    }
+                }
+
+                // Didn't change the bandwidth so just exit
+                if(vm.user.preferredBandwidth == preferred.bandwidth) {
                     return;
                 }
-                vm.user.preferredBandwidth = preferred;
+
+                vm.user.preferredBandwidth = preferred.bandwidth;
 
                 //Update the preferred bandwidth on all it's peers
                 for(var id in vm.connections) {
                     //If we're streaming to them then kill it
-                    vm.connections[id].setPreferredBandwidth(preferred);
+                    vm.connections[id].setPreferredBandwidth(preferred.bandwidth);
+
                     //renegotiate the connection for the new quality
                     vm.connections[id].connection.negotiate();
                 }
@@ -349,43 +372,44 @@ export default {
             //Possibly with a different camera or something
             var vm = this;
             vm.ui.fullscreen.wait = true;
-            console.log("-closeFullscreenOnDestroy ---------");
+
+            /*console.log("-closeFullscreenOnDestroy ---------");
             console.log(e);
             console.log(JSON.stringify(vm.ui.fullscreen));
-            console.log("------------------------------------");
+            console.log("------------------------------------");*/
 
             //If the fullscreen that closed was the one we were looking at
             //if(vm.ui.fullscreen.target == e.peerid) {
                 //Mark that we want to rebind this peer
                 //vm.ui.fullscreen.rebind = true;
 
-                //Wait 1s to actually close the fullscreen
-                setTimeout(function() {
-                    var rebound = false;
+            //Wait 1s to actually close the fullscreen
+            setTimeout(function() {
+                var rebound = false;
 
-                    //Confirm that we rebound to something
-                    for(var i=0; i < vm.peerStreams.length; i++) {
-                        //Duplicate stream! Ignore it
-                        if(vm.peerStreams[i].peerid == e.peerid) {
-                            console.log("Was rebound!");
-                            console.log(vm.peerStreams[i]);
-                            rebound = true;
-                            break;
-                        }
+                //Confirm that we rebound to something
+                for(var i=0; i < vm.peerStreams.length; i++) {
+                    //Duplicate stream! Ignore it
+                    if(vm.peerStreams[i].peerid == e.peerid) {
+                        //console.log("Was rebound!");
+                        //console.log(vm.peerStreams[i]);
+                        rebound = true;
+                        break;
                     }
+                }
 
-                    //Still waiting for a rebind but expired. Close the fullscreen
-                    if(!rebound) {
-                        console.log("Not rebound!");
-                        vm.ui.fullscreen.target = null;
-                        vm.ui.fullscreen.active = false;
-                        vm.ui.fullscreen.wait = false;
+                //Still waiting for a rebind but expired. Close the fullscreen
+                if(!rebound) {
+                    //console.log("Not rebound!");
+                    vm.ui.fullscreen.target = null;
+                    vm.ui.fullscreen.active = false;
+                    vm.ui.fullscreen.wait = false;
 
-                        //vm.$forceUpdate();
-                    } else {
-                        vm.ui.fullscreen.wait = false;
-                    }
-                }, 1000);
+                    //vm.$forceUpdate();
+                } else {
+                    vm.ui.fullscreen.wait = false;
+                }
+            }, 1000);
             //}
         },
         confirmLeave(e) {
@@ -551,52 +575,57 @@ export default {
                 return;
             }
 
-            vm.user.discoverDevices(function(availableDevices) {
-                //Turn off screensharing and swap back to video
-                if(!vm.stream.videoenabled && vm.stream.screenshareenabled) {
-                    vm.stopLocalStream();
-                    vm.stream.screenshareenabled = false;
+
+            //Turn off screensharing and swap back to video
+            if(!vm.stream.videoenabled && vm.stream.screenshareenabled) {
+                vm.stopLocalStream();
+                vm.stream.screenshareenabled = false;
+            }
+
+            //console.log("Available Devices:");
+            //console.log(vm.user.devices);
+
+            if(!vm.stream.videoenabled) {
+                console.log("Turning on camera...");
+                //Default to video: true, audio: true to just use the defaults
+                var options = {
+                        video: vm.user.devices.video.length > 0,
+                        audio: vm.user.devices.audio.length > 0
+                    };
+                if(vm.user.devices.active.video != null) {
+                    console.log("Turning video on with camera id " + vm.user.devices.active.video);
+                    options.video = {deviceId: { ideal: vm.user.devices.active.video }};
                 }
+                if(vm.user.devices.active.audio != null) {
+                    console.log("Turning video on with camera id " + vm.user.devices.active.video);
+                    options.audio = {deviceId: { ideal: vm.user.devices.active.audio }};
+                }
+                try {
+                    navigator.mediaDevices.getUserMedia(options).then(function(stream) {
+                        vm.stream.videoenabled = true;
+                        vm.stream.screenshareenabled = false;
 
-                //console.log("Available Devices:");
-                //console.log(availableDevices);
-
-                if(!vm.stream.videoenabled) {
-                    console.log("Turning on camera...");
-                    var options = {
-                            video: availableDevices.video.length > 0,
-                            audio: availableDevices.audio.length > 0
-                        };
-                    if(vm.user.devices.active.video != null) {
-                        console.log("Turning video on with camera id " + vm.user.devices.active.video);
-                        options.video = {deviceId: { ideal: vm.user.devices.active.video }};
-                    }
-                    try {
-                        navigator.mediaDevices.getUserMedia(options).then(function(stream) {
-                            vm.stream.videoenabled = true;
-                            vm.stream.screenshareenabled = false;
-
-                            vm.onLocalStream(stream);
-                        }).catch((e) => {
-                            //They have devices but are probably blocked
-                            var modal = new Modal(vm.$refs.modalcontainer, {
-                                header: "<h1>Uh oh!</h1>",
-                                body: "<p>Could not start your video feed. Did you block the browser permission?</p>" +
-                                        "<p>Click the <i class='fas fa-lock'></i><span class='sr-only'>lock</span> icon in the URL to check your permissions and reload this page.</p>"
-                            });
-
-                            console.log("Local Video Stream Error!");
-                            console.log(e);
+                        vm.onLocalStream(stream);
+                    }).catch((e) => {
+                        //They have devices but are probably blocked
+                        var modal = new Modal(vm.$refs.modalcontainer, {
+                            header: "<h1>Uh oh!</h1>",
+                            body: "<p>Could not start your video feed. Did you block the browser permission?</p>" +
+                                    "<p>Click the <i class='fas fa-lock'></i><span class='sr-only'>lock</span> icon in the URL to check your permissions and reload this page.</p>"
                         });
-                    } catch (e) {
-                        console.log("Could not get user media for local stream");
+
+                        console.log("Local Video Stream Error!");
                         console.log(e);
-                    }
-                } else {
-                    vm.stopLocalStream();
-                    vm.stream.videoenabled = false;
+                    });
+                } catch (e) {
+                    console.log("Could not get user media for local stream");
+                    console.log(e);
                 }
-            });
+            } else {
+                vm.stopLocalStream();
+                vm.stream.videoenabled = false;
+            }
+
         },
         sendMessage (e) {
             var vm = this;
@@ -674,24 +703,24 @@ export default {
             stream.peerid = peerid;
             stream.peerConnection = vm.connections[peerid];
 
-            console.log("On peer Stream ----------------------------");
+            /*console.log("On peer Stream ----------------------------");
             console.log("Peer id: " + JSON.stringify(peerid));
             console.log(stream.peerConnection);
-            console.log(JSON.stringify(vm.ui.fullscreen));
+            console.log(JSON.stringify(vm.ui.fullscreen));*/
 
 
             //We want to rebind a fullscreen stream on a specific target/hostid
             //if(vm.ui.fullscreen.rebind && vm.ui.fullscreen.target == peerid) {
             if(vm.ui.fullscreen.target == peerid) {
-                console.log("Rebind!");
+                //console.log("Rebind!");
                 //We found our stream so we don't want to rebind anymore
                 stream.startFullscreen = true;
                 vm.$forceUpdate();
             } else {
-                console.log("Don't bind!");
+                //console.log("Don't bind!");
                 stream.startFullscreen = false;
             }
-            console.log("--------------------------------------------");
+            //console.log("--------------------------------------------");
             vm.connections[peerid].setStream(stream);
             vm.peerStreams.push(stream);
 
@@ -708,11 +737,11 @@ export default {
 
                     //See if this is the video we want to delete
                     if(vm.peerStreams[i].id == e.srcElement.id) {
-                        console.log("Remove track----------");
+                        /*console.log("Remove track----------");
                         //console.log("Set rebind flag")
                         console.log(JSON.stringify(vm.ui.fullscreen));
                         console.log(e.target.peerid);
-                        console.log("------------------------");
+                        console.log("------------------------");*/
                         //This was the target stream, set the rebind flag
                         if(e.target.peerid == vm.ui.fullscreen.target) {
                             vm.ui.fullscreen.wait = true;
@@ -952,14 +981,18 @@ mounted() {
     var vm = this;
     vm.ui.sound = new SoundEffect();
     //Hide the video button since they don't support mediaDevices
-    vm.ui.videoenabled = typeof navigator.mediaDevices != 'undefined';
+    vm.ui.deviceAccess = typeof navigator.mediaDevices != 'undefined';
 
     vm.user = new User();
-    vm.user.auth().then(function(response) {
-        //Prompt for a name
-        if(response.success) {
-            vm.init();
-        }
+
+    //Discover and set the devices before we init stuff
+    vm.user.discoverDevices(function(devices) {
+        vm.user.auth().then(function(response) {
+            //Prompt for a name
+            if(response.success) {
+                vm.init();
+            }
+        });
     });
 
 }

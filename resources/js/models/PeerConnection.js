@@ -84,7 +84,7 @@ export default class PeerConnection {
                     sdpObj.media[i].bandwidth[0].type="AS";
                     sdpObj.media[i].bandwidth[0].limit=newBitrate;
 
-                    console.log("Set " + sdpObj.media[i].type + " bitrate to " + newBitrate + "kbps");
+                    //console.log("Set " + sdpObj.media[i].type + " bitrate to " + newBitrate + "kbps");
                 }
 
                 return sdpTransform.write(sdpObj);

@@ -2284,6 +2284,7 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
 
 
 
@@ -2317,7 +2318,7 @@ __webpack_require__.r(__webpack_exports__);
         signal: null
       },
       ui: {
-        videoenabled: true,
+        deviceAccess: true,
         anonUsername: '',
         fullscreen: {
           active: false,
@@ -2338,21 +2339,41 @@ __webpack_require__.r(__webpack_exports__);
           close: {
             text: "Save and close"
           },
-          userPreferred: vm.user.preferredBandwidth
+          userPreferredBandwidth: vm.user.preferredBandwidth,
+          userDevices: vm.user.devices //Use a cloned value so we don't pre-emptively update stuff
+
         }
       };
-      var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](vm.$refs.modalcontainer, options, 'settings');
+      var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](vm.$refs.modalcontainer, options, 'settings'); //Store the old settings to check against because vue binding already applied them
+
+      var oldSettings = {
+        video: vm.user.devices.active.video,
+        audio: vm.user.devices.active.audio
+      };
       modal.$on('close', function (preferred) {
-        //It's the same so don't bother
-        if (vm.user.preferredBandwidth == preferred) {
+        //We changed our audio / video device. Restart the stream stuff
+        if (oldSettings.video != preferred.video || oldSettings.audio != preferred.audio) {
+          vm.user.devices.active.video = preferred.video;
+          vm.user.devices.active.audio = preferred.audio;
+          vm.user.preferredBandwidth = preferred.bandwidth; //If we're currently streaming, turn it off
+
+          if (vm.stream.videoenabled) {
+            vm.stopLocalStream();
+            vm.stream.videoenabled = false;
+            vm.stream.screenshareenabled = false;
+          }
+        } // Didn't change the bandwidth so just exit
+
+
+        if (vm.user.preferredBandwidth == preferred.bandwidth) {
           return;
         }
 
-        vm.user.preferredBandwidth = preferred; //Update the preferred bandwidth on all it's peers
+        vm.user.preferredBandwidth = preferred.bandwidth; //Update the preferred bandwidth on all it's peers
 
         for (var id in vm.connections) {
           //If we're streaming to them then kill it
-          vm.connections[id].setPreferredBandwidth(preferred); //renegotiate the connection for the new quality
+          vm.connections[id].setPreferredBandwidth(preferred.bandwidth); //renegotiate the connection for the new quality
 
           vm.connections[id].connection.negotiate();
         }
@@ -2363,10 +2384,11 @@ __webpack_require__.r(__webpack_exports__);
       //Possibly with a different camera or something
       var vm = this;
       vm.ui.fullscreen.wait = true;
-      console.log("-closeFullscreenOnDestroy ---------");
+      /*console.log("-closeFullscreenOnDestroy ---------");
       console.log(e);
       console.log(JSON.stringify(vm.ui.fullscreen));
-      console.log("------------------------------------"); //If the fullscreen that closed was the one we were looking at
+      console.log("------------------------------------");*/
+      //If the fullscreen that closed was the one we were looking at
       //if(vm.ui.fullscreen.target == e.peerid) {
       //Mark that we want to rebind this peer
       //vm.ui.fullscreen.rebind = true;
@@ -2378,8 +2400,8 @@ __webpack_require__.r(__webpack_exports__);
         for (var i = 0; i < vm.peerStreams.length; i++) {
           //Duplicate stream! Ignore it
           if (vm.peerStreams[i].peerid == e.peerid) {
-            console.log("Was rebound!");
-            console.log(vm.peerStreams[i]);
+            //console.log("Was rebound!");
+            //console.log(vm.peerStreams[i]);
             rebound = true;
             break;
           }
@@ -2387,7 +2409,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
         if (!rebound) {
-          console.log("Not rebound!");
+          //console.log("Not rebound!");
           vm.ui.fullscreen.target = null;
           vm.ui.fullscreen.active = false;
           vm.ui.fullscreen.wait = false; //vm.$forceUpdate();
@@ -2570,56 +2592,64 @@ __webpack_require__.r(__webpack_exports__);
       if (typeof navigator.mediaDevices == 'undefined') {
         alert("Something went wrong and your device does not support video");
         return;
-      }
-
-      vm.user.discoverDevices(function (availableDevices) {
-        //Turn off screensharing and swap back to video
-        if (!vm.stream.videoenabled && vm.stream.screenshareenabled) {
-          vm.stopLocalStream();
-          vm.stream.screenshareenabled = false;
-        } //console.log("Available Devices:");
-        //console.log(availableDevices);
+      } //Turn off screensharing and swap back to video
 
 
-        if (!vm.stream.videoenabled) {
-          console.log("Turning on camera...");
-          var options = {
-            video: availableDevices.video.length > 0,
-            audio: availableDevices.audio.length > 0
+      if (!vm.stream.videoenabled && vm.stream.screenshareenabled) {
+        vm.stopLocalStream();
+        vm.stream.screenshareenabled = false;
+      } //console.log("Available Devices:");
+      //console.log(vm.user.devices);
+
+
+      if (!vm.stream.videoenabled) {
+        console.log("Turning on camera..."); //Default to video: true, audio: true to just use the defaults
+
+        var options = {
+          video: vm.user.devices.video.length > 0,
+          audio: vm.user.devices.audio.length > 0
+        };
+
+        if (vm.user.devices.active.video != null) {
+          console.log("Turning video on with camera id " + vm.user.devices.active.video);
+          options.video = {
+            deviceId: {
+              ideal: vm.user.devices.active.video
+            }
           };
-
-          if (vm.user.devices.active.video != null) {
-            console.log("Turning video on with camera id " + vm.user.devices.active.video);
-            options.video = {
-              deviceId: {
-                ideal: vm.user.devices.active.video
-              }
-            };
-          }
-
-          try {
-            navigator.mediaDevices.getUserMedia(options).then(function (stream) {
-              vm.stream.videoenabled = true;
-              vm.stream.screenshareenabled = false;
-              vm.onLocalStream(stream);
-            })["catch"](function (e) {
-              //They have devices but are probably blocked
-              var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](vm.$refs.modalcontainer, {
-                header: "<h1>Uh oh!</h1>",
-                body: "<p>Could not start your video feed. Did you block the browser permission?</p>" + "<p>Click the <i class='fas fa-lock'></i><span class='sr-only'>lock</span> icon in the URL to check your permissions and reload this page.</p>"
-              });
-              console.log("Local Video Stream Error!");
-              console.log(e);
-            });
-          } catch (e) {
-            console.log("Could not get user media for local stream");
-            console.log(e);
-          }
-        } else {
-          vm.stopLocalStream();
-          vm.stream.videoenabled = false;
         }
-      });
+
+        if (vm.user.devices.active.audio != null) {
+          console.log("Turning video on with camera id " + vm.user.devices.active.video);
+          options.audio = {
+            deviceId: {
+              ideal: vm.user.devices.active.audio
+            }
+          };
+        }
+
+        try {
+          navigator.mediaDevices.getUserMedia(options).then(function (stream) {
+            vm.stream.videoenabled = true;
+            vm.stream.screenshareenabled = false;
+            vm.onLocalStream(stream);
+          })["catch"](function (e) {
+            //They have devices but are probably blocked
+            var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](vm.$refs.modalcontainer, {
+              header: "<h1>Uh oh!</h1>",
+              body: "<p>Could not start your video feed. Did you block the browser permission?</p>" + "<p>Click the <i class='fas fa-lock'></i><span class='sr-only'>lock</span> icon in the URL to check your permissions and reload this page.</p>"
+            });
+            console.log("Local Video Stream Error!");
+            console.log(e);
+          });
+        } catch (e) {
+          console.log("Could not get user media for local stream");
+          console.log(e);
+        }
+      } else {
+        vm.stopLocalStream();
+        vm.stream.videoenabled = false;
+      }
     },
     sendMessage: function sendMessage(e) {
       var vm = this;
@@ -2715,23 +2745,24 @@ __webpack_require__.r(__webpack_exports__);
 
       stream.peerid = peerid;
       stream.peerConnection = vm.connections[peerid];
-      console.log("On peer Stream ----------------------------");
+      /*console.log("On peer Stream ----------------------------");
       console.log("Peer id: " + JSON.stringify(peerid));
       console.log(stream.peerConnection);
-      console.log(JSON.stringify(vm.ui.fullscreen)); //We want to rebind a fullscreen stream on a specific target/hostid
+      console.log(JSON.stringify(vm.ui.fullscreen));*/
+      //We want to rebind a fullscreen stream on a specific target/hostid
       //if(vm.ui.fullscreen.rebind && vm.ui.fullscreen.target == peerid) {
 
       if (vm.ui.fullscreen.target == peerid) {
-        console.log("Rebind!"); //We found our stream so we don't want to rebind anymore
-
+        //console.log("Rebind!");
+        //We found our stream so we don't want to rebind anymore
         stream.startFullscreen = true;
         vm.$forceUpdate();
       } else {
-        console.log("Don't bind!");
+        //console.log("Don't bind!");
         stream.startFullscreen = false;
-      }
+      } //console.log("--------------------------------------------");
 
-      console.log("--------------------------------------------");
+
       vm.connections[peerid].setStream(stream);
       vm.peerStreams.push(stream);
       /**
@@ -2748,12 +2779,12 @@ __webpack_require__.r(__webpack_exports__);
 
 
           if (vm.peerStreams[i].id == e.srcElement.id) {
-            console.log("Remove track----------"); //console.log("Set rebind flag")
-
+            /*console.log("Remove track----------");
+            //console.log("Set rebind flag")
             console.log(JSON.stringify(vm.ui.fullscreen));
             console.log(e.target.peerid);
-            console.log("------------------------"); //This was the target stream, set the rebind flag
-
+            console.log("------------------------");*/
+            //This was the target stream, set the rebind flag
             if (e.target.peerid == vm.ui.fullscreen.target) {
               vm.ui.fullscreen.wait = true;
             }
@@ -2974,13 +3005,16 @@ __webpack_require__.r(__webpack_exports__);
     var vm = this;
     vm.ui.sound = new _models_SoundEffect_js__WEBPACK_IMPORTED_MODULE_0__["default"](); //Hide the video button since they don't support mediaDevices
 
-    vm.ui.videoenabled = typeof navigator.mediaDevices != 'undefined';
-    vm.user = new _models_User_js__WEBPACK_IMPORTED_MODULE_1__["default"]();
-    vm.user.auth().then(function (response) {
-      //Prompt for a name
-      if (response.success) {
-        vm.init();
-      }
+    vm.ui.deviceAccess = typeof navigator.mediaDevices != 'undefined';
+    vm.user = new _models_User_js__WEBPACK_IMPORTED_MODULE_1__["default"](); //Discover and set the devices before we init stuff
+
+    vm.user.discoverDevices(function (devices) {
+      vm.user.auth().then(function (response) {
+        //Prompt for a name
+        if (response.success) {
+          vm.init();
+        }
+      });
     });
   }
 });
@@ -3178,7 +3212,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: {
     inFullscreen: Boolean,
-    videoAvailable: Boolean,
+    deviceAccess: Boolean,
     videoEnabled: Boolean,
     audioEnabled: Boolean,
     screenshareEnabled: Boolean,
@@ -3602,19 +3636,58 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "ModalSettingsComponent",
   props: {
     close: Object,
     confirm: Object,
-    userPreferred: String
+    userPreferredBandwidth: String,
+    userDevices: Object
   },
   data: function data() {
     return {};
   },
-  methods: {},
+  methods: {
+    emitData: function emitData() {
+      var vm = this;
+      return {
+        bandwidth: vm.userPreferredBandwidth,
+        video: vm.userDevices.active.video,
+        audio: vm.userDevices.active.audio
+      };
+    }
+  },
   mounted: function mounted() {
     var vm = this;
+    console.log("Modal Settings Mounted");
   }
 });
 
@@ -10822,7 +10895,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.btn[data-v-80d584ac] {\n    border-radius: 0px;\n}\n.peer-video-rebinding-wait[data-v-80d584ac] {\n    z-index:2147483647;\n    background:#000;\n    color:#fff;\n    position: fixed;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    right: 0;\n}\n.peer-video-rebinding-wait[data-v-80d584ac] h1 {\n    margin-top:50vh;\n}\n#message-box[data-v-80d584ac] {\n    border-radius:0px;\n}\n.btn-show-messages[data-v-80d584ac] {\n    z-index:3;\n}\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.chat-disabled[data-v-80d584ac] input {\n    opacity:.5;\n}\n.chat-disabled[data-v-80d584ac] button {\n    opacity:.5;\n}\n.btn-leave-chat[data-v-80d584ac] {\n    position: absolute;\n    width: 25%;\n    top: 0px;\n    left: 50%;\n    margin-top: 6px;\n    margin-left: -12.5%;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    box-shadow: none;\n}\n\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n\n/* When fullscreened, shift things around*/\n.chat-container.peer-video-fullscreen[data-v-80d584ac] {\n    height:0px !important;\n}\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n    z-index:3;\n}\n\n/*Videos container shrink so messages and stuff shows correctly*/\n#peer-videos-container.peer-video-fullscreen[data-v-80d584ac] .video-connections {\n        height:0px;\n}\n\n/* Main Video Fullscreen */\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n.btn[data-v-80d584ac] {\n    border-radius: 0px;\n}\n.peer-video-rebinding-wait[data-v-80d584ac] {\n    z-index:2147483647;\n    background:#000;\n    color:#fff;\n    position: fixed;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    right: 0;\n}\n.peer-video-rebinding-wait[data-v-80d584ac] h1 {\n    margin-top:50vh;\n}\n#message-box[data-v-80d584ac] {\n    border-radius:0px;\n}\n.btn-show-messages[data-v-80d584ac] {\n    z-index:3;\n}\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.chat-disabled[data-v-80d584ac] input {\n    opacity:.5;\n}\n.chat-disabled[data-v-80d584ac] button {\n    opacity:.5;\n}\n.btn-leave-chat[data-v-80d584ac] {\n    position: absolute;\n    width: 25%;\n    top: 0px;\n    left: 50%;\n    margin-top: 6px;\n    margin-left: -12.5%;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    box-shadow: none;\n}\n\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n/* Initial position */\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:5em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n\n/* When fullscreened, shift things around*/\n.chat-container.peer-video-fullscreen[data-v-80d584ac] {\n    height:0px !important;\n}\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n    z-index:3;\n}\n\n/*Videos container shrink so messages and stuff shows correctly*/\n#peer-videos-container.peer-video-fullscreen[data-v-80d584ac] .video-connections {\n        height:0px;\n}\n\n/* Main Video Fullscreen */\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -60284,7 +60357,7 @@ var render = function() {
               _c("controls-component", {
                 attrs: {
                   inFullscreen: _vm.ui.fullscreen.active,
-                  videoAvailable: _vm.ui.videoenabled,
+                  deviceAccess: _vm.ui.deviceAccess,
                   videoEnabled: _vm.stream.videoenabled,
                   audioEnabled: _vm.stream.audioenabled,
                   screenshareEnabled: _vm.stream.screenshareenabled,
@@ -60666,7 +60739,7 @@ var render = function() {
         ]
       ),
       _vm._v(" "),
-      _vm.videoAvailable
+      _vm.deviceAccess
         ? _c(
             "button",
             {
@@ -61095,10 +61168,10 @@ var render = function() {
         attrs: { confirm: _vm.confirm, close: _vm.close },
         on: {
           confirm: function($event) {
-            return _vm.$emit("confirm", _vm.userPreferred)
+            _vm.$emit("confirm", _vm.emitData())
           },
           close: function($event) {
-            return _vm.$emit("close", _vm.userPreferred)
+            _vm.$emit("close", _vm.emitData())
           }
         },
         scopedSlots: _vm._u([
@@ -61113,60 +61186,219 @@ var render = function() {
             key: "body",
             fn: function() {
               return [
-                _c("p", [_c("strong", [_vm._v("Video Quality")])]),
+                _c("div", { staticClass: "form-group" }, [
+                  _c("label", { attrs: { for: "videoQuality" } }, [
+                    _vm._v("Video Quality")
+                  ]),
+                  _vm._v(" "),
+                  _c(
+                    "select",
+                    {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.userPreferredBandwidth,
+                          expression: "userPreferredBandwidth"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: { id: "videoQuality" },
+                      on: {
+                        change: function($event) {
+                          var $$selectedVal = Array.prototype.filter
+                            .call($event.target.options, function(o) {
+                              return o.selected
+                            })
+                            .map(function(o) {
+                              var val = "_value" in o ? o._value : o.value
+                              return val
+                            })
+                          _vm.userPreferredBandwidth = $event.target.multiple
+                            ? $$selectedVal
+                            : $$selectedVal[0]
+                        }
+                      }
+                    },
+                    [
+                      _c("option", { attrs: { value: "ultrahigh" } }, [
+                        _vm._v("Very High")
+                      ]),
+                      _vm._v(" "),
+                      _c("option", { attrs: { value: "high" } }, [
+                        _vm._v("High")
+                      ]),
+                      _vm._v(" "),
+                      _c("option", { attrs: { value: "medium" } }, [
+                        _vm._v("Medium")
+                      ]),
+                      _vm._v(" "),
+                      _c("option", { attrs: { value: "low" } }, [
+                        _vm._v("Low")
+                      ]),
+                      _vm._v(" "),
+                      _c("option", { attrs: { value: "ultralow" } }, [
+                        _vm._v("Very Low")
+                      ]),
+                      _vm._v(" "),
+                      _c("option", { attrs: { value: "trash" } }, [
+                        _vm._v("My Internet is Trash")
+                      ])
+                    ]
+                  )
+                ]),
                 _vm._v(" "),
-                _c(
-                  "select",
-                  {
-                    directives: [
-                      {
-                        name: "model",
-                        rawName: "v-model",
-                        value: _vm.userPreferred,
-                        expression: "userPreferred"
+                _c("div", { staticClass: "form-group" }, [
+                  _c("label", { attrs: { for: "videoDevices" } }, [
+                    _vm._v("Preferred Video Device")
+                  ]),
+                  _vm._v(" "),
+                  _c(
+                    "select",
+                    {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.userDevices.active.video,
+                          expression: "userDevices.active.video"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: { id: "videoDevices" },
+                      on: {
+                        change: function($event) {
+                          var $$selectedVal = Array.prototype.filter
+                            .call($event.target.options, function(o) {
+                              return o.selected
+                            })
+                            .map(function(o) {
+                              var val = "_value" in o ? o._value : o.value
+                              return val
+                            })
+                          _vm.$set(
+                            _vm.userDevices.active,
+                            "video",
+                            $event.target.multiple
+                              ? $$selectedVal
+                              : $$selectedVal[0]
+                          )
+                        }
                       }
+                    },
+                    [
+                      _vm._l(_vm.userDevices.video, function(device) {
+                        return _c(
+                          "option",
+                          {
+                            key: device.deviceId,
+                            domProps: { value: device.deviceId }
+                          },
+                          [
+                            _vm._v(
+                              "\n                        " +
+                                _vm._s(device.label) +
+                                "\n                    "
+                            )
+                          ]
+                        )
+                      }),
+                      _vm._v(" "),
+                      _vm.userDevices.active.video == null
+                        ? _c(
+                            "option",
+                            { attrs: { value: "", selected: "selected" } },
+                            [_vm._v("Using system default")]
+                          )
+                        : _vm._e(),
+                      _vm._v(" "),
+                      _vm.userDevices.video.length == 0
+                        ? _c(
+                            "option",
+                            { attrs: { value: "", selected: "selected" } },
+                            [_vm._v("No video device found")]
+                          )
+                        : _vm._e()
                     ],
-                    staticClass: "form-control",
-                    on: {
-                      change: function($event) {
-                        var $$selectedVal = Array.prototype.filter
-                          .call($event.target.options, function(o) {
-                            return o.selected
-                          })
-                          .map(function(o) {
-                            var val = "_value" in o ? o._value : o.value
-                            return val
-                          })
-                        _vm.userPreferred = $event.target.multiple
-                          ? $$selectedVal
-                          : $$selectedVal[0]
+                    2
+                  )
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "form-group" }, [
+                  _c("label", { attrs: { for: "audioDevices" } }, [
+                    _vm._v("Preferred Audio Device")
+                  ]),
+                  _vm._v(" "),
+                  _c(
+                    "select",
+                    {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.userDevices.active.audio,
+                          expression: "userDevices.active.audio"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: { id: "audioDevices" },
+                      on: {
+                        change: function($event) {
+                          var $$selectedVal = Array.prototype.filter
+                            .call($event.target.options, function(o) {
+                              return o.selected
+                            })
+                            .map(function(o) {
+                              var val = "_value" in o ? o._value : o.value
+                              return val
+                            })
+                          _vm.$set(
+                            _vm.userDevices.active,
+                            "audio",
+                            $event.target.multiple
+                              ? $$selectedVal
+                              : $$selectedVal[0]
+                          )
+                        }
                       }
-                    }
-                  },
-                  [
-                    _c("option", { attrs: { value: "ultrahigh" } }, [
-                      _vm._v("Very High")
-                    ]),
-                    _vm._v(" "),
-                    _c("option", { attrs: { value: "high" } }, [
-                      _vm._v("High")
-                    ]),
-                    _vm._v(" "),
-                    _c("option", { attrs: { value: "medium" } }, [
-                      _vm._v("Medium")
-                    ]),
-                    _vm._v(" "),
-                    _c("option", { attrs: { value: "low" } }, [_vm._v("Low")]),
-                    _vm._v(" "),
-                    _c("option", { attrs: { value: "ultralow" } }, [
-                      _vm._v("Very Low")
-                    ]),
-                    _vm._v(" "),
-                    _c("option", { attrs: { value: "trash" } }, [
-                      _vm._v("My Internet is Trash")
-                    ])
-                  ]
-                )
+                    },
+                    [
+                      _vm._l(_vm.userDevices.audio, function(device) {
+                        return _c(
+                          "option",
+                          {
+                            key: device.deviceId,
+                            domProps: { value: device.deviceId }
+                          },
+                          [
+                            _vm._v(
+                              "\n                        " +
+                                _vm._s(device.label) +
+                                "\n                    "
+                            )
+                          ]
+                        )
+                      }),
+                      _vm._v(" "),
+                      _vm.userDevices.active.audio == null
+                        ? _c(
+                            "option",
+                            { attrs: { value: "", selected: "selected" } },
+                            [_vm._v("Using system default")]
+                          )
+                        : _vm._e(),
+                      _vm._v(" "),
+                      _vm.userDevices.audio.length == 0
+                        ? _c(
+                            "option",
+                            { attrs: { value: "", selected: "selected" } },
+                            [_vm._v("No audio device found")]
+                          )
+                        : _vm._e()
+                    ],
+                    2
+                  )
+                ])
               ]
             },
             proxy: true
@@ -77889,8 +78121,7 @@ var PeerConnection = /*#__PURE__*/function () {
 
 
           sdpObj.media[i].bandwidth[0].type = "AS";
-          sdpObj.media[i].bandwidth[0].limit = newBitrate;
-          console.log("Set " + sdpObj.media[i].type + " bitrate to " + newBitrate + "kbps");
+          sdpObj.media[i].bandwidth[0].limit = newBitrate; //console.log("Set " + sdpObj.media[i].type + " bitrate to " + newBitrate + "kbps");
         }
 
         return sdp_transform__WEBPACK_IMPORTED_MODULE_2___default.a.write(sdpObj);

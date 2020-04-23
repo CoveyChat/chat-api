@@ -1,22 +1,50 @@
 <template>
     <div>
-        <modal-component v-on:confirm="$emit('confirm', userPreferred)" v-on:close="$emit('close', userPreferred)" v-bind:confirm="confirm" v-bind:close="close">
+        <modal-component
+            v-on:confirm="$emit('confirm', emitData())"
+            v-on:close="$emit('close', emitData())"
+            v-bind:confirm="confirm"
+            v-bind:close="close">
 
             <template v-slot:header>
                 <h1>Settings</h1>
             </template>
             <template v-slot:body>
-                <p>
-                    <strong>Video Quality</strong>
-                </p>
-                <select class="form-control" v-model="userPreferred">
-                    <option value="ultrahigh">Very High</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                    <option value="ultralow">Very Low</option>
-                    <option value="trash">My Internet is Trash</option>
-                </select>
+                <div class="form-group">
+                    <label for="videoQuality">Video Quality</label>
+                    <select id="videoQuality" class="form-control" v-model="userPreferredBandwidth">
+                        <option value="ultrahigh">Very High</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                        <option value="ultralow">Very Low</option>
+                        <option value="trash">My Internet is Trash</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="videoDevices">Preferred Video Device</label>
+                    <select id="videoDevices" class="form-control" v-model="userDevices.active.video">
+                        <option v-for="device in userDevices.video"
+                            v-bind:value="device.deviceId"
+                            :key="device.deviceId">
+                            {{device.label}}
+                        </option>
+                        <option value="" v-if="userDevices.active.video == null" selected="selected">Using system default</option>
+                        <option value="" v-if="userDevices.video.length == 0" selected="selected">No video device found</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="audioDevices">Preferred Audio Device</label>
+                    <select id="audioDevices" class="form-control" v-model="userDevices.active.audio">
+                        <option v-for="device in userDevices.audio"
+                            v-bind:value="device.deviceId"
+                            :key="device.deviceId">
+                            {{device.label}}
+                        </option>
+                        <option value="" v-if="userDevices.active.audio == null" selected="selected">Using system default</option>
+                        <option value="" v-if="userDevices.audio.length == 0" selected="selected">No audio device found</option>
+                    </select>
+                </div>
             </template>
         </modal-component>
 
@@ -35,7 +63,8 @@ export default {
     props: {
         close: Object,
         confirm: Object,
-        userPreferred: String
+        userPreferredBandwidth: String,
+        userDevices: Object
     },
     data: function () {
         return {
@@ -43,11 +72,18 @@ export default {
         }
     },
     methods: {
-
+        emitData() {
+            var vm = this;
+            return {
+                bandwidth: vm.userPreferredBandwidth,
+                video: vm.userDevices.active.video,
+                audio: vm.userDevices.active.audio
+            };
+        }
     },
     mounted() {
         var vm = this;
-
+        console.log("Modal Settings Mounted");
     }
 }
 

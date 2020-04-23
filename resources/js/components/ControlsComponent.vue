@@ -28,7 +28,7 @@
                 'btn-off': !videoEnabled,
                 'local-video-overlay': inFullscreen
             }"
-            v-if="videoAvailable"
+            v-if="deviceAccess"
             @click="$emit('toggleVideo')">
 
             <span class="sr-only" v-if="!videoEnabled">Start Video</span>
@@ -134,7 +134,7 @@
 export default {
     props: {
         inFullscreen: Boolean,
-        videoAvailable: Boolean,
+        deviceAccess: Boolean,
         videoEnabled: Boolean,
         audioEnabled: Boolean,
         screenshareEnabled: Boolean,
