@@ -157,8 +157,10 @@
     .btn {
         border-radius: 0px;
     }
+
+    /*Place this behind the controls and local video but infront of everything else */
     .peer-video-rebinding-wait {
-        z-index:2147483639;
+        z-index:2147483620;
         background:#000;
         color:#fff;
         position: fixed;
