@@ -78435,6 +78435,9 @@ var User = /*#__PURE__*/function () {
             }
 
             cb(self.devices);
+          })["catch"](function (err) {
+            console.log("Discover devices!");
+            console.log(err.name + ": " + err.message);
           });
         } catch (e) {
           //navigator.mediaDevices does not exist
