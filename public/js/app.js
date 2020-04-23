@@ -2842,7 +2842,7 @@ __webpack_require__.r(__webpack_exports__);
     },
 
     /**
-     * Fires when a new stream object has opened
+     * Fires when a new local stream object has opened
      * Aka the user clicked the video button
      */
     onLocalStream: function onLocalStream(stream) {
@@ -2862,6 +2862,7 @@ __webpack_require__.r(__webpack_exports__);
         vm.connections[id].addStream(vm.stream.connection);
       }
     },
+    //Sends the existing stream to any new peers
     sendStream: function sendStream(id) {
       var vm = this;
 
@@ -77214,9 +77215,59 @@ var PeerConnection = /*#__PURE__*/function () {
 
     var Peer = __webpack_require__(/*! simple-peer */ "./node_modules/simple-peer/index.js");
 
-    var self = this;
-    self.videoBitrate = 125;
-    self.audioBitrate = 64;
+    var self = this; //Bandwidth mods
+
+    self.bandwidth = {
+      ultrahigh: {
+        video: {
+          bitrate: 1024
+        },
+        audio: {
+          bitrate: 128
+        }
+      },
+      high: {
+        video: {
+          bitrate: 512
+        },
+        audio: {
+          bitrate: 64
+        }
+      },
+      medium: {
+        video: {
+          bitrate: 256
+        },
+        audio: {
+          bitrate: 64
+        }
+      },
+      low: {
+        video: {
+          bitrate: 128
+        },
+        audio: {
+          bitrate: 64
+        }
+      },
+      ultralow: {
+        video: {
+          bitrate: 64
+        },
+        audio: {
+          bitrate: 32
+        }
+      },
+      trash: {
+        video: {
+          bitrate: 16
+        },
+        audio: {
+          bitrate: 8
+        }
+      }
+    };
+    self.bandwidthPreferred = 'low';
     self.events = {
       speaking: new Event('speaking'),
       stopped_speaking: new Event('stopped_speaking')
@@ -77233,60 +77284,33 @@ var PeerConnection = /*#__PURE__*/function () {
         }]
       },
       sdpTransform: function sdpTransform(sdp) {
-        var sdpObj = sdp_transform__WEBPACK_IMPORTED_MODULE_2___default.a.parse(sdp); //Go through all the media and apply the bitrate changes
+        var sdpObj = sdp_transform__WEBPACK_IMPORTED_MODULE_2___default.a.parse(sdp); //Go through the spd settings and if we're dealing with media aka audio/video apply bandwidth settings
 
 
         for (var i = 0; i < sdpObj.media.length; i++) {
-          var mediaItem = sdpObj.media[i];
-          var newBitrate = 0;
+          var newBitrate; //Make sure it's audio/video and we're changing the bandwidth settings
 
-          if (mediaItem.type == 'audio') {
-            newBitrate = self.audioBitrate;
-            continue;
-          } else if (mediaItem.type == 'video') {
-            newBitrate = self.videoBitrate;
+          if (sdpObj.media[i].type == 'audio' && self.bandwidth[self.bandwidthPreferred].audio.bitrate) {
+            newBitrate = self.bandwidth[self.bandwidthPreferred].audio.bitrate;
+          } else if (sdpObj.media[i].type == 'video' && self.bandwidth[self.bandwidthPreferred].video.bitrate) {
+            newBitrate = self.bandwidth[self.bandwidthPreferred].video.bitrate;
           } else {
-            //Not an audio/video media item. Skip it
+            //Not an audio/video media item or not changing settings. Skip
             continue;
-          } //Go through all the rtp settings and apply the new rate
+          } //Apply the bitrate
 
 
-          for (var j = 0; j < sdpObj.media[i].rtp.length; j++) {
-            //Convert to kbps
-            sdpObj.media[i].rtp[j].rate = newBitrate * 1000;
-          }
+          if (typeof sdpObj.media[i].bandwidth == 'undefined') {
+            sdpObj.media[i].bandwidth = [{}];
+          } //AS = Application Specific maximum
+
+
+          sdpObj.media[i].bandwidth[0].type = "AS";
+          sdpObj.media[i].bandwidth[0].limit = newBitrate;
+          console.log("Set " + sdpObj.media[i].type + " bitrate to " + newBitrate + "kbps");
         }
 
-        var updatedSdp = sdp_transform__WEBPACK_IMPORTED_MODULE_2___default.a.write(sdpObj);
-        /*
-        //var sdp2 = self.setMediaBitrate(sdp, 'video', self.videoBandwidth);
-        //sdp2 = setMediaBitrate(sdp2, 'audio', self.audioBandwidth);
-        console.log("SDP");
-        //console.log(self.connection._wrtc.RTCPeerConnection);
-        var rawCon = self.connection._pc;
-        var senders = rawCon.getSenders();
-        //console.log(self.connection._wrtc.getRTCPeerConnection());
-        if(senders.length > 0) {
-            console.log(rawCon);
-            console.log(rawCon.getSenders());
-            console.log(senders[0].getParameters());
-            console.log(senders[0]);
-            const parameters = senders[0].getParameters();
-             if (!parameters.encodings || parameters.encodings.length == 0) {
-                parameters.encodings = [{maxBitrate: null}];
-            }
-            console.log(parameters.encodings[0]);
-            parameters.encodings[0].maxBitrate = 10 * 1000
-            senders[0].setParameters(parameters)
-            .then(() => {
-                console.log("Sent??");
-            })
-            .catch(e => console.error(e));
-        }
-        */
-
-
-        return updatedSdp;
+        return sdp_transform__WEBPACK_IMPORTED_MODULE_2___default.a.write(sdpObj);
       }
     });
     self.server = server;
@@ -77304,8 +77328,15 @@ var PeerConnection = /*#__PURE__*/function () {
     self.boundElement = null;
     self.connection.on('connect', function () {
       console.log("~~~~~Connected!~~~~~");
+      /*
+      console.log(self.connection._pc.getStats(null).then(function(stats) {
+          stats.forEach(report => {
+              console.log(report);
+          });
+      }));*/
     });
     self.connection.on('signal', function (webRtcId) {
+      //console.log("SIGNAL");
       if (self.connection.initiator) {
         //console.log('Got initiator signal, sending off to client');
         self.server.emit('sendtoclient', {
@@ -77333,10 +77364,28 @@ var PeerConnection = /*#__PURE__*/function () {
       self.destroy();
     });
     return this;
-  } //This peers stream
+  }
+  /**
+   * Apply bandwidth modes
+   * @param {String} type The bandwidth mode to set. video|screenshare
+   */
 
 
   _createClass(PeerConnection, [{
+    key: "setBandwidthMode",
+    value: function setBandwidthMode(type) {
+      var self = this;
+
+      if (type == 'video') {
+        self.bandwidthPreferred = 'trash';
+      } else if (type == 'screenshare') {
+        self.bandwidthPreferred = 'ultrahigh';
+      }
+
+      console.log("\n\n#########################Updated bandwidth preferred to " + self.bandwidthPreferred + "\n\n");
+    } //This peers stream
+
+  }, {
     key: "setStream",
     value: function setStream(stream) {
       var self = this;

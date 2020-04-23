@@ -801,7 +801,7 @@ export default {
             };
         },
         /**
-         * Fires when a new stream object has opened
+         * Fires when a new local stream object has opened
          * Aka the user clicked the video button
          */
         onLocalStream(stream) {
@@ -827,6 +827,7 @@ export default {
             }
 
         },
+        //Sends the existing stream to any new peers
         sendStream(id) {
             var vm = this;
 
