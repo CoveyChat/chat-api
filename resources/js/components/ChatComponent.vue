@@ -158,7 +158,7 @@
         border-radius: 0px;
     }
     .peer-video-rebinding-wait {
-        z-index:2147483647;
+        z-index:2147483639;
         background:#000;
         color:#fff;
         position: fixed;
@@ -257,7 +257,7 @@
         position:fixed;
         right:5em;
         border-radius:3px;
-        z-index: 2147483646;
+        z-index: 2147483638;
     }
 
     /* When fullscreened, shift things around*/
