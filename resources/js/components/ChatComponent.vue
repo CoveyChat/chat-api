@@ -275,12 +275,12 @@
     }
 
     .message-box.peer-video-fullscreen {
-        z-index:3;
+        z-index:2147483622;
     }
 
     /*Videos container shrink so messages and stuff shows correctly*/
     #peer-videos-container.peer-video-fullscreen >>> .video-connections {
-            height:0px;
+        height:0px;
     }
 
     /* Main Video Fullscreen */
