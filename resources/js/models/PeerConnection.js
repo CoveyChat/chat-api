@@ -4,7 +4,7 @@ import sdpTransform from 'sdp-transform';
 
 export default class PeerConnection {
 
-    constructor(server, initiator) {
+    constructor(server, initiator, preferredBandwidth) {
         var Peer = require('simple-peer');
         var self = this;
 
@@ -35,8 +35,17 @@ export default class PeerConnection {
                 audio: {bitrate: 8}
             }
         };
+        if(typeof preferredBandwidth == 'undefined') {
+            self.bandwidthPreferred = 'low';
+        } else {
+            //Invalid type
+            if(typeof self.bandwidth[preferredBandwidth] == 'undefined') {
+                self.bandwidthPreferred = 'low';
+            } else {
+                self.bandwidthPreferred = preferredBandwidth;
+            }
+        }
 
-        self.bandwidthPreferred = 'low';
 
         self.events = {
             speaking: new Event('speaking'),
@@ -138,15 +147,11 @@ export default class PeerConnection {
      * Apply bandwidth modes
      * @param {String} type The bandwidth mode to set. video|screenshare
      */
-    setBandwidthMode(type) {
+    setPreferredBandwidth(type) {
         var self = this;
-        if(type == 'video') {
-            self.bandwidthPreferred = 'trash';
-        } else if(type == 'screenshare') {
-            self.bandwidthPreferred = 'ultrahigh';
-        }
+        self.bandwidthPreferred = type;
 
-        console.log("\n\n#########################Updated bandwidth preferred to " + self.bandwidthPreferred +"\n\n");
+        console.log("Updated bandwidth preferred to " + self.bandwidthPreferred);
     }
 
     //This peers stream

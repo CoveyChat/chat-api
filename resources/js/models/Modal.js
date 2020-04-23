@@ -1,14 +1,21 @@
 import ModalComponent from '../components/ModalComponent.vue'
+import ModalSettingsComponent from '../components/ModalSettingsComponent.vue'
 
 export default class Modal {
-    constructor(target, options) {
+    constructor(target, options, component) {
         if(typeof options.props == 'undefined') {
             options.props = {};
         }
 
-        const ModalWindow = Vue.extend(ModalComponent);
+        if(typeof component != 'undefined' && component == 'settings') {
+            component = ModalSettingsComponent;
+        } else {
+            component = ModalComponent;
+        }
+
+        const ModalWindow = Vue.extend(component);
         var modal = new ModalWindow({propsData: options.props});
-        console.log(modal);
+
         if(typeof options.header != 'undefined') {
             var headerNode = modal.$createElement('div', {domProps: {innerHTML:options.header}});
             modal.$slots.header = [headerNode];

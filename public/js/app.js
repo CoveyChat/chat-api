@@ -2284,109 +2284,6 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
 
 
 
@@ -2434,6 +2331,33 @@ __webpack_require__.r(__webpack_exports__);
     };
   },
   methods: {
+    changeSettings: function changeSettings(e) {
+      var vm = this;
+      var options = {
+        props: {
+          close: {
+            text: "Save and close"
+          },
+          userPreferred: vm.user.preferredBandwidth
+        }
+      };
+      var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](vm.$refs.modalcontainer, options, 'settings');
+      modal.$on('close', function (preferred) {
+        //It's the same so don't bother
+        if (vm.user.preferredBandwidth == preferred) {
+          return;
+        }
+
+        vm.user.preferredBandwidth = preferred; //Update the preferred bandwidth on all it's peers
+
+        for (var id in vm.connections) {
+          //If we're streaming to them then kill it
+          vm.connections[id].setPreferredBandwidth(preferred); //renegotiate the connection for the new quality
+
+          vm.connections[id].connection.negotiate();
+        }
+      });
+    },
     closeFullscreenOnDestroy: function closeFullscreenOnDestroy(e) {
       //If the video stream is getting destroyed, wait 1s to see if it comes back
       //Possibly with a different camera or something
@@ -2951,7 +2875,7 @@ __webpack_require__.r(__webpack_exports__);
       vm.server.signal.on('inithosts', function (numHosts) {
         //console.log("init (" + numHosts + ") hosts");
         for (var i = 0; i < numHosts; i++) {
-          var peer = new _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__["default"](vm.server.signal, true);
+          var peer = new _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__["default"](vm.server.signal, true, vm.user.preferredBandwidth);
           var id = peer.id;
           vm.connections[id] = peer;
           vm.connections[id].connection.on('connect', function () {
@@ -3007,7 +2931,7 @@ __webpack_require__.r(__webpack_exports__);
 
         if (typeof vm.connections[id] == 'undefined') {
           //console.log("Init a peer for host " + id);
-          var peer = new _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__["default"](vm.server.signal, false);
+          var peer = new _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__["default"](vm.server.signal, false, vm.user.preferredBandwidth);
           vm.connections[id] = peer;
           vm.connections[id].setHostId(obj.hostid);
           vm.connections[id].setUser(obj.user);
@@ -3106,6 +3030,179 @@ __webpack_require__.r(__webpack_exports__);
   mounted: function mounted() {
     var vm = this;
     vm.showModal = typeof navigator.mediaDevices == 'undefined';
+  }
+});
+
+/***/ }),
+
+/***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ControlsComponent.vue?vue&type=script&lang=js&":
+/*!****************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/ControlsComponent.vue?vue&type=script&lang=js& ***!
+  \****************************************************************************************************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+/* harmony default export */ __webpack_exports__["default"] = ({
+  props: {
+    inFullscreen: Boolean,
+    videoAvailable: Boolean,
+    videoEnabled: Boolean,
+    audioEnabled: Boolean,
+    screenshareEnabled: Boolean,
+    videoDevices: Array
+  },
+  data: function data() {
+    return {
+      showCopiedBadge: false
+    };
+  },
+  methods: {
+    onClick: function onClick(e) {
+      var vm = this;
+      navigator.clipboard.writeText(vm.text);
+      vm.showCopiedBadge = true;
+      setTimeout(function () {
+        vm.showCopiedBadge = false;
+      }, 300);
+    }
+  },
+  mounted: function mounted() {
+    console.log('Copy Component mounted.'); //View model reference for inside scoped functions
+
+    var vm = this;
   }
 });
 
@@ -3424,6 +3521,7 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "ModalComponent",
   props: {
@@ -3431,19 +3529,90 @@ __webpack_require__.r(__webpack_exports__);
     confirm: Object
   },
   data: function data() {
-    return {};
+    return {
+      closeClass: null,
+      confirmClass: null,
+      closeText: null,
+      confirmText: null
+    };
   },
   methods: {},
   beforeMount: function beforeMount() {
     var vm = this; //Make sure the props are valid
 
-    if (typeof vm.close == 'undefined') {
-      vm.close = {
-        "class": null,
-        text: null
-      };
+    if (typeof vm.close != 'undefined' && vm.close["class"]) {
+      vm.closeClass = vm.close["class"];
+    }
+
+    if (typeof vm.close != 'undefined' && vm.close.text) {
+      vm.closeText = vm.close.text;
+    }
+
+    if (typeof vm.confirm != 'undefined' && vm.confirm["class"]) {
+      vm.confirmClass = vm.confirm["class"];
+    }
+
+    if (typeof vm.confirm != 'undefined' && vm.confirm.text) {
+      vm.confirmText = vm.confirm.text;
     }
   },
+  mounted: function mounted() {
+    var vm = this;
+  }
+});
+
+/***/ }),
+
+/***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ModalSettingsComponent.vue?vue&type=script&lang=js&":
+/*!*********************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/ModalSettingsComponent.vue?vue&type=script&lang=js& ***!
+  \*********************************************************************************************************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: "ModalSettingsComponent",
+  props: {
+    close: Object,
+    confirm: Object,
+    userPreferred: String
+  },
+  data: function data() {
+    return {};
+  },
+  methods: {},
   mounted: function mounted() {
     var vm = this;
   }
@@ -10653,7 +10822,26 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.btn[data-v-80d584ac] {\n    border-radius: 0px;\n}\n.peer-video-rebinding-wait[data-v-80d584ac] {\n    z-index:2147483647;\n    background:#000;\n    color:#fff;\n    position: fixed;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    right: 0;\n}\n.peer-video-rebinding-wait[data-v-80d584ac] h1 {\n    margin-top:50vh;\n}\n#message-box[data-v-80d584ac] {\n    border-radius:0px;\n}\n.btn-show-messages[data-v-80d584ac] {\n    z-index:3;\n}\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.chat-disabled[data-v-80d584ac] input {\n    opacity:.5;\n}\n.chat-disabled[data-v-80d584ac] button {\n    opacity:.5;\n}\n.btn-leave-chat[data-v-80d584ac] {\n    position: absolute;\n    width: 25%;\n    top: 0px;\n    left: 50%;\n    margin-top: 6px;\n    margin-left: -12.5%;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n#btn-local-video-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:1em;\n}\n#btn-local-audio-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:6em;\n}\n#btn-local-screenshare-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:11em;\n}\n#btn-local-swapvideo-toggle[data-v-80d584ac] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    position: fixed;\n    z-index:2147483647;\n    margin-top:16em;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    box-shadow: none;\n}\n\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n\n/* When fullscreened, shift things around*/\n.chat-container.peer-video-fullscreen[data-v-80d584ac] {\n    height:0px !important;\n}\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\nbutton.local-video-overlay[data-v-80d584ac],\nbutton.local-audio-overlay[data-v-80d584ac],\nbutton.local-screenshare-overlay[data-v-80d584ac],\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    margin-top:0px !important;\n    right:0px !important;\n    z-index:2147483647 !important;\n}\nbutton.local-video-overlay[data-v-80d584ac] {\n    top:0px;\n}\nbutton.local-audio-overlay[data-v-80d584ac] {\n    top:5em !important;\n}\nbutton.local-screenshare-overlay[data-v-80d584ac] {\n    top:10em !important;\n}\nbutton.local-swapvideo-overlay[data-v-80d584ac] {\n    top:15em !important;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n    z-index:3;\n}\n\n/*Videos container shrink so messages and stuff shows correctly*/\n#peer-videos-container.peer-video-fullscreen[data-v-80d584ac] .video-connections {\n        height:0px;\n}\n\n/* Main Video Fullscreen */\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n.btn[data-v-80d584ac] {\n    border-radius: 0px;\n}\n.peer-video-rebinding-wait[data-v-80d584ac] {\n    z-index:2147483647;\n    background:#000;\n    color:#fff;\n    position: fixed;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    right: 0;\n}\n.peer-video-rebinding-wait[data-v-80d584ac] h1 {\n    margin-top:50vh;\n}\n#message-box[data-v-80d584ac] {\n    border-radius:0px;\n}\n.btn-show-messages[data-v-80d584ac] {\n    z-index:3;\n}\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.chat-disabled[data-v-80d584ac] input {\n    opacity:.5;\n}\n.chat-disabled[data-v-80d584ac] button {\n    opacity:.5;\n}\n.btn-leave-chat[data-v-80d584ac] {\n    position: absolute;\n    width: 25%;\n    top: 0px;\n    left: 50%;\n    margin-top: 6px;\n    margin-left: -12.5%;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    box-shadow: none;\n}\n\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:2em;\n    border-radius:3px;\n    z-index: 2147483646;\n}\n\n/* When fullscreened, shift things around*/\n.chat-container.peer-video-fullscreen[data-v-80d584ac] {\n    height:0px !important;\n}\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n    z-index:3;\n}\n\n/*Videos container shrink so messages and stuff shows correctly*/\n#peer-videos-container.peer-video-fullscreen[data-v-80d584ac] .video-connections {\n        height:0px;\n}\n\n/* Main Video Fullscreen */\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+
+// exports
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ControlsComponent.vue?vue&type=style&index=0&id=5194248c&scoped=true&lang=css&":
+/*!***********************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader??ref--6-1!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/ControlsComponent.vue?vue&type=style&index=0&id=5194248c&scoped=true&lang=css& ***!
+  \***********************************************************************************************************************************************************************************************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loader/lib/css-base.js */ "./node_modules/css-loader/lib/css-base.js")(false);
+// imports
+
+
+// module
+exports.push([module.i, "\n#control-panel-container[data-v-5194248c] {\n    position: fixed;\n    z-index:2147483630 !important;\n    right:0px;\n    width:4em;\n}\nbutton.btn[data-v-5194248c] {\n    right:10px;\n    border-radius: 2em !important;\n    width: 4em;\n    height: 4em;\n    margin-top:0.5em;\n}\n\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-5194248c] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n.btn-off[data-v-5194248c] {\n    opacity: 0.75;\n}\n\n/*\nWhen in Fullscreen\n */\n#control-panel-container.fullscreen[data-v-5194248c] {\n    margin-top:0px !important;\n    top:0px;\n    right:0px !important;\n}\n\n", ""]);
 
 // exports
 
@@ -10710,7 +10898,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.modal-mask[data-v-4b2d100a] {\n    position: fixed;\n    z-index: 9998;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    background-color: rgba(0, 0, 0, 0.5);\n    display: table;\n    transition: opacity 0.3s ease;\n}\n.modal-wrapper[data-v-4b2d100a] {\n    display: table-cell;\n    vertical-align: middle;\n}\n.modal-container[data-v-4b2d100a] {\n    width: 90%;\n    max-width:500px;\n    margin: 0px auto;\n    padding: 20px 30px;\n    background-color: #fff;\n    border-radius: 2px;\n    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);\n    transition: all 0.3s ease;\n    font-family: Helvetica, Arial, sans-serif;\n}\n.modal-header h3[data-v-4b2d100a] {\n    margin-top: 0;\n    color: #42b983;\n}\n.modal-body[data-v-4b2d100a] {\n    margin: 20px 0;\n}\n.modal-default-button[data-v-4b2d100a] {\n    float: right;\n}\n\n/*\n* The following styles are auto-applied to elements with\n* transition=\"modal\" when their visibility is toggled\n* by Vue.js.\n*\n* You can easily play with the modal transition by editing\n* these styles.\n*/\n.modal-enter[data-v-4b2d100a] {\n    opacity: 0;\n}\n.modal-leave-active[data-v-4b2d100a] {\n    opacity: 0;\n}\n.modal-enter .modal-container[data-v-4b2d100a],\n.modal-leave-active .modal-container[data-v-4b2d100a] {\n    transform: scale(1.1);\n}\n\n", ""]);
+exports.push([module.i, "\n.modal-mask[data-v-4b2d100a] {\n    position: fixed;\n    z-index: 2147483640;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    background-color: rgba(0, 0, 0, 0.5);\n    display: table;\n    transition: opacity 0.3s ease;\n}\n.modal-wrapper[data-v-4b2d100a] {\n    display: table-cell;\n    vertical-align: middle;\n}\n.modal-container[data-v-4b2d100a] {\n    z-index: 2147483641;\n    width: 90%;\n    max-width:500px;\n    margin: 0px auto;\n    padding: 20px 30px;\n    background-color: #fff;\n    border-radius: 2px;\n    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);\n    transition: all 0.3s ease;\n    font-family: Helvetica, Arial, sans-serif;\n}\n.modal-header h3[data-v-4b2d100a] {\n    margin-top: 0;\n    color: #42b983;\n}\n.modal-body[data-v-4b2d100a] {\n    margin: 20px 0;\n}\n.modal-default-button[data-v-4b2d100a] {\n    float: right;\n}\n\n/*\n* The following styles are auto-applied to elements with\n* transition=\"modal\" when their visibility is toggled\n* by Vue.js.\n*\n* You can easily play with the modal transition by editing\n* these styles.\n*/\n.modal-enter[data-v-4b2d100a] {\n    opacity: 0;\n}\n.modal-leave-active[data-v-4b2d100a] {\n    opacity: 0;\n}\n.modal-enter .modal-container[data-v-4b2d100a],\n.modal-leave-active .modal-container[data-v-4b2d100a] {\n    transform: scale(1.1);\n}\n\n", ""]);
 
 // exports
 
@@ -59067,6 +59255,36 @@ if(false) {}
 
 /***/ }),
 
+/***/ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ControlsComponent.vue?vue&type=style&index=0&id=5194248c&scoped=true&lang=css&":
+/*!***************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/style-loader!./node_modules/css-loader??ref--6-1!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/ControlsComponent.vue?vue&type=style&index=0&id=5194248c&scoped=true&lang=css& ***!
+  \***************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+var content = __webpack_require__(/*! !../../../node_modules/css-loader??ref--6-1!../../../node_modules/vue-loader/lib/loaders/stylePostLoader.js!../../../node_modules/postcss-loader/src??ref--6-2!../../../node_modules/vue-loader/lib??vue-loader-options!./ControlsComponent.vue?vue&type=style&index=0&id=5194248c&scoped=true&lang=css& */ "./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ControlsComponent.vue?vue&type=style&index=0&id=5194248c&scoped=true&lang=css&");
+
+if(typeof content === 'string') content = [[module.i, content, '']];
+
+var transform;
+var insertInto;
+
+
+
+var options = {"hmr":true}
+
+options.transform = transform
+options.insertInto = undefined;
+
+var update = __webpack_require__(/*! ../../../node_modules/style-loader/lib/addStyles.js */ "./node_modules/style-loader/lib/addStyles.js")(content, options);
+
+if(content.locals) module.exports = content.locals;
+
+if(false) {}
+
+/***/ }),
+
 /***/ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/CopyComponent.vue?vue&type=style&index=0&id=d07b0ea6&scoped=true&lang=css&":
 /*!***********************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** ./node_modules/style-loader!./node_modules/css-loader??ref--6-1!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/CopyComponent.vue?vue&type=style&index=0&id=d07b0ea6&scoped=true&lang=css& ***!
@@ -60063,144 +60281,23 @@ var render = function() {
                 ]
               ),
               _vm._v(" "),
-              _vm.ui.videoenabled
-                ? _c(
-                    "button",
-                    {
-                      staticClass: "btn btn-primary float-right",
-                      class: {
-                        "btn-off": !_vm.stream.videoenabled,
-                        "local-video-overlay": _vm.ui.fullscreen.active
-                      },
-                      attrs: { type: "button", id: "btn-local-video-toggle" },
-                      on: { click: _vm.toggleVideo }
-                    },
-                    [
-                      !_vm.stream.videoenabled
-                        ? _c("span", { staticClass: "sr-only" }, [
-                            _vm._v("Start Video")
-                          ])
-                        : _vm._e(),
-                      _vm._v(" "),
-                      !_vm.stream.videoenabled
-                        ? _c("i", { staticClass: "fas fa-video-slash" })
-                        : _vm._e(),
-                      _vm._v(" "),
-                      _vm.stream.videoenabled
-                        ? _c("span", { staticClass: "sr-only" }, [
-                            _vm._v("Stop Video")
-                          ])
-                        : _vm._e(),
-                      _vm._v(" "),
-                      _vm.stream.videoenabled
-                        ? _c("i", { staticClass: "fas fa-video" })
-                        : _vm._e()
-                    ]
-                  )
-                : _vm._e(),
-              _vm._v(" "),
-              _vm.stream.videoenabled || _vm.stream.screenshareenabled
-                ? _c(
-                    "button",
-                    {
-                      staticClass: "btn btn-danger float-right",
-                      class: {
-                        "btn-off": !_vm.stream.audioenabled,
-                        "local-audio-overlay": _vm.ui.fullscreen.active
-                      },
-                      attrs: { type: "button", id: "btn-local-audio-toggle" },
-                      on: { click: _vm.toggleAudio }
-                    },
-                    [
-                      !_vm.stream.audioenabled
-                        ? _c("span", { staticClass: "sr-only" }, [
-                            _vm._v("Enable Audio")
-                          ])
-                        : _vm._e(),
-                      _vm._v(" "),
-                      !_vm.stream.audioenabled
-                        ? _c("i", { staticClass: "fas fa-microphone-slash" })
-                        : _vm._e(),
-                      _vm._v(" "),
-                      _vm.stream.audioenabled
-                        ? _c("span", { staticClass: "sr-only" }, [
-                            _vm._v("Mute Video")
-                          ])
-                        : _vm._e(),
-                      _vm._v(" "),
-                      _vm.stream.audioenabled
-                        ? _c("i", { staticClass: "fas fa-microphone" })
-                        : _vm._e()
-                    ]
-                  )
-                : _vm._e(),
-              _vm._v(" "),
-              _vm.stream.videoenabled || _vm.stream.screenshareenabled
-                ? _c(
-                    "button",
-                    {
-                      staticClass: "btn btn-success float-right",
-                      class: {
-                        "btn-off": !_vm.stream.screenshareenabled,
-                        "local-screenshare-overlay": _vm.ui.fullscreen.active
-                      },
-                      attrs: {
-                        type: "button",
-                        id: "btn-local-screenshare-toggle"
-                      },
-                      on: { click: _vm.toggleScreenshare }
-                    },
-                    [
-                      !_vm.stream.screenshareenabled
-                        ? _c("span", { staticClass: "sr-only" }, [
-                            _vm._v("Enable Screenshare")
-                          ])
-                        : _vm._e(),
-                      _vm._v(" "),
-                      !_vm.stream.screenshareenabled
-                        ? _c("i", { staticClass: "fas fa-desktop" })
-                        : _vm._e(),
-                      _vm._v(" "),
-                      !_vm.stream.screenshareenabled
-                        ? _c("i", { staticClass: "fas fa-slash" })
-                        : _vm._e(),
-                      _vm._v(" "),
-                      _vm.stream.screenshareenabled
-                        ? _c("span", { staticClass: "sr-only" }, [
-                            _vm._v("Stop Sharing")
-                          ])
-                        : _vm._e(),
-                      _vm._v(" "),
-                      _vm.stream.screenshareenabled
-                        ? _c("i", { staticClass: "fas fa-desktop" })
-                        : _vm._e()
-                    ]
-                  )
-                : _vm._e(),
-              _vm._v(" "),
-              _vm.stream.videoenabled && _vm.user.devices.video.length > 1
-                ? _c(
-                    "button",
-                    {
-                      staticClass: "btn btn-primary float-right",
-                      class: {
-                        "local-swapvideo-overlay": _vm.ui.fullscreen.active
-                      },
-                      attrs: {
-                        type: "button",
-                        id: "btn-local-swapvideo-toggle"
-                      },
-                      on: { click: _vm.swapVideoFeed }
-                    },
-                    [
-                      _c("span", { staticClass: "sr-only" }, [
-                        _vm._v("Switch Video")
-                      ]),
-                      _vm._v(" "),
-                      _c("i", { staticClass: "fas fa-sync-alt" })
-                    ]
-                  )
-                : _vm._e(),
+              _c("controls-component", {
+                attrs: {
+                  inFullscreen: _vm.ui.fullscreen.active,
+                  videoAvailable: _vm.ui.videoenabled,
+                  videoEnabled: _vm.stream.videoenabled,
+                  audioEnabled: _vm.stream.audioenabled,
+                  screenshareEnabled: _vm.stream.screenshareenabled,
+                  videoDevices: _vm.user.devices.video
+                },
+                on: {
+                  toggleVideo: _vm.toggleVideo,
+                  toggleAudio: _vm.toggleAudio,
+                  toggleScreenshare: _vm.toggleScreenshare,
+                  swapVideoFeed: _vm.swapVideoFeed,
+                  changeSettings: _vm.changeSettings
+                }
+              }),
               _vm._v(" "),
               _c(
                 "div",
@@ -60523,6 +60620,204 @@ render._withStripped = true
 
 /***/ }),
 
+/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ControlsComponent.vue?vue&type=template&id=5194248c&scoped=true&":
+/*!********************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/ControlsComponent.vue?vue&type=template&id=5194248c&scoped=true& ***!
+  \********************************************************************************************************************************************************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "render", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return staticRenderFns; });
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c(
+    "div",
+    {
+      class: {
+        fullscreen: _vm.inFullscreen
+      },
+      attrs: { id: "control-panel-container" }
+    },
+    [
+      _c(
+        "button",
+        {
+          staticClass: "btn btn-secondary",
+          class: {
+            "btn-off": !_vm.videoEnabled,
+            "local-video-overlay": _vm.inFullscreen
+          },
+          attrs: { type: "button", id: "btn-local-video-toggle" },
+          on: {
+            click: function($event) {
+              return _vm.$emit("changeSettings")
+            }
+          }
+        },
+        [
+          _c("span", { staticClass: "sr-only" }, [_vm._v("Settings")]),
+          _vm._v(" "),
+          _c("i", { staticClass: "fas fa-cog" })
+        ]
+      ),
+      _vm._v(" "),
+      _vm.videoAvailable
+        ? _c(
+            "button",
+            {
+              staticClass: "btn btn-primary",
+              class: {
+                "btn-off": !_vm.videoEnabled,
+                "local-video-overlay": _vm.inFullscreen
+              },
+              attrs: { type: "button", id: "btn-local-video-toggle" },
+              on: {
+                click: function($event) {
+                  return _vm.$emit("toggleVideo")
+                }
+              }
+            },
+            [
+              !_vm.videoEnabled
+                ? _c("span", { staticClass: "sr-only" }, [
+                    _vm._v("Start Video")
+                  ])
+                : _vm._e(),
+              _vm._v(" "),
+              !_vm.videoEnabled
+                ? _c("i", { staticClass: "fas fa-video-slash" })
+                : _vm._e(),
+              _vm._v(" "),
+              _vm.videoEnabled
+                ? _c("span", { staticClass: "sr-only" }, [_vm._v("Stop Video")])
+                : _vm._e(),
+              _vm._v(" "),
+              _vm.videoEnabled
+                ? _c("i", { staticClass: "fas fa-video" })
+                : _vm._e()
+            ]
+          )
+        : _vm._e(),
+      _vm._v(" "),
+      _vm.videoEnabled || _vm.screenshareEnabled
+        ? _c(
+            "button",
+            {
+              staticClass: "btn btn-danger",
+              class: {
+                "btn-off": !_vm.audioEnabled,
+                "local-audio-overlay": _vm.inFullscreen
+              },
+              attrs: { type: "button", id: "btn-local-audio-toggle" },
+              on: {
+                click: function($event) {
+                  return _vm.$emit("toggleAudio")
+                }
+              }
+            },
+            [
+              !_vm.audioEnabled
+                ? _c("span", { staticClass: "sr-only" }, [
+                    _vm._v("Enable Audio")
+                  ])
+                : _vm._e(),
+              _vm._v(" "),
+              !_vm.audioEnabled
+                ? _c("i", { staticClass: "fas fa-microphone-slash" })
+                : _vm._e(),
+              _vm._v(" "),
+              _vm.audioEnabled
+                ? _c("span", { staticClass: "sr-only" }, [_vm._v("Mute Video")])
+                : _vm._e(),
+              _vm._v(" "),
+              _vm.audioEnabled
+                ? _c("i", { staticClass: "fas fa-microphone" })
+                : _vm._e()
+            ]
+          )
+        : _vm._e(),
+      _vm._v(" "),
+      _vm.videoEnabled || _vm.screenshareEnabled
+        ? _c(
+            "button",
+            {
+              staticClass: "btn btn-success",
+              class: {
+                "btn-off": !_vm.screenshareEnabled,
+                "local-screenshare-overlay": _vm.inFullscreen
+              },
+              attrs: { type: "button", id: "btn-local-screenshare-toggle" },
+              on: {
+                click: function($event) {
+                  return _vm.$emit("toggleScreenshare")
+                }
+              }
+            },
+            [
+              !_vm.screenshareEnabled
+                ? _c("span", { staticClass: "sr-only" }, [
+                    _vm._v("Enable Screenshare")
+                  ])
+                : _vm._e(),
+              _vm._v(" "),
+              !_vm.screenshareEnabled
+                ? _c("i", { staticClass: "fas fa-desktop" })
+                : _vm._e(),
+              _vm._v(" "),
+              !_vm.screenshareEnabled
+                ? _c("i", { staticClass: "fas fa-slash" })
+                : _vm._e(),
+              _vm._v(" "),
+              _vm.screenshareEnabled
+                ? _c("span", { staticClass: "sr-only" }, [
+                    _vm._v("Stop Sharing")
+                  ])
+                : _vm._e(),
+              _vm._v(" "),
+              _vm.screenshareEnabled
+                ? _c("i", { staticClass: "fas fa-desktop" })
+                : _vm._e()
+            ]
+          )
+        : _vm._e(),
+      _vm._v(" "),
+      _vm.videoEnabled && _vm.videoDevices.length > 1
+        ? _c(
+            "button",
+            {
+              staticClass: "btn btn-primary",
+              class: {
+                "local-swapvideo-overlay": _vm.inFullscreen
+              },
+              attrs: { type: "button", id: "btn-local-swapvideo-toggle" },
+              on: {
+                click: function($event) {
+                  return _vm.$emit("swapVideoFeed")
+                }
+              }
+            },
+            [
+              _c("span", { staticClass: "sr-only" }, [_vm._v("Switch Video")]),
+              _vm._v(" "),
+              _c("i", { staticClass: "fas fa-sync-alt" })
+            ]
+          )
+        : _vm._e()
+    ]
+  )
+}
+var staticRenderFns = []
+render._withStripped = true
+
+
+
+/***/ }),
+
 /***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/CopyComponent.vue?vue&type=template&id=d07b0ea6&scoped=true&":
 /*!****************************************************************************************************************************************************************************************************************************!*\
   !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/CopyComponent.vue?vue&type=template&id=d07b0ea6&scoped=true& ***!
@@ -60717,8 +61012,8 @@ var render = function() {
                     staticClass: "modal-default-button",
                     class:
                       ((_obj = {}),
-                      (_obj[_vm.close.class] = _vm.close.class),
-                      (_obj["btn btn-md btn-primary"] = !_vm.close.class),
+                      (_obj[_vm.closeClass] = _vm.closeClass),
+                      (_obj["btn btn-md btn-primary"] = !_vm.closeClass),
                       _obj),
                     on: {
                       click: function($event) {
@@ -60729,7 +61024,7 @@ var render = function() {
                   [
                     _vm._v(
                       "\n                " +
-                        _vm._s(_vm.close.text || "Close") +
+                        _vm._s(_vm.closeText || "Close") +
                         "\n              "
                     )
                   ]
@@ -60742,9 +61037,10 @@ var render = function() {
                         staticClass: "modal-default-button",
                         class:
                           ((_obj$1 = {}),
-                          (_obj$1[_vm.confirm.class] = _vm.confirm.class),
-                          (_obj$1["btn btn-md btn-primary"] = !_vm.confirm
-                            .class),
+                          (_obj$1[_vm.confirmClass] = _vm.confirmClass),
+                          (_obj$1[
+                            "btn btn-md btn-primary"
+                          ] = !_vm.confirmClass),
                           _obj$1),
                         on: {
                           click: function($event) {
@@ -60755,7 +61051,7 @@ var render = function() {
                       [
                         _vm._v(
                           "\n                " +
-                            _vm._s(_vm.confirm.text || "Confirm") +
+                            _vm._s(_vm.confirmText || "Confirm") +
                             "\n              "
                         )
                       ]
@@ -60769,6 +61065,117 @@ var render = function() {
       ])
     ])
   ])
+}
+var staticRenderFns = []
+render._withStripped = true
+
+
+
+/***/ }),
+
+/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ModalSettingsComponent.vue?vue&type=template&id=db5092d0&scoped=true&":
+/*!*************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/ModalSettingsComponent.vue?vue&type=template&id=db5092d0&scoped=true& ***!
+  \*************************************************************************************************************************************************************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "render", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return staticRenderFns; });
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c(
+    "div",
+    [
+      _c("modal-component", {
+        attrs: { confirm: _vm.confirm, close: _vm.close },
+        on: {
+          confirm: function($event) {
+            return _vm.$emit("confirm", _vm.userPreferred)
+          },
+          close: function($event) {
+            return _vm.$emit("close", _vm.userPreferred)
+          }
+        },
+        scopedSlots: _vm._u([
+          {
+            key: "header",
+            fn: function() {
+              return [_c("h1", [_vm._v("Settings")])]
+            },
+            proxy: true
+          },
+          {
+            key: "body",
+            fn: function() {
+              return [
+                _c("p", [_c("strong", [_vm._v("Video Quality")])]),
+                _vm._v(" "),
+                _c(
+                  "select",
+                  {
+                    directives: [
+                      {
+                        name: "model",
+                        rawName: "v-model",
+                        value: _vm.userPreferred,
+                        expression: "userPreferred"
+                      }
+                    ],
+                    staticClass: "form-control",
+                    on: {
+                      change: function($event) {
+                        var $$selectedVal = Array.prototype.filter
+                          .call($event.target.options, function(o) {
+                            return o.selected
+                          })
+                          .map(function(o) {
+                            var val = "_value" in o ? o._value : o.value
+                            return val
+                          })
+                        _vm.userPreferred = $event.target.multiple
+                          ? $$selectedVal
+                          : $$selectedVal[0]
+                      }
+                    }
+                  },
+                  [
+                    _c("option", { attrs: { value: "ultrahigh" } }, [
+                      _vm._v("Very High")
+                    ]),
+                    _vm._v(" "),
+                    _c("option", { attrs: { value: "high" } }, [
+                      _vm._v("High")
+                    ]),
+                    _vm._v(" "),
+                    _c("option", { attrs: { value: "medium" } }, [
+                      _vm._v("Medium")
+                    ]),
+                    _vm._v(" "),
+                    _c("option", { attrs: { value: "low" } }, [_vm._v("Low")]),
+                    _vm._v(" "),
+                    _c("option", { attrs: { value: "ultralow" } }, [
+                      _vm._v("Very Low")
+                    ]),
+                    _vm._v(" "),
+                    _c("option", { attrs: { value: "trash" } }, [
+                      _vm._v("My Internet is Trash")
+                    ])
+                  ]
+                )
+              ]
+            },
+            proxy: true
+          }
+        ])
+      })
+    ],
+    1
+  )
 }
 var staticRenderFns = []
 render._withStripped = true
@@ -76291,9 +76698,11 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 var map = {
 	"./ChatComponent.vue": "./resources/js/components/ChatComponent.vue",
 	"./CompatComponent.vue": "./resources/js/components/CompatComponent.vue",
+	"./ControlsComponent.vue": "./resources/js/components/ControlsComponent.vue",
 	"./CopyComponent.vue": "./resources/js/components/CopyComponent.vue",
 	"./MessageLogComponent.vue": "./resources/js/components/MessageLogComponent.vue",
 	"./ModalComponent.vue": "./resources/js/components/ModalComponent.vue",
+	"./ModalSettingsComponent.vue": "./resources/js/components/ModalSettingsComponent.vue",
 	"./NetworkGraphComponent.vue": "./resources/js/components/NetworkGraphComponent.vue",
 	"./PeerVideoComponent.vue": "./resources/js/components/PeerVideoComponent.vue"
 };
@@ -76471,6 +76880,93 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_CompatComponent_vue_vue_type_template_id_75b5a280_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_CompatComponent_vue_vue_type_template_id_75b5a280_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
+
+
+
+/***/ }),
+
+/***/ "./resources/js/components/ControlsComponent.vue":
+/*!*******************************************************!*\
+  !*** ./resources/js/components/ControlsComponent.vue ***!
+  \*******************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _ControlsComponent_vue_vue_type_template_id_5194248c_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ControlsComponent.vue?vue&type=template&id=5194248c&scoped=true& */ "./resources/js/components/ControlsComponent.vue?vue&type=template&id=5194248c&scoped=true&");
+/* harmony import */ var _ControlsComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ControlsComponent.vue?vue&type=script&lang=js& */ "./resources/js/components/ControlsComponent.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport *//* harmony import */ var _ControlsComponent_vue_vue_type_style_index_0_id_5194248c_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ControlsComponent.vue?vue&type=style&index=0&id=5194248c&scoped=true&lang=css& */ "./resources/js/components/ControlsComponent.vue?vue&type=style&index=0&id=5194248c&scoped=true&lang=css&");
+/* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
+
+
+
+
+
+
+/* normalize component */
+
+var component = Object(_node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_3__["default"])(
+  _ControlsComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__["default"],
+  _ControlsComponent_vue_vue_type_template_id_5194248c_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"],
+  _ControlsComponent_vue_vue_type_template_id_5194248c_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
+  false,
+  null,
+  "5194248c",
+  null
+  
+)
+
+/* hot reload */
+if (false) { var api; }
+component.options.__file = "resources/js/components/ControlsComponent.vue"
+/* harmony default export */ __webpack_exports__["default"] = (component.exports);
+
+/***/ }),
+
+/***/ "./resources/js/components/ControlsComponent.vue?vue&type=script&lang=js&":
+/*!********************************************************************************!*\
+  !*** ./resources/js/components/ControlsComponent.vue?vue&type=script&lang=js& ***!
+  \********************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_ControlsComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib??ref--4-0!../../../node_modules/vue-loader/lib??vue-loader-options!./ControlsComponent.vue?vue&type=script&lang=js& */ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ControlsComponent.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport */ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_ControlsComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__["default"]); 
+
+/***/ }),
+
+/***/ "./resources/js/components/ControlsComponent.vue?vue&type=style&index=0&id=5194248c&scoped=true&lang=css&":
+/*!****************************************************************************************************************!*\
+  !*** ./resources/js/components/ControlsComponent.vue?vue&type=style&index=0&id=5194248c&scoped=true&lang=css& ***!
+  \****************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_ControlsComponent_vue_vue_type_style_index_0_id_5194248c_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/style-loader!../../../node_modules/css-loader??ref--6-1!../../../node_modules/vue-loader/lib/loaders/stylePostLoader.js!../../../node_modules/postcss-loader/src??ref--6-2!../../../node_modules/vue-loader/lib??vue-loader-options!./ControlsComponent.vue?vue&type=style&index=0&id=5194248c&scoped=true&lang=css& */ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ControlsComponent.vue?vue&type=style&index=0&id=5194248c&scoped=true&lang=css&");
+/* harmony import */ var _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_ControlsComponent_vue_vue_type_style_index_0_id_5194248c_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_ControlsComponent_vue_vue_type_style_index_0_id_5194248c_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_ControlsComponent_vue_vue_type_style_index_0_id_5194248c_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__) if(__WEBPACK_IMPORT_KEY__ !== 'default') (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_ControlsComponent_vue_vue_type_style_index_0_id_5194248c_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_ControlsComponent_vue_vue_type_style_index_0_id_5194248c_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0___default.a); 
+
+/***/ }),
+
+/***/ "./resources/js/components/ControlsComponent.vue?vue&type=template&id=5194248c&scoped=true&":
+/*!**************************************************************************************************!*\
+  !*** ./resources/js/components/ControlsComponent.vue?vue&type=template&id=5194248c&scoped=true& ***!
+  \**************************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ControlsComponent_vue_vue_type_template_id_5194248c_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./ControlsComponent.vue?vue&type=template&id=5194248c&scoped=true& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ControlsComponent.vue?vue&type=template&id=5194248c&scoped=true&");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ControlsComponent_vue_vue_type_template_id_5194248c_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ControlsComponent_vue_vue_type_template_id_5194248c_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
 
 
 
@@ -76732,6 +77228,75 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ModalComponent_vue_vue_type_template_id_4b2d100a_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ModalComponent_vue_vue_type_template_id_4b2d100a_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
+
+
+
+/***/ }),
+
+/***/ "./resources/js/components/ModalSettingsComponent.vue":
+/*!************************************************************!*\
+  !*** ./resources/js/components/ModalSettingsComponent.vue ***!
+  \************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _ModalSettingsComponent_vue_vue_type_template_id_db5092d0_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ModalSettingsComponent.vue?vue&type=template&id=db5092d0&scoped=true& */ "./resources/js/components/ModalSettingsComponent.vue?vue&type=template&id=db5092d0&scoped=true&");
+/* harmony import */ var _ModalSettingsComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ModalSettingsComponent.vue?vue&type=script&lang=js& */ "./resources/js/components/ModalSettingsComponent.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport *//* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
+
+
+
+
+
+/* normalize component */
+
+var component = Object(_node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__["default"])(
+  _ModalSettingsComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__["default"],
+  _ModalSettingsComponent_vue_vue_type_template_id_db5092d0_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"],
+  _ModalSettingsComponent_vue_vue_type_template_id_db5092d0_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
+  false,
+  null,
+  "db5092d0",
+  null
+  
+)
+
+/* hot reload */
+if (false) { var api; }
+component.options.__file = "resources/js/components/ModalSettingsComponent.vue"
+/* harmony default export */ __webpack_exports__["default"] = (component.exports);
+
+/***/ }),
+
+/***/ "./resources/js/components/ModalSettingsComponent.vue?vue&type=script&lang=js&":
+/*!*************************************************************************************!*\
+  !*** ./resources/js/components/ModalSettingsComponent.vue?vue&type=script&lang=js& ***!
+  \*************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_ModalSettingsComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib??ref--4-0!../../../node_modules/vue-loader/lib??vue-loader-options!./ModalSettingsComponent.vue?vue&type=script&lang=js& */ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ModalSettingsComponent.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport */ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_ModalSettingsComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__["default"]); 
+
+/***/ }),
+
+/***/ "./resources/js/components/ModalSettingsComponent.vue?vue&type=template&id=db5092d0&scoped=true&":
+/*!*******************************************************************************************************!*\
+  !*** ./resources/js/components/ModalSettingsComponent.vue?vue&type=template&id=db5092d0&scoped=true& ***!
+  \*******************************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ModalSettingsComponent_vue_vue_type_template_id_db5092d0_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./ModalSettingsComponent.vue?vue&type=template&id=db5092d0&scoped=true& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ModalSettingsComponent.vue?vue&type=template&id=db5092d0&scoped=true&");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ModalSettingsComponent_vue_vue_type_template_id_db5092d0_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ModalSettingsComponent_vue_vue_type_template_id_db5092d0_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
 
 
 
@@ -77123,22 +77688,29 @@ var Message = /*#__PURE__*/function () {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Modal; });
 /* harmony import */ var _components_ModalComponent_vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/ModalComponent.vue */ "./resources/js/components/ModalComponent.vue");
+/* harmony import */ var _components_ModalSettingsComponent_vue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/ModalSettingsComponent.vue */ "./resources/js/components/ModalSettingsComponent.vue");
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 
 
-var Modal = function Modal(target, options) {
+
+var Modal = function Modal(target, options, component) {
   _classCallCheck(this, Modal);
 
   if (typeof options.props == 'undefined') {
     options.props = {};
   }
 
-  var ModalWindow = Vue.extend(_components_ModalComponent_vue__WEBPACK_IMPORTED_MODULE_0__["default"]);
+  if (typeof component != 'undefined' && component == 'settings') {
+    component = _components_ModalSettingsComponent_vue__WEBPACK_IMPORTED_MODULE_1__["default"];
+  } else {
+    component = _components_ModalComponent_vue__WEBPACK_IMPORTED_MODULE_0__["default"];
+  }
+
+  var ModalWindow = Vue.extend(component);
   var modal = new ModalWindow({
     propsData: options.props
   });
-  console.log(modal);
 
   if (typeof options.header != 'undefined') {
     var headerNode = modal.$createElement('div', {
@@ -77210,7 +77782,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 
 var PeerConnection = /*#__PURE__*/function () {
-  function PeerConnection(server, initiator) {
+  function PeerConnection(server, initiator, preferredBandwidth) {
     _classCallCheck(this, PeerConnection);
 
     var Peer = __webpack_require__(/*! simple-peer */ "./node_modules/simple-peer/index.js");
@@ -77267,7 +77839,18 @@ var PeerConnection = /*#__PURE__*/function () {
         }
       }
     };
-    self.bandwidthPreferred = 'low';
+
+    if (typeof preferredBandwidth == 'undefined') {
+      self.bandwidthPreferred = 'low';
+    } else {
+      //Invalid type
+      if (typeof self.bandwidth[preferredBandwidth] == 'undefined') {
+        self.bandwidthPreferred = 'low';
+      } else {
+        self.bandwidthPreferred = preferredBandwidth;
+      }
+    }
+
     self.events = {
       speaking: new Event('speaking'),
       stopped_speaking: new Event('stopped_speaking')
@@ -77372,17 +77955,11 @@ var PeerConnection = /*#__PURE__*/function () {
 
 
   _createClass(PeerConnection, [{
-    key: "setBandwidthMode",
-    value: function setBandwidthMode(type) {
+    key: "setPreferredBandwidth",
+    value: function setPreferredBandwidth(type) {
       var self = this;
-
-      if (type == 'video') {
-        self.bandwidthPreferred = 'trash';
-      } else if (type == 'screenshare') {
-        self.bandwidthPreferred = 'ultrahigh';
-      }
-
-      console.log("\n\n#########################Updated bandwidth preferred to " + self.bandwidthPreferred + "\n\n");
+      self.bandwidthPreferred = type;
+      console.log("Updated bandwidth preferred to " + self.bandwidthPreferred);
     } //This peers stream
 
   }, {
@@ -77551,6 +78128,7 @@ var User = /*#__PURE__*/function () {
         audio: null
       }
     };
+    self.preferredBandwidth = 'low';
     this.transport = axios.create({
       withCredentials: true
     }); //Used to determine if the user object has been instantiated

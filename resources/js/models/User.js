@@ -11,6 +11,7 @@ export default class User {
         self.verified
         self.active;
         self.devices = {video: [], audio: [], active: {video: null, audio: null}};
+        self.preferredBandwidth = 'low';
 
         this.transport = axios.create({
             withCredentials: true

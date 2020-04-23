@@ -19,15 +19,15 @@
               <div class="modal-footer">
                 <slot name="footer">
                   <button
-                    v-bind:class="{[close.class]: close.class, 'btn btn-md btn-primary': !close.class}"
+                    v-bind:class="{[closeClass]: closeClass, 'btn btn-md btn-primary': !closeClass}"
                     class="modal-default-button" @click="$emit('close')">
-                    {{close.text || 'Close'}}
+                    {{closeText || 'Close'}}
                   </button>
 
                   <button v-if="confirm"
-                    v-bind:class="{[confirm.class]: confirm.class, 'btn btn-md btn-primary': !confirm.class}"
+                    v-bind:class="{[confirmClass]: confirmClass, 'btn btn-md btn-primary': !confirmClass}"
                     class="modal-default-button" @click="$emit('confirm')">
-                    {{confirm.text || 'Confirm'}}
+                    {{confirmText || 'Confirm'}}
                   </button>
                 </slot>
               </div>
@@ -41,7 +41,7 @@
 <style scoped>
     .modal-mask {
         position: fixed;
-        z-index: 9998;
+        z-index: 2147483640;
         top: 0;
         left: 0;
         width: 100%;
@@ -57,6 +57,7 @@
     }
 
     .modal-container {
+        z-index: 2147483641;
         width: 90%;
         max-width:500px;
         margin: 0px auto;
@@ -116,7 +117,10 @@ export default {
     },
     data: function () {
         return {
-
+            closeClass: null,
+            confirmClass: null,
+            closeText: null,
+            confirmText: null
         }
     },
     methods: {
@@ -126,8 +130,20 @@ export default {
         var vm = this;
 
         //Make sure the props are valid
-        if(typeof vm.close == 'undefined') {
-            vm.close = {class:null, text:null};
+        if(typeof vm.close != 'undefined' && vm.close.class) {
+            vm.closeClass = vm.close.class;
+        }
+
+        if(typeof vm.close != 'undefined' && vm.close.text) {
+            vm.closeText = vm.close.text;
+        }
+
+        if(typeof vm.confirm != 'undefined' && vm.confirm.class) {
+            vm.confirmClass = vm.confirm.class;
+        }
+
+        if(typeof vm.confirm != 'undefined' && vm.confirm.text) {
+            vm.confirmText = vm.confirm.text;
         }
     },
     mounted() {

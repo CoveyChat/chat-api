@@ -37,72 +37,31 @@
             <i class="fas fa-sign-out-alt"></i>
             <span class="sr-only">Leave Chat</span>
         </button>
-        <!--Local Video Button-->
-        <button
-            class="btn btn-primary float-right"
-            type="button"
-            id="btn-local-video-toggle"
-            v-bind:class="{
-                'btn-off': !stream.videoenabled,
-                'local-video-overlay': ui.fullscreen.active
-            }"
-            v-on:click="toggleVideo"
-            v-if="ui.videoenabled">
-            <span class="sr-only" v-if="!stream.videoenabled">Start Video</span>
-            <i class="fas fa-video-slash" v-if="!stream.videoenabled"></i>
 
-            <span class="sr-only" v-if="stream.videoenabled">Stop Video</span>
-            <i class="fas fa-video" v-if="stream.videoenabled"></i>
-        </button>
 
-        <!--Local Audio Button-->
-        <button class="btn btn-danger float-right"
-            type="button"
-            id="btn-local-audio-toggle"
-            v-bind:class="{
-                'btn-off': !stream.audioenabled,
-                'local-audio-overlay': ui.fullscreen.active
-            }"
-            v-if="stream.videoenabled || stream.screenshareenabled"
-            v-on:click="toggleAudio">
-            <span class="sr-only" v-if="!stream.audioenabled">Enable Audio</span>
-            <i class="fas fa-microphone-slash" v-if="!stream.audioenabled"></i>
 
-            <span class="sr-only" v-if="stream.audioenabled">Mute Video</span>
-            <i class="fas fa-microphone" v-if="stream.audioenabled"></i>
-        </button>
 
-        <!--Local Screenshare Button-->
-        <button class="btn btn-success float-right"
-            type="button"
-            id="btn-local-screenshare-toggle"
-            v-bind:class="{
-                'btn-off': !stream.screenshareenabled,
-                'local-screenshare-overlay': ui.fullscreen.active
-            }"
-            v-if="stream.videoenabled || stream.screenshareenabled"
-            v-on:click="toggleScreenshare">
-            <span class="sr-only" v-if="!stream.screenshareenabled">Enable Screenshare</span>
-            <i class="fas fa-desktop" v-if="!stream.screenshareenabled"></i>
-            <i class="fas fa-slash" v-if="!stream.screenshareenabled"></i>
 
-            <span class="sr-only" v-if="stream.screenshareenabled">Stop Sharing</span>
-            <i class="fas fa-desktop" v-if="stream.screenshareenabled"></i>
-        </button>
+        <controls-component
+            v-bind:inFullscreen="ui.fullscreen.active"
+            v-bind:videoAvailable="ui.videoenabled"
+            v-bind:videoEnabled="stream.videoenabled"
+            v-bind:audioEnabled="stream.audioenabled"
+            v-bind:screenshareEnabled="stream.screenshareenabled"
+            v-bind:videoDevices="user.devices.video"
 
-        <!--Switch Video Feed Button-->
-        <button class="btn btn-primary float-right"
-            type="button"
-            id="btn-local-swapvideo-toggle"
-            v-bind:class="{
-                'local-swapvideo-overlay': ui.fullscreen.active
-            }"
-            v-if="stream.videoenabled && user.devices.video.length > 1"
-            v-on:click="swapVideoFeed">
+            v-on:toggleVideo="toggleVideo"
+            v-on:toggleAudio="toggleAudio"
+            v-on:toggleScreenshare="toggleScreenshare"
+            v-on:swapVideoFeed="swapVideoFeed"
+            v-on:changeSettings="changeSettings"
+        >
+        </controls-component>
 
-            <span class="sr-only">Switch Video</span>
-            <i class="fas fa-sync-alt"></i>
-        </button>
+
+
+
+
 
         <div id="local-video-container" v-draggable v-on:draggable-onclick="adjustLocalVideoSize"
             v-bind:class="{
@@ -251,47 +210,6 @@
         right: 0;
     }
 
-
-    #btn-local-video-toggle {
-        right:10px;
-        border-radius: 2em !important;
-        width: 4em;
-        height: 4em;
-        position: fixed;
-        z-index:2147483647;
-        margin-top:1em;
-    }
-
-    #btn-local-audio-toggle {
-        right:10px;
-        border-radius: 2em !important;
-        width: 4em;
-        height: 4em;
-        position: fixed;
-        z-index:2147483647;
-        margin-top:6em;
-    }
-
-    #btn-local-screenshare-toggle {
-        right:10px;
-        border-radius: 2em !important;
-        width: 4em;
-        height: 4em;
-        position: fixed;
-        z-index:2147483647;
-        margin-top:11em;
-    }
-
-    #btn-local-swapvideo-toggle {
-        right:10px;
-        border-radius: 2em !important;
-        width: 4em;
-        height: 4em;
-        position: fixed;
-        z-index:2147483647;
-        margin-top:16em;
-    }
-
     .btn-off {
         opacity: 0.75;
     }
@@ -351,27 +269,6 @@
         right:0px;
     }
 
-    button.local-video-overlay,
-    button.local-audio-overlay,
-    button.local-screenshare-overlay,
-    button.local-swapvideo-overlay {
-        margin-top:0px !important;
-        right:0px !important;
-        z-index:2147483647 !important;
-    }
-    button.local-video-overlay {
-        top:0px;
-    }
-    button.local-audio-overlay {
-        top:5em !important;
-    }
-    button.local-screenshare-overlay {
-        top:10em !important;
-    }
-    button.local-swapvideo-overlay {
-        top:15em !important;
-    }
-
     .message-box.peer-video-fullscreen {
         z-index:3;
     }
@@ -419,6 +316,34 @@ export default {
         }
     },
     methods: {
+        changeSettings(e) {
+            var vm = this;
+            var options = {
+                props: {
+                    close: {text: "Save and close"},
+                    userPreferred: vm.user.preferredBandwidth
+                }
+            };
+
+            var modal = new Modal(vm.$refs.modalcontainer, options, 'settings');
+
+            modal.$on('close', function(preferred) {
+                //It's the same so don't bother
+                if(vm.user.preferredBandwidth == preferred) {
+                    return;
+                }
+                vm.user.preferredBandwidth = preferred;
+
+                //Update the preferred bandwidth on all it's peers
+                for(var id in vm.connections) {
+                    //If we're streaming to them then kill it
+                    vm.connections[id].setPreferredBandwidth(preferred);
+                    //renegotiate the connection for the new quality
+                    vm.connections[id].connection.negotiate();
+                }
+
+            });
+        },
         closeFullscreenOnDestroy(e) {
             //If the video stream is getting destroyed, wait 1s to see if it comes back
             //Possibly with a different camera or something
@@ -923,7 +848,7 @@ export default {
 
                 for(var i=0;i<numHosts;i++) {
 
-                    var peer = new PeerConnection(vm.server.signal, true);
+                    var peer = new PeerConnection(vm.server.signal, true, vm.user.preferredBandwidth);
                     var id = peer.id;
                     vm.connections[id] = peer;
 
@@ -981,7 +906,7 @@ export default {
                 //Key to the host id since it can possibly reqest to init a bunch of times during the handshake
                 if(typeof vm.connections[id] == 'undefined') {
                     //console.log("Init a peer for host " + id);
-                    var peer = new PeerConnection(vm.server.signal, false);
+                    var peer = new PeerConnection(vm.server.signal, false, vm.user.preferredBandwidth);
 
                     vm.connections[id] = peer;
                     vm.connections[id].setHostId(obj.hostid);
