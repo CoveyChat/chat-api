@@ -186,7 +186,23 @@ export default class PeerConnection {
             this.connection.addStream(stream);
             this.isStreaming = true;
         }
+    }
 
+    //Changes the video stream to this peer
+    replaceStream(oldStream, newStream) {
+        console.log("REPLACE STREAM: " + this.isStreaming);
+        if(this.isStreaming) {
+            var oldTracks = oldStream.getVideoTracks();
+            var newTracks = newStream.getVideoTracks();
+
+            if(oldTracks[0].id == newTracks[0].id) {
+                console.log("Tried replacing with the same track. Skip");
+                return;
+            }
+
+            this.connection.replaceTrack(oldTracks[0], newTracks[0], oldStream);
+            oldTracks[0].stop();
+        }
     }
 
     //Removes a local stream from this peer

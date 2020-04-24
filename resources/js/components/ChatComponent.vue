@@ -480,28 +480,10 @@ export default {
                 //console.log(options);
                 //Even with audio:true getDisplayMedia doesn't return audio tracks
                 navigator.mediaDevices.getDisplayMedia(options).then(function(stream) {
-                    //Make sure they have a mic
-                    if(options.audio) {
-                        //Get and add the audio tracks manually
-                        navigator.mediaDevices.getUserMedia({audio: true}).then(function(audioStream) {
-                            audioStream.getAudioTracks().forEach(function(track){
-                                stream.addTrack(track);
-                            });
+                    vm.stream.videoenabled = false;
+                    vm.stream.screenshareenabled = true;
+                    vm.onLocalStream(stream);
 
-                            vm.stopLocalStream();
-                            vm.stream.videoenabled = false;
-                            vm.stream.screenshareenabled = true;
-                            vm.stream.connection = stream;
-                            vm.onLocalStream(stream);
-                        });
-                    } else {
-                        //Just start the screen capture with no audio
-                        vm.stopLocalStream();
-                        vm.stream.videoenabled = false;
-                        vm.stream.screenshareenabled = true;
-                        vm.stream.connection = stream;
-                        vm.onLocalStream(stream);
-                    }
 
                 }).catch((e) => {
                     vm.stream.screenshareenabled = false;
@@ -515,7 +497,6 @@ export default {
                 });
             } else if(vm.stream.screenshareenabled) {
                 console.log("Turning screenshare off");
-                vm.stopLocalStream();
                 vm.stream.screenshareenabled = false;
                 vm.toggleVideo({'message': "toggling back to local video from screenshare"});
             }
@@ -585,16 +566,6 @@ export default {
                 alert("Something went wrong and your device does not support video");
                 return;
             }
-
-
-            //Turn off screensharing and swap back to video
-            if(!vm.stream.videoenabled && vm.stream.screenshareenabled) {
-                vm.stopLocalStream();
-                vm.stream.screenshareenabled = false;
-            }
-
-            //console.log("Available Devices:");
-            //console.log(vm.user.devices);
 
             if(!vm.stream.videoenabled) {
                 console.log("Turning on camera...");
@@ -698,14 +669,18 @@ export default {
          */
         onPeerStream(stream, peerid) {
             var vm = this;
-            //console.log("On peer stream called @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+            console.log("On peer stream called @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 
             //Check for duplicates incase buttons are spammed
             for(var i=0; i < vm.peerStreams.length; i++) {
                 //Duplicate stream! Ignore it
                 if(vm.peerStreams[i].id == stream.id) {
                     //This stream already existed on this id. Remove it before we re-add it
-                    console.log("Remove duplicate stream");
+                    /*console.log("Remove duplicate stream");
+                    console.log(vm.peerStreams[i]);
+                    console.log(stream);
+                    console.log(vm.peerStreams[i].getTracks());
+                    console.log(stream.getTracks());*/
                     vm.connections[peerid].removeStream(vm.peerStreams[i]);
                     vm.peerStreams.splice(i, 1);
                 }
@@ -739,6 +714,7 @@ export default {
              * Fires twice. Once when the audio is removed and once when the video is removed
              */
             stream.onremovetrack = function(e) {
+                console.log("on remove track");
                 //Find and remove this stream
                 for(var i=0; i<vm.peerStreams.length; i++) {
                     //Already deleted. This event fires twice (once for video removal and once for audio removal)
@@ -772,11 +748,18 @@ export default {
         onLocalStream(stream) {
             var vm = this;
 
-            console.log("Local stream created - Set stream vars and tell everyone to retry");
-            vm.stream.connection = stream;
+            var replace = false;
 
-            //Set this new streams audio settings
-            vm.setLocalAudio(stream, vm.stream.audioenabled);
+            //New stream connection. Just send it
+            if(!vm.stream.connection) {
+                vm.stream.connection = stream;
+
+                //Set this new streams audio settings
+                vm.setLocalAudio(stream, vm.stream.audioenabled);
+            } else {
+                //Pre-existing stream
+                replace = true;
+            }
 
             //New Local stream! Send it off  to all the peers
             for(var id in vm.connections) {
@@ -788,7 +771,22 @@ export default {
                     continue;
                 }
 
-                vm.connections[id].addStream(vm.stream.connection);
+                //has old tracks. Replace instead of add
+                if(replace) {
+                    //Replace the stream in the peer connection
+                    vm.connections[id].replaceStream(vm.stream.connection, stream);
+                } else {
+                    vm.connections[id].addStream(vm.stream.connection);
+                }
+            }
+
+            if(replace) {
+                //Also update the stream connection so the local video is correct
+                var oldTracks = vm.stream.connection.getVideoTracks();
+                var newTracks = stream.getVideoTracks();
+
+                vm.stream.connection.removeTrack(oldTracks[0]);
+                vm.stream.connection.addTrack(newTracks[0]);
             }
 
         },
@@ -804,12 +802,6 @@ export default {
                 console.log(vm.connections[id]);
                 return false;
             }
-
-            //client.send("Sending stream to " + client._id);
-            //console.log("+Sending stream to " + id)
-            //console.log(vm.stream.connection.getTracks());
-            //console.log(client.streams);
-            //client.removeStream(vm.stream.connection);
 
             if((vm.stream.videoenabled  || vm.stream.screenshareenabled) && !vm.connections[id].isStreaming) {
                 //console.log("+APPLYING STREAM");
