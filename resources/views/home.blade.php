@@ -6,8 +6,20 @@
     @endcomponent
 
     <style>
+        body {
+            background-color: #5e77e3;
+        }
         .title {
             font-size: 5em;
+        }
+        .phonetic {
+            color:#fff !important;
+        }
+        ol.definition {
+            color: #000;
+        }
+        ol.definition > li > span.text-muted {
+            color:#333 !important;
         }
 
         @media screen and (max-width: 425px) {
@@ -23,7 +35,7 @@
         }
 
         .links > a {
-            color: #636b6f;
+            color: #fff;
             font-size: 13px;
             font-weight: 600;
             letter-spacing: .1rem;
@@ -63,13 +75,13 @@
         <div class="row">
             <div class="col-6 text-right">
                 <h1 class='title'>Bevy</h1>
-                <h2><span class="text-muted pr-2">/ˈbevē/</span></h2>
+                <h2><span class="text-muted pr-2 phonetic">/ˈbevē/</span></h2>
                 <blockquote class='mr-4'>
                     <p>
                         <h3><em>noun</em></h3>
                     </p>
                     <p>
-                        <ol class='pr-3'>
+                        <ol class='pr-3 definition'>
                             <li>
                                 <span class="text-muted">1.</span> large group or collection
                             </li>
@@ -83,13 +95,13 @@
 
             <div class="col-6">
                 <h1 class='title'>Chat</h1>
-                <h2><span class="text-muted pl-2">/CHat/</span></h2>
+                <h2><span class="text-muted pl-2 phonetic">/CHat/</span></h2>
                 <blockquote class='ml-4'>
                     <p>
                         <h3><em>verb</em></h3>
                     </p>
                     <p>
-                        <ol class='pl-3'>
+                        <ol class='pl-3 definition'>
                             <li>
                                 <span class="text-muted">1.</span> talk in a friendly and informal way.
                             </li>

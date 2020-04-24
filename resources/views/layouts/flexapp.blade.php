@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    @component('components.head', ['chat'=>$chat])
+    @component('components.head', ['chat'=>$chat ?? null])
         <strong>Whoops!</strong> Something went wrong!
     @endcomponent
 </head>

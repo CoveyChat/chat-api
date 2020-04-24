@@ -16970,3 +16970,7 @@ body,
   color: #f0f2fc !important;
 }
 
+.btn {
+  border-radius: 0px;
+}
+

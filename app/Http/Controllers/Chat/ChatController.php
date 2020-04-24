@@ -60,9 +60,9 @@ class ChatController extends Controller
 
     public function verifyLaunchPassword(Chat $chat, ChatPasswordVerifyRequest $request) {
         if(Hash::check($request->input('password'), $chat->password)) {
-            return view('chat.launch');
+            return view('chat.launch', ['chat' => $chat]);
         } else {
-            return view('chat.verify_launch', ['chat' => $chat->id, 'messages' => 'Incorrect password']);
+            return view('chat.verify_launch', ['chat' => $chat, 'messages' => 'Incorrect password']);
         }
 
     }

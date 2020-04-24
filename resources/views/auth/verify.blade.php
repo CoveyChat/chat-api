@@ -1,13 +1,13 @@
-@extends('layouts.app')
+@extends('layouts.flexapp')
 
 @section('content')
-<div class="container">
+<div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">{{ __('Verify Your Email Address') }}</div>
-
                 <div class="card-body">
+                    <h1>{{ __('Verify Your Email Address') }}</h1>
+                    <hr />
                     @if (session('resent'))
                         <div class="alert alert-success" role="alert">
                             {{ __('A fresh verification link has been sent to your email address.') }}
