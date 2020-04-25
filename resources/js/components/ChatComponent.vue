@@ -81,6 +81,7 @@
                     class="local-stream"
                     v-bind="stream.local"
                     v-if="stream.videoenabled || stream.screenshareenabled"
+                    playsinline
                 ></video>
         </div>
 

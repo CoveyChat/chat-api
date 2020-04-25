@@ -2289,6 +2289,7 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
 
 
 
@@ -3904,6 +3905,7 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+//
 //
 //
 //
@@ -60394,7 +60396,8 @@ var render = function() {
                             attrs: {
                               poster: "https://bevy.chat/img/video_poster.png",
                               autoplay: "autoplay",
-                              muted: "muted"
+                              muted: "muted",
+                              playsinline: ""
                             },
                             domProps: {
                               srcObject: _vm.stream.connection,
@@ -61487,7 +61490,8 @@ var render = function() {
       attrs: {
         poster: "https://bevy.chat/img/video_poster.png",
         autoplay: "autoplay",
-        volume: "1"
+        volume: "1",
+        playsinline: ""
       },
       domProps: { srcObject: _vm.stream },
       on: { click: _vm.onDoubleClickCheck, play: _vm.setDefaultVolume }

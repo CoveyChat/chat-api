@@ -22,8 +22,8 @@ Route::get('oauth/{provider}/callback', 'Auth\LoginController@handleProviderCall
 
 
 Route::get('/profile', 'ProfileController@index')->name('profile');
-Route::get('/terms', 'ProfileController@index')->name('home');
-Route::get('/privacy', 'ProfileController@index')->name('home');
+Route::get('/terms', function () {return view('terms');});
+Route::get('/privacy', function () {return view('privacy');});
 
 Route::get('/chat', 'Chat\ChatController@index');
 Route::post('/chat', 'Chat\ChatController@create')->name('chat_create');

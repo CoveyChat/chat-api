@@ -20,6 +20,7 @@
                 'peer-video-fullscreen': ui.inFullscreen,
                 'peer-is-speaking': stream.peerConnection.user.isSpeaking && !ui.inFullscreen
             }"
+            playsinline
         ></video>
 
     </div>
