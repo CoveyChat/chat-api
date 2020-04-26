@@ -5,11 +5,11 @@
 <link rel="icon" type="image/png" sizes="32x32" href="{{ URL::asset('/img/icons/favicon-32x32.png') }}">
 <link rel="icon" type="image/png" sizes="16x16" href="{{ URL::asset('/img/icons/favicon-16x16.png') }}">
 <link rel="manifest" href="{{ URL::asset('/img/icons/site.webmanifest') }}">
-<link rel="mask-icon" href="{{ URL::asset('/img/icons/safari-pinned-tab.svg" color="#5e77e3') }}">
+<link rel="mask-icon" href="{{ URL::asset('/img/icons/safari-pinned-tab.svg" color="#3caea3') }}">
 <link rel="shortcut icon" href="{{ URL::asset('/img/icons/favicon.ico') }}">
-<meta name="msapplication-TileColor" content="#5e77e3">
+<meta name="msapplication-TileColor" content="#3caea3">
 <meta name="msapplication-config" content="{{ URL::asset('/img/icons/browserconfig.xml') }}">
-<meta name="theme-color" content="#5e77e3">
+<meta name="theme-color" content="#3caea3">
 
 <!-- CSRF Token -->
 <meta name="csrf-token" content="{{ csrf_token() }}">

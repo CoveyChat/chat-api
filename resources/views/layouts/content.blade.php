@@ -7,7 +7,7 @@
 
     <style>
         body {
-            background-color: #5e77e3;
+            background-color: #3caea3;
         }
 
         .row.body {
@@ -57,7 +57,7 @@
             bottom:0px;
             left:0px;
             right:0px;
-            background-color: #5e77e3;
+            background-color: #3caea3;
             color:#fff;
         }
         .row.footer a {padding-left:15px;padding-right:15px;color:#fff;}
