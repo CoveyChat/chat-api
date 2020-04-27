@@ -2,6 +2,27 @@
 export default class Message {
     constructor() {}
 
+    static pack(data, type) {
+        var validTypes = [
+            'message', 'event', 'file'
+        ];
+        if(validTypes.includes(type)) {
+            return JSON.stringify({type: type, data: data});
+        } else {
+            throw 'Invalid message type!';
+        }
+    }
+
+    //Data comes in as a Uint8Array Buffer
+    static unpack(data) {
+        //Already unpacked
+        if(typeof(data) == 'string') {
+            return JSON.parse(data);
+        }
+        //Data comes in as a buffer
+        return JSON.parse(data.toString());
+    }
+
     static broadcast(connections, message) {
         if(message == '' || Object.keys(connections).length == 0) {
             return false;

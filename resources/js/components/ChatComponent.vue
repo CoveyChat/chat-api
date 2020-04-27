@@ -548,9 +548,13 @@ export default {
             if((vm.stream.videoenabled || vm.stream.screenshareenabled) && vm.stream.audioenabled) {
                 vm.stream.audioenabled = false;
                 vm.setLocalAudio(vm.stream.connection, false);
+
+                Message.broadcast(vm.connections, Message.pack({muted:true}, 'event'));
             } else if((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.stream.audioenabled) {
                 vm.stream.audioenabled = true;
                 vm.setLocalAudio(vm.stream.connection, true);
+
+                Message.broadcast(vm.connections, Message.pack({muted:false}, 'event'));
             }
         },
         setLocalAudio(stream, enabled) {
@@ -614,19 +618,30 @@ export default {
             var vm = this;
             console.log('Called message sender');
             if(vm.message != '' && Object.keys(vm.connections).length > 0) {
-                if(Message.broadcast(vm.connections, vm.message)) {
+                console.log("Sending");
+                console.log(vm.message);
+                if(Message.broadcast(vm.connections, Message.pack(vm.message, 'message'))) {
                     //Write the message we just sent to ourself
-                    vm.recieveMessage(vm.user.getDataObject(), vm.message, true);
+                    vm.recieveData(vm.user.getDataObject(), Message.pack(vm.message, 'message'), true);
                     vm.message = '';
                 } else {
                     alert("Something went wrong!");
                 }
             }
         },
-        recieveMessage(user, data, self = false) {
+        recieveData(user, data, self = false) {
             var vm = this;
-            //Add the elements in reverse so that the log trickles from the bottom up
-            vm.chatLog.unshift({index: vm.chatLog.length, message: data, user: user, self: self});
+            data = Message.unpack(data);
+
+            if(data.type == 'message') {
+                vm.ui.sound.play('message');
+                //Add the elements in reverse so that the log trickles from the bottom up
+                vm.chatLog.unshift({index: vm.chatLog.length, message: data.data, user: user, self: self});
+            } else if (data.type == 'event') {
+                console.log("Revieved event ");
+                console.log(data);
+                console.log(data.data);
+            }
         },
         outputConnections () {
             var vm = this;
@@ -901,8 +916,7 @@ export default {
                     vm.connections[id].connection.on('error', function() {vm.handlePeerDisconnect(this._id);});
 
                     vm.connections[id].connection.on('data', function(data) {
-                        vm.ui.sound.play('message');
-                        vm.recieveMessage(vm.connections[this._id].user, data);
+                        vm.recieveData(vm.connections[this._id].user, data);
                     });
 
                     vm.connections[id].connection.on('stream', function(stream) {
@@ -962,8 +976,7 @@ export default {
                     vm.connections[id].connection.on('error', function() {vm.handlePeerDisconnect(id);});
 
                     vm.connections[id].connection.on('data', function(data) {
-                        vm.ui.sound.play('message');
-                        vm.recieveMessage(vm.connections[id].user, data);
+                        vm.recieveData(vm.connections[id].user, data);
                     });
 
                     vm.connections[id].connection.on('stream', stream => {vm.onPeerStream(stream, id); });

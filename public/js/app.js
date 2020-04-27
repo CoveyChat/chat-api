@@ -2556,9 +2556,15 @@ __webpack_require__.r(__webpack_exports__);
       if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && vm.stream.audioenabled) {
         vm.stream.audioenabled = false;
         vm.setLocalAudio(vm.stream.connection, false);
+        _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].broadcast(vm.connections, _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack({
+          muted: true
+        }, 'event'));
       } else if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.stream.audioenabled) {
         vm.stream.audioenabled = true;
         vm.setLocalAudio(vm.stream.connection, true);
+        _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].broadcast(vm.connections, _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack({
+          muted: false
+        }, 'event'));
       }
     },
     setLocalAudio: function setLocalAudio(stream, enabled) {
@@ -2632,25 +2638,37 @@ __webpack_require__.r(__webpack_exports__);
       console.log('Called message sender');
 
       if (vm.message != '' && Object.keys(vm.connections).length > 0) {
-        if (_models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].broadcast(vm.connections, vm.message)) {
+        console.log("Sending");
+        console.log(vm.message);
+
+        if (_models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].broadcast(vm.connections, _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack(vm.message, 'message'))) {
           //Write the message we just sent to ourself
-          vm.recieveMessage(vm.user.getDataObject(), vm.message, true);
+          vm.recieveData(vm.user.getDataObject(), _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack(vm.message, 'message'), true);
           vm.message = '';
         } else {
           alert("Something went wrong!");
         }
       }
     },
-    recieveMessage: function recieveMessage(user, data) {
+    recieveData: function recieveData(user, data) {
       var self = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-      var vm = this; //Add the elements in reverse so that the log trickles from the bottom up
+      var vm = this;
+      data = _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].unpack(data);
 
-      vm.chatLog.unshift({
-        index: vm.chatLog.length,
-        message: data,
-        user: user,
-        self: self
-      });
+      if (data.type == 'message') {
+        vm.ui.sound.play('message'); //Add the elements in reverse so that the log trickles from the bottom up
+
+        vm.chatLog.unshift({
+          index: vm.chatLog.length,
+          message: data.data,
+          user: user,
+          self: self
+        });
+      } else if (data.type == 'event') {
+        console.log("Revieved event ");
+        console.log(data);
+        console.log(data.data);
+      }
     },
     outputConnections: function outputConnections() {
       var vm = this; //Update for anything that's binding to Object.keys
@@ -2924,8 +2942,7 @@ __webpack_require__.r(__webpack_exports__);
             vm.handlePeerDisconnect(this._id);
           });
           vm.connections[id].connection.on('data', function (data) {
-            vm.ui.sound.play('message');
-            vm.recieveMessage(vm.connections[this._id].user, data);
+            vm.recieveData(vm.connections[this._id].user, data);
           });
           vm.connections[id].connection.on('stream', function (stream) {
             //console.log("Recieved peer stream");
@@ -2983,8 +3000,7 @@ __webpack_require__.r(__webpack_exports__);
             vm.handlePeerDisconnect(id);
           });
           vm.connections[id].connection.on('data', function (data) {
-            vm.ui.sound.play('message');
-            vm.recieveMessage(vm.connections[id].user, data);
+            vm.recieveData(vm.connections[id].user, data);
           });
           vm.connections[id].connection.on('stream', function (stream) {
             vm.onPeerStream(stream, id);
@@ -77875,6 +77891,32 @@ var Message = /*#__PURE__*/function () {
   }
 
   _createClass(Message, null, [{
+    key: "pack",
+    value: function pack(data, type) {
+      var validTypes = ['message', 'event', 'file'];
+
+      if (validTypes.includes(type)) {
+        return JSON.stringify({
+          type: type,
+          data: data
+        });
+      } else {
+        throw 'Invalid message type!';
+      }
+    } //Data comes in as a Uint8Array Buffer
+
+  }, {
+    key: "unpack",
+    value: function unpack(data) {
+      //Already unpacked
+      if (typeof data == 'string') {
+        return JSON.parse(data);
+      } //Data comes in as a buffer
+
+
+      return JSON.parse(data.toString());
+    }
+  }, {
     key: "broadcast",
     value: function broadcast(connections, message) {
       if (message == '' || Object.keys(connections).length == 0) {
