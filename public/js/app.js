@@ -2643,15 +2643,15 @@ __webpack_require__.r(__webpack_exports__);
 
         if (_models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].broadcast(vm.connections, _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack(vm.message, 'message'))) {
           //Write the message we just sent to ourself
-          vm.recieveData(vm.user.getDataObject(), _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack(vm.message, 'message'), true);
+          vm.recieveData(null, vm.user.getDataObject(), _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack(vm.message, 'message'), true);
           vm.message = '';
         } else {
           alert("Something went wrong!");
         }
       }
     },
-    recieveData: function recieveData(user, data) {
-      var self = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+    recieveData: function recieveData(id, user, data) {
+      var self = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
       var vm = this;
       data = _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].unpack(data);
 
@@ -2664,10 +2664,18 @@ __webpack_require__.r(__webpack_exports__);
           user: user,
           self: self
         });
-      } else if (data.type == 'event') {
-        console.log("Revieved event ");
-        console.log(data);
-        console.log(data.data);
+      } else if (data.type == 'event' && id !== null) {
+        console.log("Recieved event ");
+
+        if (data.data && typeof data.data.muted != 'undefined') {
+          vm.connections[id].user.isMuted = data.data.muted;
+          user.isMuted = data.data.muted;
+          console.log(data);
+          console.log(data.data);
+          console.log(user);
+          console.log(vm.connections[id].user);
+          vm.$forceUpdate();
+        }
       }
     },
     outputConnections: function outputConnections() {
@@ -2848,9 +2856,13 @@ __webpack_require__.r(__webpack_exports__);
         return false;
       }
 
-      if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.connections[id].isStreaming) {
+      if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.connections[id].user.isStreaming) {
         //console.log("+APPLYING STREAM");
-        vm.connections[id].addStream(vm.stream.connection);
+        vm.connections[id].addStream(vm.stream.connection); //Let them know the state of the microphone
+
+        _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].broadcast(vm.connections, _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack({
+          muted: !vm.stream.audioenabled
+        }, 'event'));
       }
     },
     stopLocalStream: function stopLocalStream() {
@@ -2862,7 +2874,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
       for (var id in vm.connections) {
-        if (!vm.connections[id].isStreaming) {
+        if (!vm.connections[id].user.isStreaming) {
           continue;
         }
 
@@ -2942,7 +2954,7 @@ __webpack_require__.r(__webpack_exports__);
             vm.handlePeerDisconnect(this._id);
           });
           vm.connections[id].connection.on('data', function (data) {
-            vm.recieveData(vm.connections[this._id].user, data);
+            vm.recieveData(this._id, vm.connections[this._id].user, data);
           });
           vm.connections[id].connection.on('stream', function (stream) {
             //console.log("Recieved peer stream");
@@ -3000,7 +3012,7 @@ __webpack_require__.r(__webpack_exports__);
             vm.handlePeerDisconnect(id);
           });
           vm.connections[id].connection.on('data', function (data) {
-            vm.recieveData(vm.connections[id].user, data);
+            vm.recieveData(id, vm.connections[id].user, data);
           });
           vm.connections[id].connection.on('stream', function (stream) {
             vm.onPeerStream(stream, id);
@@ -3921,6 +3933,9 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+//
+//
+//
 //
 //
 //
@@ -61487,8 +61502,15 @@ var render = function() {
         _vm._v(
           "\n        " +
             _vm._s(_vm.stream.peerConnection.user.name) +
-            "\n        "
+            "\n\n        "
         ),
+        _vm.stream.peerConnection.user.isMuted
+          ? _c("i", { staticClass: "fas fa-microphone-slash text-danger" })
+          : _vm._e(),
+        _vm._v(" "),
+        !_vm.stream.peerConnection.user.isMuted
+          ? _c("i", { staticClass: "fas fa-microphone" })
+          : _vm._e(),
         _vm._v(" "),
         _vm.stream.peerConnection.user.verified
           ? _c("i", { staticClass: "fas fa-lock" })
@@ -78177,12 +78199,15 @@ var PeerConnection = /*#__PURE__*/function () {
     self.user = {
       name: "anonymous user",
       verified: false,
-      isSpeaking: false
+      isSpeaking: false,
+      isMuted: false,
+      isStreaming: false
     };
     self.initiator = initiator;
     self.hostid = initiator ? self.id : null;
     self.clientid = initiator ? null : self.id;
     self.isStreaming = false;
+    self.isMuted = false;
     self.stream = null;
     self.boundElement = null;
     self.connection.on('connect', function () {
@@ -78262,20 +78287,20 @@ var PeerConnection = /*#__PURE__*/function () {
   }, {
     key: "addStream",
     value: function addStream(stream) {
-      if (this.isStreaming) {//console.log("ALREADY STREAMING");
+      if (this.user.isStreaming) {//console.log("ALREADY STREAMING");
       } else {
         //console.log(this.connection);
         this.connection.addStream(stream);
-        this.isStreaming = true;
+        this.user.isStreaming = true;
       }
     } //Changes the video stream to this peer
 
   }, {
     key: "replaceStream",
     value: function replaceStream(oldStream, newStream) {
-      console.log("REPLACE STREAM: " + this.isStreaming);
+      console.log("REPLACE STREAM: " + this.user.isStreaming);
 
-      if (this.isStreaming) {
+      if (this.user.isStreaming) {
         var oldTracks = oldStream.getVideoTracks();
         var newTracks = newStream.getVideoTracks();
 
@@ -78292,10 +78317,10 @@ var PeerConnection = /*#__PURE__*/function () {
   }, {
     key: "removeStream",
     value: function removeStream(stream) {
-      if (!this.isStreaming) {//console.log("NOT STREAMING");
+      if (!this.user.isStreaming) {//console.log("NOT STREAMING");
       } else {
         this.connection.removeStream(stream);
-        this.isStreaming = false;
+        this.user.isStreaming = false;
       }
     }
   }, {

@@ -93,13 +93,14 @@ export default class PeerConnection {
         self.server = server;
 
         self.id = self.connection._id;
-        self.user = {name: "anonymous user", verified: false, isSpeaking: false};
+        self.user = {name: "anonymous user", verified: false, isSpeaking: false, isMuted: false, isStreaming: false};
 
         self.initiator = initiator;
         self.hostid = initiator ? self.id : null;
         self.clientid = initiator ? null : self.id;
 
         self.isStreaming = false;
+        self.isMuted = false;
         self.stream = null;
 
         self.boundElement = null;
@@ -179,19 +180,19 @@ export default class PeerConnection {
 
     //Sends a local stream to this peer
     addStream(stream) {
-        if(this.isStreaming) {
+        if(this.user.isStreaming) {
             //console.log("ALREADY STREAMING");
         } else {
             //console.log(this.connection);
             this.connection.addStream(stream);
-            this.isStreaming = true;
+            this.user.isStreaming = true;
         }
     }
 
     //Changes the video stream to this peer
     replaceStream(oldStream, newStream) {
-        console.log("REPLACE STREAM: " + this.isStreaming);
-        if(this.isStreaming) {
+        console.log("REPLACE STREAM: " + this.user.isStreaming);
+        if(this.user.isStreaming) {
             var oldTracks = oldStream.getVideoTracks();
             var newTracks = newStream.getVideoTracks();
 
@@ -207,11 +208,11 @@ export default class PeerConnection {
 
     //Removes a local stream from this peer
     removeStream(stream) {
-        if(!this.isStreaming) {
+        if(!this.user.isStreaming) {
             //console.log("NOT STREAMING");
         } else {
             this.connection.removeStream(stream);
-            this.isStreaming = false;
+            this.user.isStreaming = false;
         }
 
     }

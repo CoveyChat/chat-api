@@ -4,6 +4,9 @@
             class="peer-video-details"
             v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }">
             {{stream.peerConnection.user.name}}
+
+            <i class="fas fa-microphone-slash text-danger" v-if="stream.peerConnection.user.isMuted"></i>
+            <i class="fas fa-microphone" v-if="!stream.peerConnection.user.isMuted"></i>
             <!-- - PId: #{{stream.peerid}}# - Id: #{{stream.peerConnection.id}}# - Hst: {{stream.peerConnection.hostid}}# - Cl: {{stream.peerConnection.clientid}}#
             -->
             <i class="fas fa-lock" v-if="stream.peerConnection.user.verified"></i>

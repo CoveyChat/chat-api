@@ -622,14 +622,14 @@ export default {
                 console.log(vm.message);
                 if(Message.broadcast(vm.connections, Message.pack(vm.message, 'message'))) {
                     //Write the message we just sent to ourself
-                    vm.recieveData(vm.user.getDataObject(), Message.pack(vm.message, 'message'), true);
+                    vm.recieveData(null, vm.user.getDataObject(), Message.pack(vm.message, 'message'), true);
                     vm.message = '';
                 } else {
                     alert("Something went wrong!");
                 }
             }
         },
-        recieveData(user, data, self = false) {
+        recieveData(id, user, data, self = false) {
             var vm = this;
             data = Message.unpack(data);
 
@@ -637,10 +637,20 @@ export default {
                 vm.ui.sound.play('message');
                 //Add the elements in reverse so that the log trickles from the bottom up
                 vm.chatLog.unshift({index: vm.chatLog.length, message: data.data, user: user, self: self});
-            } else if (data.type == 'event') {
-                console.log("Revieved event ");
-                console.log(data);
-                console.log(data.data);
+            } else if (data.type == 'event' && id !== null) {
+                console.log("Recieved event ");
+
+                if(data.data && typeof data.data.muted != 'undefined') {
+                    vm.connections[id].user.isMuted = data.data.muted;
+                    user.isMuted = data.data.muted;
+
+                    console.log(data);
+                    console.log(data.data);
+                    console.log(user);
+                    console.log(vm.connections[id].user);
+
+                    vm.$forceUpdate();
+                }
             }
         },
         outputConnections () {
@@ -819,9 +829,12 @@ export default {
                 return false;
             }
 
-            if((vm.stream.videoenabled  || vm.stream.screenshareenabled) && !vm.connections[id].isStreaming) {
+            if((vm.stream.videoenabled  || vm.stream.screenshareenabled) && !vm.connections[id].user.isStreaming) {
                 //console.log("+APPLYING STREAM");
                 vm.connections[id].addStream(vm.stream.connection);
+
+                //Let them know the state of the microphone
+                Message.broadcast(vm.connections, Message.pack({muted:!vm.stream.audioenabled}, 'event'));
             }
 
         },
@@ -832,7 +845,7 @@ export default {
 
             //Remove this stream to all the peers so they don't need to do the timeout removal
             for(var id in vm.connections) {
-                if(!vm.connections[id].isStreaming) {
+                if(!vm.connections[id].user.isStreaming) {
                     continue;
                 }
                 vm.connections[id].removeStream(vm.stream.connection);
@@ -916,7 +929,7 @@ export default {
                     vm.connections[id].connection.on('error', function() {vm.handlePeerDisconnect(this._id);});
 
                     vm.connections[id].connection.on('data', function(data) {
-                        vm.recieveData(vm.connections[this._id].user, data);
+                        vm.recieveData(this._id, vm.connections[this._id].user, data);
                     });
 
                     vm.connections[id].connection.on('stream', function(stream) {
@@ -976,7 +989,7 @@ export default {
                     vm.connections[id].connection.on('error', function() {vm.handlePeerDisconnect(id);});
 
                     vm.connections[id].connection.on('data', function(data) {
-                        vm.recieveData(vm.connections[id].user, data);
+                        vm.recieveData(id, vm.connections[id].user, data);
                     });
 
                     vm.connections[id].connection.on('stream', stream => {vm.onPeerStream(stream, id); });
