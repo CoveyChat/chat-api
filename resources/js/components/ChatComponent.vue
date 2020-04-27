@@ -97,16 +97,16 @@
                 <h1><i class="fas fa-broadcast-tower"></i><i class="fas fa-slash tower-slash"></i></h1>
                 <p>Nobody is streaming</p>
             </div>
-            <div v-for="stream in peerStreams"
-                :key="stream.id"
+            <div v-for="peer in peerStreams"
+                :key="peer.id"
                 class="col-sm-6 col-md-6 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3">
 
                 <peer-video-component
-                v-bind:stream="stream"
-                v-bind:startFullscreen="stream.startFullscreen"
-                v-on:openFullscreen=" ui.fullscreen.active = true; ui.fullscreen.target = stream.peerid;"
-                v-on:closeFullscreen="ui.fullscreen.active = false; ui.fullscreen.target = null;"
-                v-on:closeFullscreenOnDestroy="closeFullscreenOnDestroy">
+                ref="peerVideos"
+                v-bind:peer="peer"
+                v-bind:startFullscreen="peer.startFullscreen"
+                v-on:openFullscreen=" ui.fullscreen.active = true; ui.fullscreen.target = peer.hostid;"
+                v-on:closeFullscreen="ui.fullscreen.active = false; ui.fullscreen.target = null;">
                 </peer-video-component>
             </div>
             </div>
@@ -308,6 +308,23 @@ export default {
     props: {
         chatName: String
     },
+    computed: {
+        peerStreams: function() {
+            var vm = this;
+
+            console.log("COMPUTED ---------------");
+            //console.log(test);
+            console.log(vm.connections);
+            console.log(Object.keys(vm.connections));
+            console.log(Object.keys(vm.connections).length);
+            console.log("END COMPUTED ---------------");
+
+            //Only return peer connections that have a stream object
+            return Object.keys(vm.connections)
+                .map(key => vm.connections[key]) // turn an array of keys into array of items.
+                .filter(peer =>  peer.stream != null); // filter that array,
+        }
+    },
     data: function () {
         return {
             message: '',
@@ -316,8 +333,7 @@ export default {
             chatId: null,
             user: {active: false},
             stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
-            peerStreams: [],
-            server: {ip:'bevy.chat', port:1337, signal: null},
+            server: {ip:'devbevy.chat', port:1337, signal: null},
             ui: {
                 deviceAccess: true,
                 anonUsername: '',
@@ -378,51 +394,6 @@ export default {
                 }
 
             });
-        },
-        closeFullscreenOnDestroy(e) {
-            //If the video stream is getting destroyed, wait 1s to see if it comes back
-            //Possibly with a different camera or something
-            var vm = this;
-            vm.ui.fullscreen.wait = true;
-
-            /*console.log("-closeFullscreenOnDestroy ---------");
-            console.log(e);
-            console.log(JSON.stringify(vm.ui.fullscreen));
-            console.log("------------------------------------");*/
-
-            //If the fullscreen that closed was the one we were looking at
-            //if(vm.ui.fullscreen.target == e.peerid) {
-                //Mark that we want to rebind this peer
-                //vm.ui.fullscreen.rebind = true;
-
-            //Wait 1s to actually close the fullscreen
-            setTimeout(function() {
-                var rebound = false;
-
-                //Confirm that we rebound to something
-                for(var i=0; i < vm.peerStreams.length; i++) {
-                    //Duplicate stream! Ignore it
-                    if(vm.peerStreams[i].peerid == e.peerid) {
-                        //console.log("Was rebound!");
-                        //console.log(vm.peerStreams[i]);
-                        rebound = true;
-                        break;
-                    }
-                }
-
-                //Still waiting for a rebind but expired. Close the fullscreen
-                if(!rebound) {
-                    //console.log("Not rebound!");
-                    vm.ui.fullscreen.target = null;
-                    vm.ui.fullscreen.active = false;
-                    vm.ui.fullscreen.wait = false;
-
-                    //vm.$forceUpdate();
-                } else {
-                    vm.ui.fullscreen.wait = false;
-                }
-            }, 1000);
-            //}
         },
         confirmLeave(e) {
             var vm = this;
@@ -642,15 +613,17 @@ export default {
 
                 if(data.data && typeof data.data.muted != 'undefined') {
                     vm.connections[id].user.isMuted = data.data.muted;
-                    user.isMuted = data.data.muted;
 
                     console.log(data);
                     console.log(data.data);
                     console.log(user);
                     console.log(vm.connections[id].user);
 
+                    //Double force update
                     vm.$forceUpdate();
+                    setTimeout(function() {vm.$forceUpdate();}, 100);
                 }
+
             }
         },
         outputConnections () {
@@ -696,73 +669,60 @@ export default {
         onPeerStream(stream, peerid) {
             var vm = this;
             console.log("On peer stream called @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+            console.log(stream);
 
-            //Check for duplicates incase buttons are spammed
-            for(var i=0; i < vm.peerStreams.length; i++) {
-                //Duplicate stream! Ignore it
-                if(vm.peerStreams[i].id == stream.id) {
-                    //This stream already existed on this id. Remove it before we re-add it
-                    /*console.log("Remove duplicate stream");
-                    console.log(vm.peerStreams[i]);
-                    console.log(stream);
-                    console.log(vm.peerStreams[i].getTracks());
-                    console.log(stream.getTracks());*/
-                    vm.connections[peerid].removeStream(vm.peerStreams[i]);
-                    vm.peerStreams.splice(i, 1);
-                }
-            }
-
-            stream.peerid = peerid;
-            stream.peerConnection = vm.connections[peerid];
-
-            /*console.log("On peer Stream ----------------------------");
-            console.log("Peer id: " + JSON.stringify(peerid));
-            console.log(stream.peerConnection);
-            console.log(JSON.stringify(vm.ui.fullscreen));*/
-
-
-            //We want to rebind a fullscreen stream on a specific target/hostid
-            //if(vm.ui.fullscreen.rebind && vm.ui.fullscreen.target == peerid) {
             if(vm.ui.fullscreen.target == peerid) {
                 //console.log("Rebind!");
                 //We found our stream so we don't want to rebind anymore
-                stream.startFullscreen = true;
-                vm.$forceUpdate();
+                vm.connections[peerid].startFullscreen = true;
+
             } else {
                 //console.log("Don't bind!");
-                stream.startFullscreen = false;
+                vm.connections[peerid].startFullscreen = false;
             }
             //console.log("--------------------------------------------");
+            console.log("Set stream for peer " + peerid);
             vm.connections[peerid].setStream(stream);
-            vm.peerStreams.push(stream);
 
+            vm.$set(vm.connections[peerid], 'stream', stream);
+
+            if(typeof vm.$refs.peerVideos != 'undefined') {
+                //Forceupdate all the video channels
+                for(var i =0;i<vm.$refs.peerVideos.length;i++) {
+                    if(vm.$refs.peerVideos[i].peer.hostid == peerid) {
+                        //Force-update the dom for this new peer stream
+                        vm.$refs.peerVideos[i].$forceUpdate();
+                        break;
+                    }
+                }
+            } else {
+                console.log("uh oh!");
+                console.log(vm.$refs.peerVideos);
+            }
             /**
              * Fires twice. Once when the audio is removed and once when the video is removed
              */
             stream.onremovetrack = function(e) {
                 console.log("on remove track");
-                //Find and remove this stream
-                for(var i=0; i<vm.peerStreams.length; i++) {
-                    //Already deleted. This event fires twice (once for video removal and once for audio removal)
-                    if(typeof vm.peerStreams[i] == 'undefined' || typeof e.srcElement == 'undefined') {
-                        continue;
-                    }
+                vm.connections[peerid].stream = null;
+                vm.$set(vm.connections[peerid], 'stream', null);
 
-                    //See if this is the video we want to delete
-                    if(vm.peerStreams[i].id == e.srcElement.id) {
-                        /*console.log("Remove track----------");
-                        //console.log("Set rebind flag")
-                        console.log(JSON.stringify(vm.ui.fullscreen));
-                        console.log(e.target.peerid);
-                        console.log("------------------------");*/
-                        //This was the target stream, set the rebind flag
-                        if(e.target.peerid == vm.ui.fullscreen.target) {
-                            vm.ui.fullscreen.wait = true;
+                //Make sure we close fullscreen if necessary
+                if(vm.ui.fullscreen.active) {
+
+                    //The current video was fullscreen. Close it
+                    if(vm.ui.fullscreen.target == peerid) {
+                        vm.ui.fullscreen.target = null;
+                        vm.ui.fullscreen.active = false;
+
+                        //Find the peer connection that removed a track and remove fullscreen
+                        for(var i =0;i<vm.$refs.peerVideos.length;i++) {
+                            if(vm.$refs.peerVideos[i].peer.hostid == peerid) {
+                                vm.$refs.peerVideos[i].ui.inFullscreen = false;
+                                break;
+                            }
                         }
-
-
-                        vm.peerStreams.splice(i, 1);
-                        break;
+                        vm.$forceUpdate();
                     }
                 }
             };
@@ -829,12 +789,12 @@ export default {
                 return false;
             }
 
-            if((vm.stream.videoenabled  || vm.stream.screenshareenabled) && !vm.connections[id].user.isStreaming) {
+            if((vm.stream.videoenabled  || vm.stream.screenshareenabled) && !vm.connections[id].isStreaming) {
                 //console.log("+APPLYING STREAM");
                 vm.connections[id].addStream(vm.stream.connection);
 
                 //Let them know the state of the microphone
-                Message.broadcast(vm.connections, Message.pack({muted:!vm.stream.audioenabled}, 'event'));
+                vm.connections[id].send(Message.pack({muted:!vm.stream.audioenabled}, 'event'));
             }
 
         },
@@ -845,7 +805,7 @@ export default {
 
             //Remove this stream to all the peers so they don't need to do the timeout removal
             for(var id in vm.connections) {
-                if(!vm.connections[id].user.isStreaming) {
+                if(!vm.connections[id].isStreaming) {
                     continue;
                 }
                 vm.connections[id].removeStream(vm.stream.connection);
@@ -863,18 +823,11 @@ export default {
         handlePeerDisconnect(id) {
             var vm = this;
             vm.ui.sound.play('disconnect');
+            //Set the value to null so vue can compute it before we delete it
+            vm.connections[id] = null;
+
             delete vm.connections[id];
             vm.outputConnections();
-
-            //Also remove anything they were streaming
-            for(var i=0; i<vm.peerStreams.length; i++) {
-                //See if this is the video we want to delete
-                if(vm.peerStreams[i].peerid == id) {
-                    console.log("Found a dead stream. Removing...");
-                    vm.peerStreams.splice(i, 1);
-                    break;
-                }
-            }
         },
         init() {
             var vm = this;
@@ -911,7 +864,9 @@ export default {
 
                     var peer = new PeerConnection(vm.server.signal, true, vm.user.preferredBandwidth);
                     var id = peer.id;
-                    vm.connections[id] = peer;
+
+                    //Add this peer to the connections[id] and also reactive for vue
+                    vm.$set(vm.connections, id, peer);
 
                     vm.connections[id].connection.on('connect', function() {
                         console.log("Connection established between host -> client");
@@ -968,7 +923,7 @@ export default {
                     //console.log("Init a peer for host " + id);
                     var peer = new PeerConnection(vm.server.signal, false, vm.user.preferredBandwidth);
 
-                    vm.connections[id] = peer;
+                    vm.$set(vm.connections, id, peer);
                     vm.connections[id].setHostId(obj.hostid);
                     vm.connections[id].setUser(obj.user);
 

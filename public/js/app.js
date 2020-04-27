@@ -2299,6 +2299,24 @@ __webpack_require__.r(__webpack_exports__);
   props: {
     chatName: String
   },
+  computed: {
+    peerStreams: function peerStreams() {
+      var vm = this;
+      console.log("COMPUTED ---------------"); //console.log(test);
+
+      console.log(vm.connections);
+      console.log(Object.keys(vm.connections));
+      console.log(Object.keys(vm.connections).length);
+      console.log("END COMPUTED ---------------"); //Only return peer connections that have a stream object
+
+      return Object.keys(vm.connections).map(function (key) {
+        return vm.connections[key];
+      }) // turn an array of keys into array of items.
+      .filter(function (peer) {
+        return peer.stream != null;
+      }); // filter that array,
+    }
+  },
   data: function data() {
     return {
       message: '',
@@ -2316,9 +2334,8 @@ __webpack_require__.r(__webpack_exports__);
         local: null,
         localsize: 'md'
       },
-      peerStreams: [],
       server: {
-        ip: 'bevy.chat',
+        ip: 'devbevy.chat',
         port: 1337,
         signal: null
       },
@@ -2383,45 +2400,6 @@ __webpack_require__.r(__webpack_exports__);
           vm.connections[id].connection.negotiate();
         }
       });
-    },
-    closeFullscreenOnDestroy: function closeFullscreenOnDestroy(e) {
-      //If the video stream is getting destroyed, wait 1s to see if it comes back
-      //Possibly with a different camera or something
-      var vm = this;
-      vm.ui.fullscreen.wait = true;
-      /*console.log("-closeFullscreenOnDestroy ---------");
-      console.log(e);
-      console.log(JSON.stringify(vm.ui.fullscreen));
-      console.log("------------------------------------");*/
-      //If the fullscreen that closed was the one we were looking at
-      //if(vm.ui.fullscreen.target == e.peerid) {
-      //Mark that we want to rebind this peer
-      //vm.ui.fullscreen.rebind = true;
-      //Wait 1s to actually close the fullscreen
-
-      setTimeout(function () {
-        var rebound = false; //Confirm that we rebound to something
-
-        for (var i = 0; i < vm.peerStreams.length; i++) {
-          //Duplicate stream! Ignore it
-          if (vm.peerStreams[i].peerid == e.peerid) {
-            //console.log("Was rebound!");
-            //console.log(vm.peerStreams[i]);
-            rebound = true;
-            break;
-          }
-        } //Still waiting for a rebind but expired. Close the fullscreen
-
-
-        if (!rebound) {
-          //console.log("Not rebound!");
-          vm.ui.fullscreen.target = null;
-          vm.ui.fullscreen.active = false;
-          vm.ui.fullscreen.wait = false; //vm.$forceUpdate();
-        } else {
-          vm.ui.fullscreen.wait = false;
-        }
-      }, 1000); //}
     },
     confirmLeave: function confirmLeave(e) {
       var vm = this;
@@ -2669,12 +2647,15 @@ __webpack_require__.r(__webpack_exports__);
 
         if (data.data && typeof data.data.muted != 'undefined') {
           vm.connections[id].user.isMuted = data.data.muted;
-          user.isMuted = data.data.muted;
           console.log(data);
           console.log(data.data);
           console.log(user);
-          console.log(vm.connections[id].user);
+          console.log(vm.connections[id].user); //Double force update
+
           vm.$forceUpdate();
+          setTimeout(function () {
+            vm.$forceUpdate();
+          }, 100);
         }
       }
     },
@@ -2733,72 +2714,60 @@ __webpack_require__.r(__webpack_exports__);
      */
     onPeerStream: function onPeerStream(stream, peerid) {
       var vm = this;
-      console.log("On peer stream called @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"); //Check for duplicates incase buttons are spammed
-
-      for (var i = 0; i < vm.peerStreams.length; i++) {
-        //Duplicate stream! Ignore it
-        if (vm.peerStreams[i].id == stream.id) {
-          //This stream already existed on this id. Remove it before we re-add it
-
-          /*console.log("Remove duplicate stream");
-          console.log(vm.peerStreams[i]);
-          console.log(stream);
-          console.log(vm.peerStreams[i].getTracks());
-          console.log(stream.getTracks());*/
-          vm.connections[peerid].removeStream(vm.peerStreams[i]);
-          vm.peerStreams.splice(i, 1);
-        }
-      }
-
-      stream.peerid = peerid;
-      stream.peerConnection = vm.connections[peerid];
-      /*console.log("On peer Stream ----------------------------");
-      console.log("Peer id: " + JSON.stringify(peerid));
-      console.log(stream.peerConnection);
-      console.log(JSON.stringify(vm.ui.fullscreen));*/
-      //We want to rebind a fullscreen stream on a specific target/hostid
-      //if(vm.ui.fullscreen.rebind && vm.ui.fullscreen.target == peerid) {
+      console.log("On peer stream called @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+      console.log(stream);
 
       if (vm.ui.fullscreen.target == peerid) {
         //console.log("Rebind!");
         //We found our stream so we don't want to rebind anymore
-        stream.startFullscreen = true;
-        vm.$forceUpdate();
+        vm.connections[peerid].startFullscreen = true;
       } else {
         //console.log("Don't bind!");
-        stream.startFullscreen = false;
+        vm.connections[peerid].startFullscreen = false;
       } //console.log("--------------------------------------------");
 
 
+      console.log("Set stream for peer " + peerid);
       vm.connections[peerid].setStream(stream);
-      vm.peerStreams.push(stream);
+      vm.$set(vm.connections[peerid], 'stream', stream);
+
+      if (typeof vm.$refs.peerVideos != 'undefined') {
+        //Forceupdate all the video channels
+        for (var i = 0; i < vm.$refs.peerVideos.length; i++) {
+          if (vm.$refs.peerVideos[i].peer.hostid == peerid) {
+            //Force-update the dom for this new peer stream
+            vm.$refs.peerVideos[i].$forceUpdate();
+            break;
+          }
+        }
+      } else {
+        console.log("uh oh!");
+        console.log(vm.$refs.peerVideos);
+      }
       /**
        * Fires twice. Once when the audio is removed and once when the video is removed
        */
 
+
       stream.onremovetrack = function (e) {
-        console.log("on remove track"); //Find and remove this stream
+        console.log("on remove track");
+        vm.connections[peerid].stream = null;
+        vm.$set(vm.connections[peerid], 'stream', null); //Make sure we close fullscreen if necessary
 
-        for (var i = 0; i < vm.peerStreams.length; i++) {
-          //Already deleted. This event fires twice (once for video removal and once for audio removal)
-          if (typeof vm.peerStreams[i] == 'undefined' || typeof e.srcElement == 'undefined') {
-            continue;
-          } //See if this is the video we want to delete
+        if (vm.ui.fullscreen.active) {
+          //The current video was fullscreen. Close it
+          if (vm.ui.fullscreen.target == peerid) {
+            vm.ui.fullscreen.target = null;
+            vm.ui.fullscreen.active = false; //Find the peer connection that removed a track and remove fullscreen
 
-
-          if (vm.peerStreams[i].id == e.srcElement.id) {
-            /*console.log("Remove track----------");
-            //console.log("Set rebind flag")
-            console.log(JSON.stringify(vm.ui.fullscreen));
-            console.log(e.target.peerid);
-            console.log("------------------------");*/
-            //This was the target stream, set the rebind flag
-            if (e.target.peerid == vm.ui.fullscreen.target) {
-              vm.ui.fullscreen.wait = true;
+            for (var i = 0; i < vm.$refs.peerVideos.length; i++) {
+              if (vm.$refs.peerVideos[i].peer.hostid == peerid) {
+                vm.$refs.peerVideos[i].ui.inFullscreen = false;
+                break;
+              }
             }
 
-            vm.peerStreams.splice(i, 1);
-            break;
+            vm.$forceUpdate();
           }
         }
       };
@@ -2856,11 +2825,11 @@ __webpack_require__.r(__webpack_exports__);
         return false;
       }
 
-      if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.connections[id].user.isStreaming) {
+      if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.connections[id].isStreaming) {
         //console.log("+APPLYING STREAM");
         vm.connections[id].addStream(vm.stream.connection); //Let them know the state of the microphone
 
-        _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].broadcast(vm.connections, _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack({
+        vm.connections[id].send(_models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack({
           muted: !vm.stream.audioenabled
         }, 'event'));
       }
@@ -2874,7 +2843,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
       for (var id in vm.connections) {
-        if (!vm.connections[id].user.isStreaming) {
+        if (!vm.connections[id].isStreaming) {
           continue;
         }
 
@@ -2890,18 +2859,11 @@ __webpack_require__.r(__webpack_exports__);
     },
     handlePeerDisconnect: function handlePeerDisconnect(id) {
       var vm = this;
-      vm.ui.sound.play('disconnect');
-      delete vm.connections[id];
-      vm.outputConnections(); //Also remove anything they were streaming
+      vm.ui.sound.play('disconnect'); //Set the value to null so vue can compute it before we delete it
 
-      for (var i = 0; i < vm.peerStreams.length; i++) {
-        //See if this is the video we want to delete
-        if (vm.peerStreams[i].peerid == id) {
-          console.log("Found a dead stream. Removing...");
-          vm.peerStreams.splice(i, 1);
-          break;
-        }
-      }
+      vm.connections[id] = null;
+      delete vm.connections[id];
+      vm.outputConnections();
     },
     init: function init() {
       var vm = this;
@@ -2935,8 +2897,9 @@ __webpack_require__.r(__webpack_exports__);
         //console.log("init (" + numHosts + ") hosts");
         for (var i = 0; i < numHosts; i++) {
           var peer = new _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__["default"](vm.server.signal, true, vm.user.preferredBandwidth);
-          var id = peer.id;
-          vm.connections[id] = peer;
+          var id = peer.id; //Add this peer to the connections[id] and also reactive for vue
+
+          vm.$set(vm.connections, id, peer);
           vm.connections[id].connection.on('connect', function () {
             console.log("Connection established between host -> client");
             vm.ui.sound.play('connect');
@@ -2990,7 +2953,7 @@ __webpack_require__.r(__webpack_exports__);
         if (typeof vm.connections[id] == 'undefined') {
           //console.log("Init a peer for host " + id);
           var peer = new _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__["default"](vm.server.signal, false, vm.user.preferredBandwidth);
-          vm.connections[id] = peer;
+          vm.$set(vm.connections, id, peer);
           vm.connections[id].setHostId(obj.hostid);
           vm.connections[id].setUser(obj.user);
           vm.connections[id].connection.on('connect', function () {
@@ -3933,6 +3896,7 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../models/PeerConnection.js */ "./resources/js/models/PeerConnection.js");
 //
 //
 //
@@ -4005,10 +3969,15 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "PeerVideoComponent",
   props: {
-    stream: MediaStream,
+    peer: _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_0__["default"],
     startFullscreen: Boolean
   },
   data: function data() {
@@ -4033,8 +4002,13 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {
     onDoubleClickCheck: function onDoubleClickCheck(e) {
-      var vm = this; //Play the video if you touched it
+      var vm = this; //Don't pullscreen because there's no stream;
+
+      if (vm.peer.stream == null) {
+        return;
+      } //Play the video if you touched it
       //Chrome disables auto-play if you don't interact with the document first
+
 
       e.target.play(); //Clicked again within 1s, trigger fullscreen
 
@@ -4043,9 +4017,9 @@ __webpack_require__.r(__webpack_exports__);
         vm.ui.inFullscreen = !vm.ui.inFullscreen;
 
         if (vm.ui.inFullscreen) {
-          vm.$emit('openFullscreen', vm.stream.peerConnection);
+          vm.$emit('openFullscreen', vm.peer);
         } else {
-          vm.$emit('closeFullscreen', vm.stream.peerConnection);
+          vm.$emit('closeFullscreen', vm.peer);
         }
       } else {
         vm.ui.dblClickTimer = Date.now();
@@ -4057,22 +4031,22 @@ __webpack_require__.r(__webpack_exports__);
   },
   beforeDestroy: function beforeDestroy() {
     var vm = this;
-    vm.$emit('closeFullscreenOnDestroy', vm.stream);
+    vm.$emit('closeFullscreenOnDestroy', vm.peer);
   },
   mounted: function mounted() {
     console.log('Peer Video Component mounted.');
     var vm = this;
     document.addEventListener("speaking", function (e) {
       //Check to see if this this the right video that's speaking
-      if (vm.stream.peerConnection.hostid == e.peer.hostid) {
-        vm.stream.peerConnection.user.isSpeaking = true;
+      if (vm.peer.hostid == e.peer.hostid) {
+        vm.peer.user.isSpeaking = true;
         vm.$forceUpdate();
       }
     });
     document.addEventListener("stopped_speaking", function (e) {
       //Check to see if this this the right video that's speaking
-      if (vm.stream.peerConnection.hostid == e.peer.hostid) {
-        vm.stream.peerConnection.user.isSpeaking = false;
+      if (vm.peer.hostid == e.peer.hostid) {
+        vm.peer.user.isSpeaking = false;
         vm.$forceUpdate();
       }
     });
@@ -60473,31 +60447,31 @@ var render = function() {
                           ])
                         : _vm._e(),
                       _vm._v(" "),
-                      _vm._l(_vm.peerStreams, function(stream) {
+                      _vm._l(_vm.peerStreams, function(peer) {
                         return _c(
                           "div",
                           {
-                            key: stream.id,
+                            key: peer.id,
                             staticClass:
                               "col-sm-6 col-md-6 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3"
                           },
                           [
                             _c("peer-video-component", {
+                              ref: "peerVideos",
+                              refInFor: true,
                               attrs: {
-                                stream: stream,
-                                startFullscreen: stream.startFullscreen
+                                peer: peer,
+                                startFullscreen: peer.startFullscreen
                               },
                               on: {
                                 openFullscreen: function($event) {
                                   _vm.ui.fullscreen.active = true
-                                  _vm.ui.fullscreen.target = stream.peerid
+                                  _vm.ui.fullscreen.target = peer.hostid
                                 },
                                 closeFullscreen: function($event) {
                                   _vm.ui.fullscreen.active = false
                                   _vm.ui.fullscreen.target = null
-                                },
-                                closeFullscreenOnDestroy:
-                                  _vm.closeFullscreenOnDestroy
+                                }
                               }
                             })
                           ],
@@ -61499,20 +61473,16 @@ var render = function() {
         class: { "peer-video-fullscreen": _vm.ui.inFullscreen }
       },
       [
-        _vm._v(
-          "\n        " +
-            _vm._s(_vm.stream.peerConnection.user.name) +
-            "\n\n        "
-        ),
-        _vm.stream.peerConnection.user.isMuted
+        _vm.peer.user.isMuted
           ? _c("i", { staticClass: "fas fa-microphone-slash text-danger" })
           : _vm._e(),
         _vm._v(" "),
-        !_vm.stream.peerConnection.user.isMuted
+        !_vm.peer.user.isMuted
           ? _c("i", { staticClass: "fas fa-microphone" })
           : _vm._e(),
+        _vm._v("\n        " + _vm._s(_vm.peer.user.name) + "\n\n        "),
         _vm._v(" "),
-        _vm.stream.peerConnection.user.verified
+        _vm.peer.user.verified
           ? _c("i", { staticClass: "fas fa-lock" })
           : _vm._e()
       ]
@@ -61522,8 +61492,7 @@ var render = function() {
       staticClass: "embed-responsive-item remote-stream",
       class: {
         "peer-video-fullscreen": _vm.ui.inFullscreen,
-        "peer-is-speaking":
-          _vm.stream.peerConnection.user.isSpeaking && !_vm.ui.inFullscreen
+        "peer-is-speaking": _vm.peer.user.isSpeaking && !_vm.ui.inFullscreen
       },
       attrs: {
         poster: "https://bevy.chat/img/video_poster.png",
@@ -61531,7 +61500,7 @@ var render = function() {
         volume: "1",
         playsinline: ""
       },
-      domProps: { srcObject: _vm.stream },
+      domProps: { srcObject: _vm.peer.stream },
       on: { click: _vm.onDoubleClickCheck, play: _vm.setDefaultVolume }
     })
   ])
@@ -78200,13 +78169,14 @@ var PeerConnection = /*#__PURE__*/function () {
       name: "anonymous user",
       verified: false,
       isSpeaking: false,
-      isMuted: false,
-      isStreaming: false
+      isMuted: false
     };
     self.initiator = initiator;
     self.hostid = initiator ? self.id : null;
     self.clientid = initiator ? null : self.id;
-    self.isStreaming = false;
+    self.isStreaming = false; //Is currently recieving a stream
+
+    self.startFullscreen = false;
     self.isMuted = false;
     self.stream = null;
     self.boundElement = null;
@@ -78287,20 +78257,20 @@ var PeerConnection = /*#__PURE__*/function () {
   }, {
     key: "addStream",
     value: function addStream(stream) {
-      if (this.user.isStreaming) {//console.log("ALREADY STREAMING");
+      if (this.isStreaming) {//console.log("ALREADY STREAMING");
       } else {
         //console.log(this.connection);
         this.connection.addStream(stream);
-        this.user.isStreaming = true;
+        this.isStreaming = true;
       }
     } //Changes the video stream to this peer
 
   }, {
     key: "replaceStream",
     value: function replaceStream(oldStream, newStream) {
-      console.log("REPLACE STREAM: " + this.user.isStreaming);
+      console.log("REPLACE STREAM: " + this.isStreaming);
 
-      if (this.user.isStreaming) {
+      if (this.isStreaming) {
         var oldTracks = oldStream.getVideoTracks();
         var newTracks = newStream.getVideoTracks();
 
@@ -78317,10 +78287,10 @@ var PeerConnection = /*#__PURE__*/function () {
   }, {
     key: "removeStream",
     value: function removeStream(stream) {
-      if (!this.user.isStreaming) {//console.log("NOT STREAMING");
+      if (!this.isStreaming) {//console.log("NOT STREAMING");
       } else {
         this.connection.removeStream(stream);
-        this.user.isStreaming = false;
+        this.isStreaming = false;
       }
     }
   }, {

@@ -3,15 +3,19 @@
         <div
             class="peer-video-details"
             v-bind:class="{ 'peer-video-fullscreen': ui.inFullscreen }">
-            {{stream.peerConnection.user.name}}
 
-            <i class="fas fa-microphone-slash text-danger" v-if="stream.peerConnection.user.isMuted"></i>
-            <i class="fas fa-microphone" v-if="!stream.peerConnection.user.isMuted"></i>
-            <!-- - PId: #{{stream.peerid}}# - Id: #{{stream.peerConnection.id}}# - Hst: {{stream.peerConnection.hostid}}# - Cl: {{stream.peerConnection.clientid}}#
+            <i class="fas fa-microphone-slash text-danger" v-if="peer.user.isMuted"></i>
+            <i class="fas fa-microphone" v-if="!peer.user.isMuted"></i>
+            {{peer.user.name}}
+
+            <!--
+            #{{peer.stream == null}}#
+            #{{peer.hostid}}#-->
+            <!-- - PId: #{{stream.peerid}}# - Id: #{{peer.id}}# - Hst: {{peer.hostid}}# - Cl: {{peer.clientid}}#
             -->
-            <i class="fas fa-lock" v-if="stream.peerConnection.user.verified"></i>
+            <i class="fas fa-lock" v-if="peer.user.verified"></i>
         </div>
-        <video :srcObject.prop="stream"
+        <video :srcObject.prop="peer.stream"
             v-on:click="onDoubleClickCheck"
             v-on:play="setDefaultVolume"
 
@@ -21,7 +25,7 @@
             class="embed-responsive-item remote-stream"
             v-bind:class="{
                 'peer-video-fullscreen': ui.inFullscreen,
-                'peer-is-speaking': stream.peerConnection.user.isSpeaking && !ui.inFullscreen
+                'peer-is-speaking': peer.user.isSpeaking && !ui.inFullscreen
             }"
             playsinline
         ></video>
@@ -71,11 +75,12 @@
 </style>
 
 <script>
+import PeerConnection from '../models/PeerConnection.js';
 
 export default {
     name: "PeerVideoComponent",
     props: {
-        stream: MediaStream,
+        peer: PeerConnection,
         startFullscreen: Boolean
     },
     data: function () {
@@ -99,6 +104,11 @@ export default {
         onDoubleClickCheck(e) {
             var vm = this;
 
+            //Don't pullscreen because there's no stream;
+            if(vm.peer.stream == null) {
+                return;
+            }
+
             //Play the video if you touched it
             //Chrome disables auto-play if you don't interact with the document first
             e.target.play();
@@ -108,9 +118,9 @@ export default {
                 vm.ui.dblClickTimer = null;
                 vm.ui.inFullscreen = !vm.ui.inFullscreen;
                 if(vm.ui.inFullscreen) {
-                    vm.$emit('openFullscreen', vm.stream.peerConnection);
+                    vm.$emit('openFullscreen', vm.peer);
                 } else {
-                    vm.$emit('closeFullscreen', vm.stream.peerConnection);
+                    vm.$emit('closeFullscreen', vm.peer);
                 }
             } else {
                 vm.ui.dblClickTimer = Date.now();
@@ -122,7 +132,7 @@ export default {
     },
     beforeDestroy() {
         var vm = this;
-        vm.$emit('closeFullscreenOnDestroy', vm.stream);
+        vm.$emit('closeFullscreenOnDestroy', vm.peer);
     },
     mounted() {
         console.log('Peer Video Component mounted.');
@@ -130,16 +140,16 @@ export default {
 
         document.addEventListener("speaking", function(e) {
             //Check to see if this this the right video that's speaking
-            if(vm.stream.peerConnection.hostid == e.peer.hostid) {
-                vm.stream.peerConnection.user.isSpeaking = true;
+            if(vm.peer.hostid == e.peer.hostid) {
+                vm.peer.user.isSpeaking = true;
                 vm.$forceUpdate();
             }
         });
 
         document.addEventListener("stopped_speaking", function(e) {
             //Check to see if this this the right video that's speaking
-            if(vm.stream.peerConnection.hostid == e.peer.hostid) {
-                vm.stream.peerConnection.user.isSpeaking = false;
+            if(vm.peer.hostid == e.peer.hostid) {
+                vm.peer.user.isSpeaking = false;
                 vm.$forceUpdate();
             }
         });
