@@ -2466,10 +2466,16 @@ __webpack_require__.r(__webpack_exports__);
           vm.stream.screenshareenabled = false;
           console.log("Local Screenshare Stream Error!");
           console.log(e);
-          var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](vm.$refs.modalcontainer, {
-            header: "<h1>Not supported</h1>",
-            body: "<p>Could not start a screenshare. It seems your device does not support this functionality.</p>"
-          }); //vm.toggleVideo({'message': "toggling back to local video from screenshare"});
+          console.log(e.code);
+          console.log(e.message);
+          console.log(e.name); // Throw a modal if you didn't simply cancel the screenshare
+
+          if (e.name != "NotAllowedError") {
+            var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](vm.$refs.modalcontainer, {
+              header: "<h1>Not supported</h1>",
+              body: "<p>Could not start a screenshare. It seems your device does not support this functionality.</p>"
+            });
+          }
         });
       } else if (vm.stream.screenshareenabled) {
         console.log("Turning screenshare off");
