@@ -156,6 +156,11 @@ export default class PeerConnection {
         console.log("Updated bandwidth preferred to " + self.bandwidthPreferred);
     }
 
+    //Passthrough for WebRTC.send()
+    send(data) {
+        this.connection.send(data);
+    }
+
     //This peers stream
     setStream(stream) {
         var self = this;
@@ -192,7 +197,7 @@ export default class PeerConnection {
 
     //Changes the video stream to this peer
     replaceStream(oldStream, newStream) {
-        console.log("REPLACE STREAM: " + this.isStreaming);
+        //console.log("REPLACE STREAM: " + this.isStreaming);
         if(this.isStreaming) {
             var oldTracks = oldStream.getVideoTracks();
             var newTracks = newStream.getVideoTracks();

@@ -312,13 +312,6 @@ export default {
         peerStreams: function() {
             var vm = this;
 
-            console.log("COMPUTED ---------------");
-            //console.log(test);
-            console.log(vm.connections);
-            console.log(Object.keys(vm.connections));
-            console.log(Object.keys(vm.connections).length);
-            console.log("END COMPUTED ---------------");
-
             //Only return peer connections that have a stream object
             return Object.keys(vm.connections)
                 .map(key => vm.connections[key]) // turn an array of keys into array of items.
@@ -333,7 +326,7 @@ export default {
             chatId: null,
             user: {active: false},
             stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
-            server: {ip:'devbevy.chat', port:1337, signal: null},
+            server: {ip:'bevy.chat', port:1337, signal: null},
             ui: {
                 deviceAccess: true,
                 anonUsername: '',
@@ -614,14 +607,10 @@ export default {
                 if(data.data && typeof data.data.muted != 'undefined') {
                     vm.connections[id].user.isMuted = data.data.muted;
 
-                    console.log(data);
+                    /*console.log(data);
                     console.log(data.data);
                     console.log(user);
-                    console.log(vm.connections[id].user);
-
-                    //Double force update
-                    vm.$forceUpdate();
-                    setTimeout(function() {vm.$forceUpdate();}, 100);
+                    console.log(vm.connections[id].user);*/
                 }
 
             }
@@ -668,8 +657,28 @@ export default {
          */
         onPeerStream(stream, peerid) {
             var vm = this;
-            console.log("On peer stream called @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+
+            /*console.log("On peer stream called @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
             console.log(stream);
+            console.log(peerid);
+            console.log(vm.connections);*/
+
+            /*
+            Check for duplicates across all peers incase buttons are spammed
+            Sometimes a second connection will still be waiting to close and we don't want to
+            renegotiate otherwise the connection will be re-established and not close
+            */
+            for(var id in vm.connections) {
+                //Duplicate stream! Ignore it
+                if(vm.connections[id].stream != null && vm.connections[id].stream.id == stream.id) {
+                    //This stream already existed on this id
+                    //Seems we have 2 connections open. Destroy the duplicate!
+                    vm.connections[id].destroy();
+                    vm.outputConnections();
+                }
+            }
+
+
 
             if(vm.ui.fullscreen.target == peerid) {
                 //console.log("Rebind!");
@@ -681,31 +690,18 @@ export default {
                 vm.connections[peerid].startFullscreen = false;
             }
             //console.log("--------------------------------------------");
-            console.log("Set stream for peer " + peerid);
+            //console.log("Set stream for peer " + peerid);
             vm.connections[peerid].setStream(stream);
 
-            vm.$set(vm.connections[peerid], 'stream', stream);
+            //vm.$set(vm.connections[peerid], 'stream', stream);
 
-            if(typeof vm.$refs.peerVideos != 'undefined') {
-                //Forceupdate all the video channels
-                for(var i =0;i<vm.$refs.peerVideos.length;i++) {
-                    if(vm.$refs.peerVideos[i].peer.hostid == peerid) {
-                        //Force-update the dom for this new peer stream
-                        vm.$refs.peerVideos[i].$forceUpdate();
-                        break;
-                    }
-                }
-            } else {
-                console.log("uh oh!");
-                console.log(vm.$refs.peerVideos);
-            }
             /**
              * Fires twice. Once when the audio is removed and once when the video is removed
              */
             stream.onremovetrack = function(e) {
                 console.log("on remove track");
                 vm.connections[peerid].stream = null;
-                vm.$set(vm.connections[peerid], 'stream', null);
+                //vm.$set(vm.connections[peerid], 'stream', null);
 
                 //Make sure we close fullscreen if necessary
                 if(vm.ui.fullscreen.active) {
@@ -752,8 +748,8 @@ export default {
                 if(vm.connections[id].connection == null
                     || !vm.connections[id].connection.connected
                     || vm.connections[id].connection.destroyed) {
-                    console.log("Don't send stream. Skip bad connection " + id);
-                    console.log(vm.connections[id]);
+                    //console.log("Don't send stream. Skip bad connection " + id);
+                    //console.log(vm.connections[id]);
                     continue;
                 }
 
@@ -823,6 +819,7 @@ export default {
         handlePeerDisconnect(id) {
             var vm = this;
             vm.ui.sound.play('disconnect');
+
             //Set the value to null so vue can compute it before we delete it
             vm.connections[id] = null;
 
@@ -858,13 +855,13 @@ export default {
              * for every client in the mesh that it needs to connec tto
              */
             vm.server.signal.on('inithosts', function (numHosts) {
-                //console.log("init (" + numHosts + ") hosts");
+                console.log("init (" + numHosts + ") hosts");
 
                 for(var i=0;i<numHosts;i++) {
 
                     var peer = new PeerConnection(vm.server.signal, true, vm.user.preferredBandwidth);
                     var id = peer.id;
-
+                    console.log("Created host id " + id);
                     //Add this peer to the connections[id] and also reactive for vue
                     vm.$set(vm.connections, id, peer);
 

@@ -11,8 +11,8 @@
             <!--
             #{{peer.stream == null}}#
             #{{peer.hostid}}#-->
-            <!-- - PId: #{{stream.peerid}}# - Id: #{{peer.id}}# - Hst: {{peer.hostid}}# - Cl: {{peer.clientid}}#
-            -->
+            <!--- Id: #{{peer.id}}# - Hst: {{peer.hostid}}# - Cl: {{peer.clientid}}#-->
+
             <i class="fas fa-lock" v-if="peer.user.verified"></i>
         </div>
         <video :srcObject.prop="peer.stream"
