@@ -2831,10 +2831,12 @@ __webpack_require__.r(__webpack_exports__);
       var analyser = audioContext.createAnalyser();
       var microphone = audioContext.createMediaStreamSource(stream);
       var javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+      var gainNode = audioContext.createGain();
       analyser.smoothingTimeConstant = 0.8;
       analyser.fftSize = 1024;
       microphone.connect(analyser);
       analyser.connect(javascriptNode);
+      console.log(microphone);
       javascriptNode.connect(audioContext.destination);
 
       javascriptNode.onaudioprocess = function () {
@@ -2849,7 +2851,11 @@ __webpack_require__.r(__webpack_exports__);
 
         var average = values / length; //console.log("Volume: " + vm.stream.volume);
 
-        vm.stream.volume = Math.round(average);
+        vm.stream.volume = Math.round(average); //Gain from 0.00 - 1 when volume is below 20
+
+        var newGain = vm.stream.volume < 20 ? Math.abs(vm.stream.volume / 20 - 1) : 0; //console.log(newGain);
+
+        gainNode.gain.value = newGain;
       };
     },
 
