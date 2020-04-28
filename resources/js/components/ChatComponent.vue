@@ -433,9 +433,8 @@ export default {
                 }
             }
 
-            vm.stopLocalStream();
-            vm.stream.videoenabled = false;
-            vm.toggleVideo({'message': "swapping video feed to another camera"});
+            //Re-enable the video now that we've changed the active camera
+            vm.enableVideo();
         },
         toggleScreenshare(e) {
             var vm = this;
@@ -534,6 +533,54 @@ export default {
         enableLocalAudio(stream) {
             var vm = this;
         },
+        enableVideo() {
+            var vm = this;
+            //Enables the video stream.
+            //If one already exists then it gets replaced
+            console.log("Setting camera...");
+            //Default to video: true, audio: true to just use the defaults
+            var options = {
+                    video: vm.user.devices.video.length > 0,
+                    audio: vm.user.devices.audio.length > 0
+                };
+            if(vm.user.devices.active.video != null) {
+                console.log("Turning video on with camera id " + vm.user.devices.active.video);
+                options.video = {deviceId: { ideal: vm.user.devices.active.video }};
+            }
+            if(vm.user.devices.active.audio != null) {
+                console.log("Turning video on with camera id " + vm.user.devices.active.video);
+                options.audio = {deviceId: { ideal: vm.user.devices.active.audio }};
+            }
+            try {
+                navigator.mediaDevices.getUserMedia(options).then(function(stream) {
+                    vm.stream.videoenabled = true;
+                    vm.stream.screenshareenabled = false;
+
+                    vm.onLocalStream(stream);
+                }).catch((e) => {
+                    vm.stream.videoenabled = false;
+                    vm.stream.screenshareenabled = false;
+                    //They have devices but are probably blocked
+                    var modal = new Modal(vm.$refs.modalcontainer, {
+                        header: "<h1>Uh oh!</h1>",
+                        body: "<p>Could not start your video feed. Did you block the browser permission?</p>" +
+                                "<p>Click the <i class='fas fa-lock'></i><span class='sr-only'>lock</span> icon in the URL to check your permissions and reload this page.</p>"
+                    });
+
+                    console.log("Local Video Stream Error!");
+                    console.log(e);
+                });
+            } catch (e) {
+                console.log("Could not get user media for local stream");
+                console.log(e);
+            }
+        },
+        disableVideo() {
+            //Disables the local camera stream
+            var vm = this;
+            vm.stopLocalStream();
+            vm.stream.videoenabled = false;
+        },
         toggleVideo(e) {
             var vm = this;
 
@@ -543,44 +590,9 @@ export default {
             }
 
             if(!vm.stream.videoenabled) {
-                console.log("Turning on camera...");
-                //Default to video: true, audio: true to just use the defaults
-                var options = {
-                        video: vm.user.devices.video.length > 0,
-                        audio: vm.user.devices.audio.length > 0
-                    };
-                if(vm.user.devices.active.video != null) {
-                    console.log("Turning video on with camera id " + vm.user.devices.active.video);
-                    options.video = {deviceId: { ideal: vm.user.devices.active.video }};
-                }
-                if(vm.user.devices.active.audio != null) {
-                    console.log("Turning video on with camera id " + vm.user.devices.active.video);
-                    options.audio = {deviceId: { ideal: vm.user.devices.active.audio }};
-                }
-                try {
-                    navigator.mediaDevices.getUserMedia(options).then(function(stream) {
-                        vm.stream.videoenabled = true;
-                        vm.stream.screenshareenabled = false;
-
-                        vm.onLocalStream(stream);
-                    }).catch((e) => {
-                        //They have devices but are probably blocked
-                        var modal = new Modal(vm.$refs.modalcontainer, {
-                            header: "<h1>Uh oh!</h1>",
-                            body: "<p>Could not start your video feed. Did you block the browser permission?</p>" +
-                                    "<p>Click the <i class='fas fa-lock'></i><span class='sr-only'>lock</span> icon in the URL to check your permissions and reload this page.</p>"
-                        });
-
-                        console.log("Local Video Stream Error!");
-                        console.log(e);
-                    });
-                } catch (e) {
-                    console.log("Could not get user media for local stream");
-                    console.log(e);
-                }
+                vm.enableVideo();
             } else {
                 vm.stopLocalStream();
-                vm.stream.videoenabled = false;
             }
 
         },
