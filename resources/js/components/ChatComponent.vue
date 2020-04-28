@@ -71,6 +71,7 @@
                         'local-video-md': stream.localsize =='md',
                         'local-video-lg': stream.localsize =='lg'
                     }"
+            v-if="stream.videoenabled || stream.screenshareenabled"
             >
 
             <video :srcObject.prop="stream.connection"
@@ -79,10 +80,13 @@
                     autoplay="autoplay"
                     muted="muted"
                     class="local-stream"
-                    v-bind="stream.local"
-                    v-if="stream.videoenabled || stream.screenshareenabled"
-                    playsinline
-                ></video>
+                    playsinline>
+            </video>
+
+            <div class="progress" id="local-video-volume-meter">
+                <div class="progress-bar bg-success" role="progressbar" v-bind:style="{'width': currentVolume + '%'}" :aria-valuenow="currentVolume" aria-valuemin="0" aria-valuemax="100"></div>
+                <div class="progress-bar bg-danger" role="progressbar" v-bind:style="{'width': saturatedVolume + '%'}" :aria-valuenow="saturatedVolume" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
         </div>
 
         <network-graph-component
@@ -255,6 +259,15 @@
     #local-video-container.local-video-lg >>> video {
         width:300px;
     }
+
+    #local-video-volume-meter {
+        width: 100%;
+        height: 5px;
+        position: relative;
+        bottom: 10px;
+        opacity:0.5;
+    }
+
     /* Initial position */
     #local-video-container {
         margin-top:20px;
@@ -268,6 +281,7 @@
     .chat-container.peer-video-fullscreen {
         height:0px !important;
     }
+
     #local-video-container.local-video-overlay,
     #local-video-container.local-video-overlay >>> video {
         margin-right:0px;
@@ -316,6 +330,38 @@ export default {
             return Object.keys(vm.connections)
                 .map(key => vm.connections[key]) // turn an array of keys into array of items.
                 .filter(peer =>  peer.stream != null); // filter that array,
+        },
+        currentVolume() {
+            var vm = this;
+            //return 100;
+            if(vm.stream.volume == 0) {
+                return 0;
+            }
+            //Normalize 0-30 as 0-100
+            var vol = Math.round((vm.stream.volume / 30) * 100);
+
+            return vol > 100 ? 100 : vol;
+        },
+        saturatedVolume() {
+            var vm = this;
+            //return 10;
+            if(vm.stream.volume == 0) {
+                return 0;
+            }
+
+            //Anything over 30 is "saturated"
+            var vol = Math.round((vm.stream.volume / 30) * 100);
+            var saturated = vol > 100 ? vol-100 : 0;
+
+            if(saturated == 0) {
+                return 0;
+            }
+
+            //Normalize saturation to 0-30 = 0-100
+            saturated = Math.round((saturated / 30) * 100);
+
+
+            return saturated > 100 ? 100 : saturated;
         }
     },
     data: function () {
@@ -325,7 +371,7 @@ export default {
             connections: {},
             chatId: null,
             user: {active: false},
-            stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md'},
+            stream: {videoenabled: false, audioenabled:true, screenshareenabled: false, connection: null, local:null, localsize:'md', volume:0},
             server: {ip:'bevy.chat', port:1337, signal: null},
             ui: {
                 deviceAccess: true,
@@ -592,7 +638,7 @@ export default {
             if(!vm.stream.videoenabled) {
                 vm.enableVideo();
             } else {
-                vm.stopLocalStream();
+                vm.disableVideo();
             }
 
         },
@@ -741,6 +787,36 @@ export default {
                 }
             };
         },
+        bindVolume(stream) {
+            var vm = this;
+
+            var audioContext = new AudioContext();
+            var analyser = audioContext.createAnalyser();
+            var microphone = audioContext.createMediaStreamSource(stream);
+            var javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+
+            analyser.smoothingTimeConstant = 0.8;
+            analyser.fftSize = 1024;
+
+            microphone.connect(analyser);
+            analyser.connect(javascriptNode);
+
+            javascriptNode.connect(audioContext.destination);
+            javascriptNode.onaudioprocess = function() {
+                var array = new Uint8Array(analyser.frequencyBinCount);
+                analyser.getByteFrequencyData(array);
+                var values = 0;
+
+                var length = array.length;
+                for (var i = 0; i < length; i++) {
+                values += (array[i]);
+                }
+
+                var average = values / length;
+                //console.log("Volume: " + vm.stream.volume);
+                vm.stream.volume = Math.round(average);
+            };
+        },
         /**
          * Fires when a new local stream object has opened
          * Aka the user clicked the video button
@@ -749,6 +825,7 @@ export default {
             var vm = this;
 
             var replace = false;
+            vm.stream.volume = 0;
 
             //New stream connection. Just send it
             if(!vm.stream.connection) {
@@ -760,6 +837,8 @@ export default {
                 //Pre-existing stream
                 replace = true;
             }
+
+            vm.bindVolume(vm.stream.connection);
 
             //New Local stream! Send it off  to all the peers
             for(var id in vm.connections) {
