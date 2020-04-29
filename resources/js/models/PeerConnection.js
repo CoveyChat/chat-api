@@ -167,7 +167,7 @@ export default class PeerConnection {
         console.log("tracking track");
         console.log(videoTrack);
 
-        self.streamMonitorInterval = setInterval(function() {
+        /*self.streamMonitorInterval = setInterval(function() {
             if(videoTrack != null) {
                 self.connection._pc.getStats(videoTrack).then(stats => {
                     //console.log("_pc stream stats:");
@@ -184,7 +184,7 @@ export default class PeerConnection {
                     console.log("Output: " + output);
                 });
             }
-        }, 2000);
+        }, 2000);*/
 
         //Make sure there's audio tracks to bind to
         if(stream.getAudioTracks().length > 0) {
@@ -208,7 +208,7 @@ export default class PeerConnection {
         var self = this;
         console.log("Clear tracking!");
         self.stream = null;
-        clearInterval(self.streamMonitorInterval);
+        //clearInterval(self.streamMonitorInterval);
 
 
     }

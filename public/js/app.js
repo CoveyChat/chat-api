@@ -78408,25 +78408,25 @@ var PeerConnection = /*#__PURE__*/function () {
       var videoTrack = videoTracks.length > 0 ? videoTracks[0] : null;
       console.log("tracking track");
       console.log(videoTrack);
-      self.streamMonitorInterval = setInterval(function () {
-        if (videoTrack != null) {
-          self.connection._pc.getStats(videoTrack).then(function (stats) {
-            //console.log("_pc stream stats:");
-            //console.log(stats);
-            var output = "";
-            stats.forEach(function (report) {
-              if (report.type == 'track') {
-                output += " - Frames dropped: " + report.framesDropped;
-              }
-
-              if (report.type == 'inbound-rtp') {
-                output += " - Packets Lost: " + report.packetsLost;
-              }
-            });
-            console.log("Output: " + output);
-          });
-        }
-      }, 2000); //Make sure there's audio tracks to bind to
+      /*self.streamMonitorInterval = setInterval(function() {
+          if(videoTrack != null) {
+              self.connection._pc.getStats(videoTrack).then(stats => {
+                  //console.log("_pc stream stats:");
+                  //console.log(stats);
+                  var output = "";
+                  stats.forEach(report => {
+                      if(report.type == 'track') {
+                          output += " - Frames dropped: " + report.framesDropped;
+                      }
+                      if(report.type == 'inbound-rtp') {
+                          output += " - Packets Lost: " + report.packetsLost;
+                      }
+                  });
+                  console.log("Output: " + output);
+              });
+          }
+      }, 2000);*/
+      //Make sure there's audio tracks to bind to
 
       if (stream.getAudioTracks().length > 0) {
         var speechEvents = hark__WEBPACK_IMPORTED_MODULE_0___default()(stream);
@@ -78447,8 +78447,7 @@ var PeerConnection = /*#__PURE__*/function () {
     value: function clearPeerStream() {
       var self = this;
       console.log("Clear tracking!");
-      self.stream = null;
-      clearInterval(self.streamMonitorInterval);
+      self.stream = null; //clearInterval(self.streamMonitorInterval);
     } //Sends a local stream to this peer
 
   }, {
