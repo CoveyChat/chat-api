@@ -104,17 +104,13 @@ export default class PeerConnection {
         self.isMuted = false;
         self.stream = null;
 
+        self.streamMonitorInterval = null;
+
         self.boundElement = null;
 
         self.connection.on('connect', function() {
             console.log("~~~~~Connected!~~~~~");
-
-            /*
-            console.log(self.connection._pc.getStats(null).then(function(stats) {
-                stats.forEach(report => {
-                    console.log(report);
-                });
-            }));*/
+            //console.log(self.connection);
         });
 
         self.connection.on('signal', function (webRtcId) {
@@ -165,6 +161,30 @@ export default class PeerConnection {
     setStream(stream) {
         var self = this;
         self.stream = stream;
+        var videoTracks = self.stream.getVideoTracks();
+
+        var videoTrack = videoTracks.length > 0 ? videoTracks[0] : null;
+        console.log("tracking track");
+        console.log(videoTrack);
+
+        self.streamMonitorInterval = setInterval(function() {
+            if(videoTrack != null) {
+                self.connection._pc.getStats(videoTrack).then(stats => {
+                    //console.log("_pc stream stats:");
+                    //console.log(stats);
+                    var output = "";
+                    stats.forEach(report => {
+                        if(report.type == 'track') {
+                            output += " - Frames dropped: " + report.framesDropped;
+                        }
+                        if(report.type == 'inbound-rtp') {
+                            output += " - Packets Lost: " + report.packetsLost;
+                        }
+                    });
+                    console.log("Output: " + output);
+                });
+            }
+        }, 2000);
 
         //Make sure there's audio tracks to bind to
         if(stream.getAudioTracks().length > 0) {
@@ -182,6 +202,15 @@ export default class PeerConnection {
                 document.dispatchEvent(self.events.stopped_speaking);
             });
         }
+    }
+
+    clearPeerStream() {
+        var self = this;
+        console.log("Clear tracking!");
+        self.stream = null;
+        clearInterval(self.streamMonitorInterval);
+
+
     }
 
     //Sends a local stream to this peer

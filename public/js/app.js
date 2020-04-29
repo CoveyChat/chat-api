@@ -2840,7 +2840,7 @@ __webpack_require__.r(__webpack_exports__);
 
       stream.onremovetrack = function (e) {
         console.log("on remove track");
-        vm.connections[peerid].stream = null; //vm.$set(vm.connections[peerid], 'stream', null);
+        vm.connections[peerid].clearPeerStream(); //vm.$set(vm.connections[peerid], 'stream', null);
         //Make sure we close fullscreen if necessary
 
         if (vm.ui.fullscreen.active) {
@@ -78344,15 +78344,10 @@ var PeerConnection = /*#__PURE__*/function () {
     self.startFullscreen = false;
     self.isMuted = false;
     self.stream = null;
+    self.streamMonitorInterval = null;
     self.boundElement = null;
     self.connection.on('connect', function () {
-      console.log("~~~~~Connected!~~~~~");
-      /*
-      console.log(self.connection._pc.getStats(null).then(function(stats) {
-          stats.forEach(report => {
-              console.log(report);
-          });
-      }));*/
+      console.log("~~~~~Connected!~~~~~"); //console.log(self.connection);
     });
     self.connection.on('signal', function (webRtcId) {
       //console.log("SIGNAL");
@@ -78408,7 +78403,30 @@ var PeerConnection = /*#__PURE__*/function () {
     key: "setStream",
     value: function setStream(stream) {
       var self = this;
-      self.stream = stream; //Make sure there's audio tracks to bind to
+      self.stream = stream;
+      var videoTracks = self.stream.getVideoTracks();
+      var videoTrack = videoTracks.length > 0 ? videoTracks[0] : null;
+      console.log("tracking track");
+      console.log(videoTrack);
+      self.streamMonitorInterval = setInterval(function () {
+        if (videoTrack != null) {
+          self.connection._pc.getStats(videoTrack).then(function (stats) {
+            //console.log("_pc stream stats:");
+            //console.log(stats);
+            var output = "";
+            stats.forEach(function (report) {
+              if (report.type == 'track') {
+                output += " - Frames dropped: " + report.framesDropped;
+              }
+
+              if (report.type == 'inbound-rtp') {
+                output += " - Packets Lost: " + report.packetsLost;
+              }
+            });
+            console.log("Output: " + output);
+          });
+        }
+      }, 2000); //Make sure there's audio tracks to bind to
 
       if (stream.getAudioTracks().length > 0) {
         var speechEvents = hark__WEBPACK_IMPORTED_MODULE_0___default()(stream);
@@ -78423,6 +78441,14 @@ var PeerConnection = /*#__PURE__*/function () {
           document.dispatchEvent(self.events.stopped_speaking);
         });
       }
+    }
+  }, {
+    key: "clearPeerStream",
+    value: function clearPeerStream() {
+      var self = this;
+      console.log("Clear tracking!");
+      self.stream = null;
+      clearInterval(self.streamMonitorInterval);
     } //Sends a local stream to this peer
 
   }, {

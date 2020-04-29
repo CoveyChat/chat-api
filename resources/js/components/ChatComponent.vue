@@ -802,7 +802,7 @@ export default {
              */
             stream.onremovetrack = function(e) {
                 console.log("on remove track");
-                vm.connections[peerid].stream = null;
+                vm.connections[peerid].clearPeerStream();
                 //vm.$set(vm.connections[peerid], 'stream', null);
 
                 //Make sure we close fullscreen if necessary
