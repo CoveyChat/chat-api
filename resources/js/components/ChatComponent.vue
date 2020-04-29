@@ -74,6 +74,11 @@
             v-if="stream.videoenabled || stream.screenshareenabled"
             >
 
+            <div id="local-video-volume-meter" class="progress progress-bar-vertical">
+                <div class="progress-bar bg-success" role="progressbar" v-bind:style="{'height': currentVolume + '%'}" :aria-valuenow="currentVolume" aria-valuemin="0" aria-valuemax="100"></div>
+                <div class="progress-bar bg-danger" role="progressbar" v-bind:style="{'height': saturatedVolume + '%'}" :aria-valuenow="saturatedVolume" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+
             <video :srcObject.prop="stream.connection"
 
                     poster = "https://bevy.chat/img/video_poster.png"
@@ -83,10 +88,9 @@
                     playsinline>
             </video>
 
-            <div class="progress" id="local-video-volume-meter">
-                <div class="progress-bar bg-success" role="progressbar" v-bind:style="{'width': currentVolume + '%'}" :aria-valuenow="currentVolume" aria-valuemin="0" aria-valuemax="100"></div>
-                <div class="progress-bar bg-danger" role="progressbar" v-bind:style="{'width': saturatedVolume + '%'}" :aria-valuenow="saturatedVolume" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
+
+
+
         </div>
 
         <network-graph-component
@@ -260,12 +264,30 @@
         width:300px;
     }
 
-    #local-video-volume-meter {
+    .progress-bar-vertical {
+        width: 20px;
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .progress-bar-vertical .progress-bar {
         width: 100%;
-        height: 5px;
-        position: relative;
-        bottom: 10px;
-        opacity:0.5;
+        height: 0;
+        -webkit-transition: height 0.6s ease;
+        -o-transition: height 0.6s ease;
+        transition: height 0.6s ease;
+    }
+
+
+    #local-video-volume-meter {
+        width: 5px;
+        height: 95%;
+        display: flex;
+        align-items: flex-end;
+        position: absolute;
+        right: -1px;
+        bottom: 5%;
+        opacity: 0.75;
     }
 
     /* Initial position */
@@ -397,7 +419,10 @@ export default {
             var modal = new Modal(vm.$refs.modalcontainer, options, 'settings');
 
             //Store the old settings to check against because vue binding already applied them
-            var oldSettings = {video: vm.user.devices.active.video, audio: vm.user.devices.active.audio};
+            var oldSettings = {
+                video: vm.user.devices.active.video,
+                audio: vm.user.devices.active.audio
+            };
 
             modal.$on('close', function(preferred) {
                 //We changed our audio / video device. Restart the stream stuff
@@ -484,11 +509,15 @@ export default {
         },
         toggleScreenshare(e) {
             var vm = this;
-            var options = {video: {cursor: "always"}, audio: vm.user.devices.audio.length > 0};
+            var options = {
+                video: {cursor: "always"},
+                audio: vm.user.devices.audio.length > 0
+            };
 
             if(vm.stream.videoenabled && !vm.stream.screenshareenabled) {
                 //console.log(options);
-                //Even with audio:true getDisplayMedia doesn't return audio tracks
+                //Even with audio:true getDisplayMedia doesn't return audio tracks but since we're replacing
+                //The video stream it preserves the audio track
                 navigator.mediaDevices.getDisplayMedia(options).then(function(stream) {
                     vm.stream.videoenabled = false;
                     vm.stream.screenshareenabled = true;
@@ -588,15 +617,24 @@ export default {
             var options = {
                     video: vm.user.devices.video.length > 0,
                     audio: vm.user.devices.audio.length > 0
-                };
+            };
+
+            //If there's a preferred video device, override with that
             if(vm.user.devices.active.video != null) {
                 console.log("Turning video on with camera id " + vm.user.devices.active.video);
                 options.video = {deviceId: { ideal: vm.user.devices.active.video }};
             }
+
+            //If there's an audio device, set the auto-gain
+            if(vm.user.devices.audio.length > 0) {
+                options.audio = {autoGainControl: {ideal: true}};
+            }
+            //If there's a preferred audio device, override with that
             if(vm.user.devices.active.audio != null) {
                 console.log("Turning video on with camera id " + vm.user.devices.active.video);
-                options.audio = {deviceId: { ideal: vm.user.devices.active.audio }};
+                options.audio = {deviceId: { ideal: vm.user.devices.active.audio}, autoGainControl: {ideal: true}};
             }
+
             try {
                 navigator.mediaDevices.getUserMedia(options).then(function(stream) {
                     vm.stream.videoenabled = true;
@@ -790,19 +828,37 @@ export default {
         bindVolume(stream) {
             var vm = this;
 
+            /*
+            let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+            console.log(supportedConstraints);
+
+            var audioTracks = stream.getAudioTracks();
+            if(audioTracks.length > 0) {
+                audioTracks[0].applyConstraints({autoGainControl: true});
+                var constraints = audioTracks[0].getConstraints();
+                console.log("Audio Constraints:");
+                console.log(audioTracks[0]);
+                console.log(audioTracks[0].getConstraints());
+                console.log(constraints);
+                console.log(constraints.autoGainControl);
+            }
+            */
+
+
             var audioContext = new AudioContext();
             var analyser = audioContext.createAnalyser();
             var microphone = audioContext.createMediaStreamSource(stream);
             var javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
-            var gainNode = audioContext.createGain();
+            //var gainNode = audioContext.createGain();
 
             analyser.smoothingTimeConstant = 0.8;
             analyser.fftSize = 1024;
 
             microphone.connect(analyser);
             analyser.connect(javascriptNode);
-            console.log(microphone);
+            //console.log(microphone);
             javascriptNode.connect(audioContext.destination);
+
             javascriptNode.onaudioprocess = function() {
                 var array = new Uint8Array(analyser.frequencyBinCount);
                 analyser.getByteFrequencyData(array);
@@ -810,7 +866,7 @@ export default {
 
                 var length = array.length;
                 for (var i = 0; i < length; i++) {
-                values += (array[i]);
+                    values += (array[i]);
                 }
 
                 var average = values / length;
@@ -818,9 +874,10 @@ export default {
                 vm.stream.volume = Math.round(average);
 
                 //Gain from 0.00 - 1 when volume is below 20
-                var newGain = (vm.stream.volume < 20 ? Math.abs((vm.stream.volume / 20) - 1) : 0);
+                //var newGain = (vm.stream.volume < 10 ? Math.abs((vm.stream.volume / 10) - 1) : 0);
+
                 //console.log(newGain);
-                gainNode.gain.value = newGain;
+                //gainNode.gain.value = newGain;
             };
         },
         /**

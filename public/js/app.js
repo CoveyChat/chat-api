@@ -2304,6 +2304,28 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -2499,7 +2521,8 @@ __webpack_require__.r(__webpack_exports__);
 
       if (vm.stream.videoenabled && !vm.stream.screenshareenabled) {
         //console.log(options);
-        //Even with audio:true getDisplayMedia doesn't return audio tracks
+        //Even with audio:true getDisplayMedia doesn't return audio tracks but since we're replacing
+        //The video stream it preserves the audio track
         navigator.mediaDevices.getDisplayMedia(options).then(function (stream) {
           vm.stream.videoenabled = false;
           vm.stream.screenshareenabled = true;
@@ -2605,7 +2628,7 @@ __webpack_require__.r(__webpack_exports__);
       var options = {
         video: vm.user.devices.video.length > 0,
         audio: vm.user.devices.audio.length > 0
-      };
+      }; //If there's a preferred video device, override with that
 
       if (vm.user.devices.active.video != null) {
         console.log("Turning video on with camera id " + vm.user.devices.active.video);
@@ -2614,13 +2637,26 @@ __webpack_require__.r(__webpack_exports__);
             ideal: vm.user.devices.active.video
           }
         };
-      }
+      } //If there's an audio device, set the auto-gain
+
+
+      if (vm.user.devices.audio.length > 0) {
+        options.audio = {
+          autoGainControl: {
+            ideal: true
+          }
+        };
+      } //If there's a preferred audio device, override with that
+
 
       if (vm.user.devices.active.audio != null) {
         console.log("Turning video on with camera id " + vm.user.devices.active.video);
         options.audio = {
           deviceId: {
             ideal: vm.user.devices.active.audio
+          },
+          autoGainControl: {
+            ideal: true
           }
         };
       }
@@ -2827,16 +2863,31 @@ __webpack_require__.r(__webpack_exports__);
     },
     bindVolume: function bindVolume(stream) {
       var vm = this;
+      /*
+      let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+      console.log(supportedConstraints);
+       var audioTracks = stream.getAudioTracks();
+      if(audioTracks.length > 0) {
+          audioTracks[0].applyConstraints({autoGainControl: true});
+          var constraints = audioTracks[0].getConstraints();
+          console.log("Audio Constraints:");
+          console.log(audioTracks[0]);
+          console.log(audioTracks[0].getConstraints());
+          console.log(constraints);
+          console.log(constraints.autoGainControl);
+      }
+      */
+
       var audioContext = new AudioContext();
       var analyser = audioContext.createAnalyser();
       var microphone = audioContext.createMediaStreamSource(stream);
-      var javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
-      var gainNode = audioContext.createGain();
+      var javascriptNode = audioContext.createScriptProcessor(2048, 1, 1); //var gainNode = audioContext.createGain();
+
       analyser.smoothingTimeConstant = 0.8;
       analyser.fftSize = 1024;
       microphone.connect(analyser);
-      analyser.connect(javascriptNode);
-      console.log(microphone);
+      analyser.connect(javascriptNode); //console.log(microphone);
+
       javascriptNode.connect(audioContext.destination);
 
       javascriptNode.onaudioprocess = function () {
@@ -2852,10 +2903,9 @@ __webpack_require__.r(__webpack_exports__);
         var average = values / length; //console.log("Volume: " + vm.stream.volume);
 
         vm.stream.volume = Math.round(average); //Gain from 0.00 - 1 when volume is below 20
-
-        var newGain = vm.stream.volume < 20 ? Math.abs(vm.stream.volume / 20 - 1) : 0; //console.log(newGain);
-
-        gainNode.gain.value = newGain;
+        //var newGain = (vm.stream.volume < 10 ? Math.abs((vm.stream.volume / 10) - 1) : 0);
+        //console.log(newGain);
+        //gainNode.gain.value = newGain;
       };
     },
 
@@ -10990,7 +11040,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.btn[data-v-80d584ac] {\n    border-radius: 0px;\n}\n\n/*Place this behind the controls and local video but infront of everything else */\n.peer-video-rebinding-wait[data-v-80d584ac] {\n    z-index:2147483620;\n    background:#000;\n    color:#fff;\n    position: fixed;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    right: 0;\n}\n.peer-video-rebinding-wait[data-v-80d584ac] h1 {\n    margin-top:50vh;\n}\n#message-box[data-v-80d584ac] {\n    border-radius:0px;\n}\n/*Place this infront of the rebinding thing*/\n.btn-show-messages[data-v-80d584ac] {\n    z-index:2147483621;\n}\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.chat-disabled[data-v-80d584ac] input {\n    opacity:.5;\n}\n.chat-disabled[data-v-80d584ac] button {\n    opacity:.5;\n}\n.btn-leave-chat[data-v-80d584ac] {\n    position: absolute;\n    width: 25%;\n    top: 0px;\n    left: 50%;\n    margin-top: 6px;\n    margin-left: -12.5%;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    box-shadow: none;\n}\n\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n#local-video-volume-meter[data-v-80d584ac] {\n    width: 100%;\n    height: 5px;\n    position: relative;\n    bottom: 10px;\n    opacity:0.5;\n}\n\n/* Initial position */\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:5em;\n    border-radius:3px;\n    z-index: 2147483638;\n}\n\n/* When fullscreened, shift things around*/\n.chat-container.peer-video-fullscreen[data-v-80d584ac] {\n    height:0px !important;\n}\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n    z-index:2147483622;\n}\n\n/*Videos container shrink so messages and stuff shows correctly*/\n#peer-videos-container.peer-video-fullscreen[data-v-80d584ac] .video-connections {\n    height:0px;\n}\n\n/* Main Video Fullscreen */\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
+exports.push([module.i, "\n.btn[data-v-80d584ac] {\n    border-radius: 0px;\n}\n\n/*Place this behind the controls and local video but infront of everything else */\n.peer-video-rebinding-wait[data-v-80d584ac] {\n    z-index:2147483620;\n    background:#000;\n    color:#fff;\n    position: fixed;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    right: 0;\n}\n.peer-video-rebinding-wait[data-v-80d584ac] h1 {\n    margin-top:50vh;\n}\n#message-box[data-v-80d584ac] {\n    border-radius:0px;\n}\n/*Place this infront of the rebinding thing*/\n.btn-show-messages[data-v-80d584ac] {\n    z-index:2147483621;\n}\n.no-video-connections[data-v-80d584ac] {\n    padding: 4vh;\n    text-align: center;\n}\n.chat-disabled[data-v-80d584ac] input {\n    opacity:.5;\n}\n.chat-disabled[data-v-80d584ac] button {\n    opacity:.5;\n}\n.btn-leave-chat[data-v-80d584ac] {\n    position: absolute;\n    width: 25%;\n    top: 0px;\n    left: 50%;\n    margin-top: 6px;\n    margin-left: -12.5%;\n}\n.video-connections[data-v-80d584ac] {\n    background: #eee;\n    color:#555;\n    padding: 1vh;\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #ccc;\n}\n.no-video-connections[data-v-80d584ac] h1 {\n    height:2em;\n}\n.no-video-connections[data-v-80d584ac] i {\n    position: absolute;\n    /*Center the icons*/\n    left: 0;\n    right: 0;\n}\n.btn-off[data-v-80d584ac] {\n    opacity: 0.75;\n}\n\n\n/*Remove any previous positions*/\n.is-draggable[data-v-80d584ac] {\n    top:unset;\n    bottom: unset;\n    right:unset;\n    left:unset;\n}\nvideo[data-v-80d584ac] {\n    border-radius: 5px;\n    box-shadow: 0px 1px 3px #000;\n}\nvideo.peer-video-fullscreen[data-v-80d584ac] {\n    box-shadow: none;\n}\n\n/**Adjust the slash since font awesome doesn't offer a video slash option */\n#btn-local-screenshare-toggle[data-v-80d584ac] .fa-slash {\n    display:block;\n    margin-top:-20px;\n}\n#local-video-container.local-video-sm[data-v-80d584ac],\n#local-video-container.local-video-sm[data-v-80d584ac] video {\n    margin-right:25px;\n    width:100px;\n}\n#local-video-container.local-video-md[data-v-80d584ac],\n#local-video-container.local-video-md[data-v-80d584ac] video {\n    width:200px;\n}\n#local-video-container.local-video-lg[data-v-80d584ac],\n#local-video-container.local-video-lg[data-v-80d584ac] video {\n    width:300px;\n}\n.progress-bar-vertical[data-v-80d584ac] {\n    width: 20px;\n    display: flex;\n    align-items: flex-end;\n}\n.progress-bar-vertical .progress-bar[data-v-80d584ac] {\n    width: 100%;\n    height: 0;\n    transition: height 0.6s ease;\n}\n#local-video-volume-meter[data-v-80d584ac] {\n    width: 5px;\n    height: 95%;\n    display: flex;\n    align-items: flex-end;\n    position: absolute;\n    right: -1px;\n    bottom: 5%;\n    opacity: 0.75;\n}\n\n/* Initial position */\n#local-video-container[data-v-80d584ac] {\n    margin-top:20px;\n    position:fixed;\n    right:5em;\n    border-radius:3px;\n    z-index: 2147483638;\n}\n\n/* When fullscreened, shift things around*/\n.chat-container.peer-video-fullscreen[data-v-80d584ac] {\n    height:0px !important;\n}\n#local-video-container.local-video-overlay[data-v-80d584ac],\n#local-video-container.local-video-overlay[data-v-80d584ac] video {\n    margin-right:0px;\n    bottom:0px;\n    right:0px;\n}\n.message-box.peer-video-fullscreen[data-v-80d584ac] {\n    z-index:2147483622;\n}\n\n/*Videos container shrink so messages and stuff shows correctly*/\n#peer-videos-container.peer-video-fullscreen[data-v-80d584ac] .video-connections {\n    height:0px;\n}\n\n/* Main Video Fullscreen */\n#user-prompt[data-v-80d584ac] {\n    margin-top:10%;\n}\n.fade-enter-active[data-v-80d584ac], .fade-leave-active[data-v-80d584ac] {\n    transition: opacity .5s;\n}\n.fade-enter[data-v-80d584ac], .fade-leave-to[data-v-80d584ac] /* .fade-leave-active below version 2.1.8 */ {\n    opacity: 0;\n}\n", ""]);
 
 // exports
 
@@ -60485,6 +60535,37 @@ var render = function() {
                       on: { "draggable-onclick": _vm.adjustLocalVideoSize }
                     },
                     [
+                      _c(
+                        "div",
+                        {
+                          staticClass: "progress progress-bar-vertical",
+                          attrs: { id: "local-video-volume-meter" }
+                        },
+                        [
+                          _c("div", {
+                            staticClass: "progress-bar bg-success",
+                            style: { height: _vm.currentVolume + "%" },
+                            attrs: {
+                              role: "progressbar",
+                              "aria-valuenow": _vm.currentVolume,
+                              "aria-valuemin": "0",
+                              "aria-valuemax": "100"
+                            }
+                          }),
+                          _vm._v(" "),
+                          _c("div", {
+                            staticClass: "progress-bar bg-danger",
+                            style: { height: _vm.saturatedVolume + "%" },
+                            attrs: {
+                              role: "progressbar",
+                              "aria-valuenow": _vm.saturatedVolume,
+                              "aria-valuemin": "0",
+                              "aria-valuemax": "100"
+                            }
+                          })
+                        ]
+                      ),
+                      _vm._v(" "),
                       _c("video", {
                         staticClass: "local-stream",
                         attrs: {
@@ -60497,38 +60578,7 @@ var render = function() {
                           srcObject: _vm.stream.connection,
                           muted: true
                         }
-                      }),
-                      _vm._v(" "),
-                      _c(
-                        "div",
-                        {
-                          staticClass: "progress",
-                          attrs: { id: "local-video-volume-meter" }
-                        },
-                        [
-                          _c("div", {
-                            staticClass: "progress-bar bg-success",
-                            style: { width: _vm.currentVolume + "%" },
-                            attrs: {
-                              role: "progressbar",
-                              "aria-valuenow": _vm.currentVolume,
-                              "aria-valuemin": "0",
-                              "aria-valuemax": "100"
-                            }
-                          }),
-                          _vm._v(" "),
-                          _c("div", {
-                            staticClass: "progress-bar bg-danger",
-                            style: { width: _vm.saturatedVolume + "%" },
-                            attrs: {
-                              role: "progressbar",
-                              "aria-valuenow": _vm.saturatedVolume,
-                              "aria-valuemin": "0",
-                              "aria-valuemax": "100"
-                            }
-                          })
-                        ]
-                      )
+                      })
                     ]
                   )
                 : _vm._e(),
