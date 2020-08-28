@@ -45,19 +45,19 @@ export default {
     },
     methods: {
         onClick(e) {
-            var vm = this;
-            navigator.clipboard.writeText(vm.text);
-            vm.showCopiedBadge = true;
+            let self = this;
+            navigator.clipboard.writeText(self.text);
+            self.showCopiedBadge = true;
 
             setTimeout(function() {
-                vm.showCopiedBadge = false
+                self.showCopiedBadge = false
             }, 300);
         }
     },
 mounted() {
     console.log('Copy Component mounted.');
     //View model reference for inside scoped functions
-    var vm = this;
+    let self = this;
 
 }
 }

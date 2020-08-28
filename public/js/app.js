@@ -2337,35 +2337,35 @@ __webpack_require__.r(__webpack_exports__);
   },
   computed: {
     peerStreams: function peerStreams() {
-      var vm = this; //Only return peer connections that have a stream object
+      var self = this; //Only return peer connections that have a stream object
 
-      return Object.keys(vm.connections).map(function (key) {
-        return vm.connections[key];
+      return Object.keys(self.connections).map(function (key) {
+        return self.connections[key];
       }) // turn an array of keys into array of items.
       .filter(function (peer) {
         return peer.stream != null;
       }); // filter that array,
     },
     currentVolume: function currentVolume() {
-      var vm = this; //return 100;
+      var self = this; //return 100;
 
-      if (vm.stream.volume == 0) {
+      if (self.stream.volume == 0) {
         return 0;
       } //Normalize 0-30 as 0-100
 
 
-      var vol = Math.round(vm.stream.volume / 30 * 100);
+      var vol = Math.round(self.stream.volume / 30 * 100);
       return vol > 100 ? 100 : vol;
     },
     saturatedVolume: function saturatedVolume() {
-      var vm = this; //return 10;
+      var self = this; //return 10;
 
-      if (vm.stream.volume == 0) {
+      if (self.stream.volume == 0) {
         return 0;
       } //Anything over 30 is "saturated"
 
 
-      var vol = Math.round(vm.stream.volume / 30 * 100);
+      var vol = Math.round(self.stream.volume / 30 * 100);
       var saturated = vol > 100 ? vol - 100 : 0;
 
       if (saturated == 0) {
@@ -2396,7 +2396,7 @@ __webpack_require__.r(__webpack_exports__);
         volume: 0
       },
       server: {
-        ip: 'bevy.chat',
+        ip: 'devbevy.chat',
         port: 1337,
         signal: null
       },
@@ -2416,54 +2416,54 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {
     changeSettings: function changeSettings(e) {
-      var vm = this;
+      var self = this;
       var options = {
         props: {
           close: {
             text: "Save and close"
           },
-          userPreferredBandwidth: vm.user.preferredBandwidth,
-          userDevices: vm.user.devices //Use a cloned value so we don't pre-emptively update stuff
+          userPreferredBandwidth: self.user.preferredBandwidth,
+          userDevices: self.user.devices //Use a cloned value so we don't pre-emptively update stuff
 
         }
       };
-      var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](vm.$refs.modalcontainer, options, 'settings'); //Store the old settings to check against because vue binding already applied them
+      var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](self.$refs.modalcontainer, options, 'settings'); //Store the old settings to check against because vue binding already applied them
 
       var oldSettings = {
-        video: vm.user.devices.active.video,
-        audio: vm.user.devices.active.audio
+        video: self.user.devices.active.video,
+        audio: self.user.devices.active.audio
       };
       modal.$on('close', function (preferred) {
         //We changed our audio / video device. Restart the stream stuff
         if (oldSettings.video != preferred.video || oldSettings.audio != preferred.audio) {
-          vm.user.devices.active.video = preferred.video;
-          vm.user.devices.active.audio = preferred.audio;
-          vm.user.preferredBandwidth = preferred.bandwidth; //If we're currently streaming, turn it off
+          self.user.devices.active.video = preferred.video;
+          self.user.devices.active.audio = preferred.audio;
+          self.user.preferredBandwidth = preferred.bandwidth; //If we're currently streaming, turn it off
 
-          if (vm.stream.videoenabled) {
-            vm.stopLocalStream();
-            vm.stream.videoenabled = false;
-            vm.stream.screenshareenabled = false;
+          if (self.stream.videoenabled) {
+            self.stopLocalStream();
+            self.stream.videoenabled = false;
+            self.stream.screenshareenabled = false;
           }
         } // Didn't change the bandwidth so just exit
 
 
-        if (vm.user.preferredBandwidth == preferred.bandwidth) {
+        if (self.user.preferredBandwidth == preferred.bandwidth) {
           return;
         }
 
-        vm.user.preferredBandwidth = preferred.bandwidth; //Update the preferred bandwidth on all it's peers
+        self.user.preferredBandwidth = preferred.bandwidth; //Update the preferred bandwidth on all it's peers
 
-        for (var id in vm.connections) {
+        for (var id in self.connections) {
           //If we're streaming to them then kill it
-          vm.connections[id].setPreferredBandwidth(preferred.bandwidth); //renegotiate the connection for the new quality
+          self.connections[id].setPreferredBandwidth(preferred.bandwidth); //renegotiate the connection for the new quality
 
-          vm.connections[id].connection.negotiate();
+          self.connections[id].connection.negotiate();
         }
       });
     },
     confirmLeave: function confirmLeave(e) {
-      var vm = this;
+      var self = this;
       var options = {
         props: {
           close: {
@@ -2477,13 +2477,13 @@ __webpack_require__.r(__webpack_exports__);
         header: "<h1>Confirm Leave</h1>",
         body: "Are you sure you want to leave this chat?"
       };
-      var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](vm.$refs.modalcontainer, options);
+      var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](self.$refs.modalcontainer, options);
       modal.$on('confirm', function (e) {
         //Let everyone know I'm leaving so they don't sit then hanging
-        for (var id in vm.connections) {
+        for (var id in self.connections) {
           //If we're streaming to them then kill it
-          vm.connections[id].removeStream(vm.stream.connection);
-          vm.connections[id].destroy();
+          self.connections[id].removeStream(self.stream.connection);
+          self.connections[id].destroy();
         } //Go back to the homepage
 
 
@@ -2491,16 +2491,16 @@ __webpack_require__.r(__webpack_exports__);
       });
     },
     swapVideoFeed: function swapVideoFeed(e) {
-      var vm = this;
-      var activeId = vm.user.devices.active.video;
+      var self = this;
+      var activeId = self.user.devices.active.video;
 
-      for (var i = 0; i < vm.user.devices.video.length; i++) {
-        if (vm.user.devices.video[i].deviceId == activeId) {
+      for (var i = 0; i < self.user.devices.video.length; i++) {
+        if (self.user.devices.video[i].deviceId == activeId) {
           //We found the current active one. Get the next
-          if (i < vm.user.devices.video.length - 1) {
-            vm.user.devices.active.video = vm.user.devices.video[i + 1].deviceId;
+          if (i < self.user.devices.video.length - 1) {
+            self.user.devices.active.video = self.user.devices.video[i + 1].deviceId;
           } else {
-            vm.user.devices.active.video = vm.user.devices.video[0].deviceId;
+            self.user.devices.active.video = self.user.devices.video[0].deviceId;
           }
 
           break;
@@ -2508,27 +2508,27 @@ __webpack_require__.r(__webpack_exports__);
       } //Re-enable the video now that we've changed the active camera
 
 
-      vm.enableVideo();
+      self.enableVideo();
     },
     toggleScreenshare: function toggleScreenshare(e) {
-      var vm = this;
+      var self = this;
       var options = {
         video: {
           cursor: "always"
         },
-        audio: vm.user.devices.audio.length > 0
+        audio: self.user.devices.audio.length > 0
       };
 
-      if (vm.stream.videoenabled && !vm.stream.screenshareenabled) {
+      if (self.stream.videoenabled && !self.stream.screenshareenabled) {
         //console.log(options);
         //Even with audio:true getDisplayMedia doesn't return audio tracks but since we're replacing
         //The video stream it preserves the audio track
         navigator.mediaDevices.getDisplayMedia(options).then(function (stream) {
-          vm.stream.videoenabled = false;
-          vm.stream.screenshareenabled = true;
-          vm.onLocalStream(stream);
+          self.stream.videoenabled = false;
+          self.stream.screenshareenabled = true;
+          self.onLocalStream(stream);
         })["catch"](function (e) {
-          vm.stream.screenshareenabled = false;
+          self.stream.screenshareenabled = false;
           console.log("Local Screenshare Stream Error!");
           console.log(e);
           console.log(e.code);
@@ -2536,32 +2536,32 @@ __webpack_require__.r(__webpack_exports__);
           console.log(e.name); // Throw a modal if you didn't simply cancel the screenshare
 
           if (e.name != "NotAllowedError") {
-            var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](vm.$refs.modalcontainer, {
+            var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](self.$refs.modalcontainer, {
               header: "<h1>Not supported</h1>",
               body: "<p>Could not start a screenshare. It seems your device does not support this functionality.</p>"
             });
           }
         });
-      } else if (vm.stream.screenshareenabled) {
+      } else if (self.stream.screenshareenabled) {
         console.log("Turning screenshare off");
-        vm.stream.screenshareenabled = false;
-        vm.toggleVideo({
+        self.stream.screenshareenabled = false;
+        self.toggleVideo({
           'message': "toggling back to local video from screenshare"
         });
       }
     },
     adjustLocalVideoSize: function adjustLocalVideoSize(e) {
-      var vm = this;
+      var self = this;
       var position = e.target.getBoundingClientRect();
 
-      if (vm.stream.localsize == 'lg') {
-        vm.stream.localsize = 'md';
-      } else if (vm.stream.localsize == 'md') {
-        vm.stream.localsize = 'sm';
+      if (self.stream.localsize == 'lg') {
+        self.stream.localsize = 'md';
+      } else if (self.stream.localsize == 'md') {
+        self.stream.localsize = 'sm';
         e.target.style.top = position.y + 10 + "px";
         e.target.style.left = position.x + 50 + "px";
-      } else if (vm.stream.localsize == 'sm') {
-        vm.stream.localsize = 'md';
+      } else if (self.stream.localsize == 'sm') {
+        self.stream.localsize = 'md';
         e.target.style.top = position.y - 50 + "px";
         e.target.style.left = position.x - 50 + "px";
       } //Don't lose the element off the top/left screen
@@ -2585,62 +2585,62 @@ __webpack_require__.r(__webpack_exports__);
       }
     },
     setAnonUser: function setAnonUser(e) {
-      var vm = this;
+      var self = this;
 
-      if (vm.ui.anonUsername != '') {
-        vm.user.name = vm.ui.anonUsername;
-        vm.user.active = true;
-        vm.init();
+      if (self.ui.anonUsername != '') {
+        self.user.name = self.ui.anonUsername;
+        self.user.active = true;
+        self.init();
       }
     },
     toggleAudio: function toggleAudio(e) {
-      var vm = this;
+      var self = this;
 
-      if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && vm.stream.audioenabled) {
-        vm.stream.audioenabled = false;
-        vm.setLocalAudio(vm.stream.connection, false);
-        _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].broadcast(vm.connections, _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack({
+      if ((self.stream.videoenabled || self.stream.screenshareenabled) && self.stream.audioenabled) {
+        self.stream.audioenabled = false;
+        self.setLocalAudio(self.stream.connection, false);
+        _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].broadcast(self.connections, _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack({
           muted: true
         }, 'event'));
-      } else if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.stream.audioenabled) {
-        vm.stream.audioenabled = true;
-        vm.setLocalAudio(vm.stream.connection, true);
-        _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].broadcast(vm.connections, _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack({
+      } else if ((self.stream.videoenabled || self.stream.screenshareenabled) && !self.stream.audioenabled) {
+        self.stream.audioenabled = true;
+        self.setLocalAudio(self.stream.connection, true);
+        _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].broadcast(self.connections, _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack({
           muted: false
         }, 'event'));
       }
     },
     setLocalAudio: function setLocalAudio(stream, enabled) {
-      var vm = this;
+      var self = this;
       stream.getAudioTracks().forEach(function (track) {
         track.enabled = enabled;
       });
     },
     enableLocalAudio: function enableLocalAudio(stream) {
-      var vm = this;
+      var self = this;
     },
     enableVideo: function enableVideo() {
-      var vm = this; //Enables the video stream.
+      var self = this; //Enables the video stream.
       //If one already exists then it gets replaced
 
       console.log("Setting camera..."); //Default to video: true, audio: true to just use the defaults
 
       var options = {
-        video: vm.user.devices.video.length > 0,
-        audio: vm.user.devices.audio.length > 0
+        video: self.user.devices.video.length > 0,
+        audio: self.user.devices.audio.length > 0
       }; //If there's a preferred video device, override with that
 
-      if (vm.user.devices.active.video != null) {
-        console.log("Turning video on with camera id " + vm.user.devices.active.video);
+      if (self.user.devices.active.video != null) {
+        console.log("Turning video on with camera id " + self.user.devices.active.video);
         options.video = {
           deviceId: {
-            ideal: vm.user.devices.active.video
+            ideal: self.user.devices.active.video
           }
         };
       } //If there's an audio device, set the auto-gain
 
 
-      if (vm.user.devices.audio.length > 0) {
+      if (self.user.devices.audio.length > 0) {
         options.audio = {
           autoGainControl: {
             ideal: true
@@ -2649,11 +2649,11 @@ __webpack_require__.r(__webpack_exports__);
       } //If there's a preferred audio device, override with that
 
 
-      if (vm.user.devices.active.audio != null) {
-        console.log("Turning video on with camera id " + vm.user.devices.active.video);
+      if (self.user.devices.active.audio != null) {
+        console.log("Turning video on with camera id " + self.user.devices.active.video);
         options.audio = {
           deviceId: {
-            ideal: vm.user.devices.active.audio
+            ideal: self.user.devices.active.audio
           },
           autoGainControl: {
             ideal: true
@@ -2663,14 +2663,14 @@ __webpack_require__.r(__webpack_exports__);
 
       try {
         navigator.mediaDevices.getUserMedia(options).then(function (stream) {
-          vm.stream.videoenabled = true;
-          vm.stream.screenshareenabled = false;
-          vm.onLocalStream(stream);
+          self.stream.videoenabled = true;
+          self.stream.screenshareenabled = false;
+          self.onLocalStream(stream);
         })["catch"](function (e) {
-          vm.stream.videoenabled = false;
-          vm.stream.screenshareenabled = false; //They have devices but are probably blocked
+          self.stream.videoenabled = false;
+          self.stream.screenshareenabled = false; //They have devices but are probably blocked
 
-          var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](vm.$refs.modalcontainer, {
+          var modal = new _models_Modal_js__WEBPACK_IMPORTED_MODULE_4__["default"](self.$refs.modalcontainer, {
             header: "<h1>Uh oh!</h1>",
             body: "<p>Could not start your video feed. Did you block the browser permission?</p>" + "<p>Click the <i class='fas fa-lock'></i><span class='sr-only'>lock</span> icon in the URL to check your permissions and reload this page.</p>"
           });
@@ -2684,71 +2684,71 @@ __webpack_require__.r(__webpack_exports__);
     },
     disableVideo: function disableVideo() {
       //Disables the local camera stream
-      var vm = this;
-      vm.stopLocalStream();
-      vm.stream.videoenabled = false;
+      var self = this;
+      self.stopLocalStream();
+      self.stream.videoenabled = false;
     },
     toggleVideo: function toggleVideo(e) {
-      var vm = this;
+      var self = this;
 
       if (typeof navigator.mediaDevices == 'undefined') {
         alert("Something went wrong and your device does not support video");
         return;
       }
 
-      if (!vm.stream.videoenabled) {
-        vm.enableVideo();
+      if (!self.stream.videoenabled) {
+        self.enableVideo();
       } else {
-        vm.disableVideo();
+        self.disableVideo();
       }
     },
     sendMessage: function sendMessage(e) {
-      var vm = this;
+      var self = this;
       console.log('Called message sender');
 
-      if (vm.message != '' && Object.keys(vm.connections).length > 0) {
+      if (self.message != '' && Object.keys(self.connections).length > 0) {
         console.log("Sending");
-        console.log(vm.message);
+        console.log(self.message);
 
-        if (_models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].broadcast(vm.connections, _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack(vm.message, 'message'))) {
+        if (_models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].broadcast(self.connections, _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack(self.message, 'message'))) {
           //Write the message we just sent to ourself
-          vm.recieveData(null, vm.user.getDataObject(), _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack(vm.message, 'message'), true);
-          vm.message = '';
+          self.recieveData(null, self.user.getDataObject(), _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack(self.message, 'message'), true);
+          self.message = '';
         } else {
           alert("Something went wrong!");
         }
       }
     },
     recieveData: function recieveData(id, user, data) {
-      var self = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
-      var vm = this;
+      var writeSelf = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+      var self = this;
       data = _models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].unpack(data);
 
       if (data.type == 'message') {
-        vm.ui.sound.play('message'); //Add the elements in reverse so that the log trickles from the bottom up
+        self.ui.sound.play('message'); //Add the elements in reverse so that the log trickles from the bottom up
 
-        vm.chatLog.unshift({
-          index: vm.chatLog.length,
+        self.chatLog.unshift({
+          index: self.chatLog.length,
           message: data.data,
           user: user,
-          self: self
+          self: writeSelf
         });
       } else if (data.type == 'event' && id !== null) {
         console.log("Recieved event ");
 
         if (data.data && typeof data.data.muted != 'undefined') {
-          vm.connections[id].user.isMuted = data.data.muted;
+          self.connections[id].user.isMuted = data.data.muted;
           /*console.log(data);
           console.log(data.data);
           console.log(user);
-          console.log(vm.connections[id].user);*/
+          console.log(self.connections[id].user);*/
         }
       }
     },
     outputConnections: function outputConnections() {
-      var vm = this; //Update for anything that's binding to Object.keys
+      var self = this; //Update for anything that's binding to Object.keys
 
-      vm.$forceUpdate();
+      self.$forceUpdate();
       var networkChartData = {
         nodes: [{
           id: 'me',
@@ -2757,8 +2757,8 @@ __webpack_require__.r(__webpack_exports__);
         links: []
       };
 
-      for (var id in vm.connections) {
-        var peer = vm.connections[id];
+      for (var id in self.connections) {
+        var peer = self.connections[id];
         var name = typeof peer.user != 'undefined' ? peer.user.name : 'X'; //This is the host connection and it's actually bound to someone
 
         if (typeof peer != 'undefined' && peer.initiator && peer.clientid != null) {
@@ -2792,18 +2792,18 @@ __webpack_require__.r(__webpack_exports__);
       //console.log(networkChartData);
 
 
-      vm.$refs.networkGraph.update(networkChartData);
+      self.$refs.networkGraph.update(networkChartData);
     },
 
     /**
      * When a peer opens a stream, show the new connection
      */
     onPeerStream: function onPeerStream(stream, peerid) {
-      var vm = this;
+      var self = this;
       /*console.log("On peer stream called @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
       console.log(stream);
       console.log(peerid);
-      console.log(vm.connections);*/
+      console.log(self.connections);*/
 
       /*
       Check for duplicates across all peers incase buttons are spammed
@@ -2811,28 +2811,28 @@ __webpack_require__.r(__webpack_exports__);
       renegotiate otherwise the connection will be re-established and not close
       */
 
-      for (var id in vm.connections) {
+      for (var id in self.connections) {
         //Duplicate stream! Ignore it
-        if (vm.connections[id].stream != null && vm.connections[id].stream.id == stream.id) {
+        if (self.connections[id].stream != null && self.connections[id].stream.id == stream.id) {
           //This stream already existed on this id
           //Seems we have 2 connections open. Destroy the duplicate!
-          vm.connections[id].destroy();
-          vm.outputConnections();
+          self.connections[id].destroy();
+          self.outputConnections();
         }
       }
 
-      if (vm.ui.fullscreen.target == peerid) {
+      if (self.ui.fullscreen.target == peerid) {
         //console.log("Rebind!");
         //We found our stream so we don't want to rebind anymore
-        vm.connections[peerid].startFullscreen = true;
+        self.connections[peerid].startFullscreen = true;
       } else {
         //console.log("Don't bind!");
-        vm.connections[peerid].startFullscreen = false;
+        self.connections[peerid].startFullscreen = false;
       } //console.log("--------------------------------------------");
       //console.log("Set stream for peer " + peerid);
 
 
-      vm.connections[peerid].setStream(stream); //vm.$set(vm.connections[peerid], 'stream', stream);
+      self.connections[peerid].setStream(stream); //self.$set(self.connections[peerid], 'stream', stream);
 
       /**
        * Fires twice. Once when the audio is removed and once when the video is removed
@@ -2840,29 +2840,29 @@ __webpack_require__.r(__webpack_exports__);
 
       stream.onremovetrack = function (e) {
         console.log("on remove track");
-        vm.connections[peerid].clearPeerStream(); //vm.$set(vm.connections[peerid], 'stream', null);
+        self.connections[peerid].clearPeerStream(); //self.$set(self.connections[peerid], 'stream', null);
         //Make sure we close fullscreen if necessary
 
-        if (vm.ui.fullscreen.active) {
+        if (self.ui.fullscreen.active) {
           //The current video was fullscreen. Close it
-          if (vm.ui.fullscreen.target == peerid) {
-            vm.ui.fullscreen.target = null;
-            vm.ui.fullscreen.active = false; //Find the peer connection that removed a track and remove fullscreen
+          if (self.ui.fullscreen.target == peerid) {
+            self.ui.fullscreen.target = null;
+            self.ui.fullscreen.active = false; //Find the peer connection that removed a track and remove fullscreen
 
-            for (var i = 0; i < vm.$refs.peerVideos.length; i++) {
-              if (vm.$refs.peerVideos[i].peer.hostid == peerid) {
-                vm.$refs.peerVideos[i].ui.inFullscreen = false;
+            for (var i = 0; i < self.$refs.peerVideos.length; i++) {
+              if (self.$refs.peerVideos[i].peer.hostid == peerid) {
+                self.$refs.peerVideos[i].ui.inFullscreen = false;
                 break;
               }
             }
 
-            vm.$forceUpdate();
+            self.$forceUpdate();
           }
         }
       };
     },
     bindVolume: function bindVolume(stream) {
-      var vm = this;
+      var self = this;
       /*
       let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
       console.log(supportedConstraints);
@@ -2900,10 +2900,10 @@ __webpack_require__.r(__webpack_exports__);
           values += array[i];
         }
 
-        var average = values / length; //console.log("Volume: " + vm.stream.volume);
+        var average = values / length; //console.log("Volume: " + self.stream.volume);
 
-        vm.stream.volume = Math.round(average); //Gain from 0.00 - 1 when volume is below 20
-        //var newGain = (vm.stream.volume < 10 ? Math.abs((vm.stream.volume / 10) - 1) : 0);
+        self.stream.volume = Math.round(average); //Gain from 0.00 - 1 when volume is below 20
+        //var newGain = (self.stream.volume < 10 ? Math.abs((self.stream.volume / 10) - 1) : 0);
         //console.log(newGain);
         //gainNode.gain.value = newGain;
       };
@@ -2914,116 +2914,116 @@ __webpack_require__.r(__webpack_exports__);
      * Aka the user clicked the video button
      */
     onLocalStream: function onLocalStream(stream) {
-      var vm = this;
+      var self = this;
       var replace = false;
-      vm.stream.volume = 0; //New stream connection. Just send it
+      self.stream.volume = 0; //New stream connection. Just send it
 
-      if (!vm.stream.connection) {
-        vm.stream.connection = stream; //Set this new streams audio settings
+      if (!self.stream.connection) {
+        self.stream.connection = stream; //Set this new streams audio settings
 
-        vm.setLocalAudio(stream, vm.stream.audioenabled);
+        self.setLocalAudio(stream, self.stream.audioenabled);
       } else {
         //Pre-existing stream
         replace = true;
       }
 
-      vm.bindVolume(vm.stream.connection); //New Local stream! Send it off  to all the peers
+      self.bindVolume(self.stream.connection); //New Local stream! Send it off  to all the peers
 
-      for (var id in vm.connections) {
-        if (vm.connections[id].connection == null || !vm.connections[id].connection.connected || vm.connections[id].connection.destroyed) {
+      for (var id in self.connections) {
+        if (self.connections[id].connection == null || !self.connections[id].connection.connected || self.connections[id].connection.destroyed) {
           //console.log("Don't send stream. Skip bad connection " + id);
-          //console.log(vm.connections[id]);
+          //console.log(self.connections[id]);
           continue;
         } //has old tracks. Replace instead of add
 
 
         if (replace) {
           //Replace the stream in the peer connection
-          vm.connections[id].replaceStream(vm.stream.connection, stream);
+          self.connections[id].replaceStream(self.stream.connection, stream);
         } else {
-          vm.connections[id].addStream(vm.stream.connection);
+          self.connections[id].addStream(self.stream.connection);
         }
       }
 
       if (replace) {
         //Also update the stream connection so the local video is correct
-        var oldTracks = vm.stream.connection.getVideoTracks();
+        var oldTracks = self.stream.connection.getVideoTracks();
         var newTracks = stream.getVideoTracks();
-        vm.stream.connection.removeTrack(oldTracks[0]);
-        vm.stream.connection.addTrack(newTracks[0]);
+        self.stream.connection.removeTrack(oldTracks[0]);
+        self.stream.connection.addTrack(newTracks[0]);
       }
     },
     //Sends the existing stream to any new peers
     sendStream: function sendStream(id) {
-      var vm = this;
+      var self = this;
 
-      if (typeof vm.connections[id] == 'undefined' || vm.connections[id].connection == null || !vm.connections[id].connection.connected || vm.connections[id].connection.destroyed) {
+      if (typeof self.connections[id] == 'undefined' || self.connections[id].connection == null || !self.connections[id].connection.connected || self.connections[id].connection.destroyed) {
         console.log("Cannot send stream! BAD CONNECTION TO " + id);
-        console.log(vm.connections[id]);
+        console.log(self.connections[id]);
         return false;
       }
 
-      if ((vm.stream.videoenabled || vm.stream.screenshareenabled) && !vm.connections[id].isStreaming) {
+      if ((self.stream.videoenabled || self.stream.screenshareenabled) && !self.connections[id].isStreaming) {
         //console.log("+APPLYING STREAM");
-        vm.connections[id].addStream(vm.stream.connection); //Let them know the state of the microphone
+        self.connections[id].addStream(self.stream.connection); //Let them know the state of the microphone
 
-        vm.connections[id].send(_models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack({
-          muted: !vm.stream.audioenabled
+        self.connections[id].send(_models_Message_js__WEBPACK_IMPORTED_MODULE_2__["default"].pack({
+          muted: !self.stream.audioenabled
         }, 'event'));
       }
     },
     stopLocalStream: function stopLocalStream() {
-      var vm = this;
+      var self = this;
 
-      if (!vm.stream.videoenabled && !vm.stream.screenshareenabled) {
+      if (!self.stream.videoenabled && !self.stream.screenshareenabled) {
         return;
       } //Remove this stream to all the peers so they don't need to do the timeout removal
 
 
-      for (var id in vm.connections) {
-        if (!vm.connections[id].isStreaming) {
+      for (var id in self.connections) {
+        if (!self.connections[id].isStreaming) {
           continue;
         }
 
-        vm.connections[id].removeStream(vm.stream.connection);
+        self.connections[id].removeStream(self.stream.connection);
       } //Also remove it from the UI / Kill the feed
 
 
-      var tracks = vm.stream.connection.getTracks();
+      var tracks = self.stream.connection.getTracks();
       tracks.forEach(function (track) {
         track.stop();
       });
-      vm.stream.connection = null;
+      self.stream.connection = null;
     },
     handlePeerDisconnect: function handlePeerDisconnect(id) {
-      var vm = this;
-      vm.ui.sound.play('disconnect'); //Set the value to null so vue can compute it before we delete it
+      var self = this;
+      self.ui.sound.play('disconnect'); //Set the value to null so vue can compute it before we delete it
 
-      vm.connections[id] = null;
-      delete vm.connections[id];
-      vm.outputConnections();
+      self.connections[id] = null;
+      delete self.connections[id];
+      self.outputConnections();
     },
     init: function init() {
-      var vm = this;
+      var self = this;
 
       var Peer = __webpack_require__(/*! simple-peer */ "./node_modules/simple-peer/index.js");
 
       var io = __webpack_require__(/*! socket.io-client */ "./node_modules/socket.io-client/lib/index.js");
 
-      vm.chatId = location.pathname.replace('/chat/', '');
-      vm.server.signal = io.connect('https://' + vm.server.ip + ':' + vm.server.port); //var txtLogger = document.getElementById('logger');
+      self.chatId = location.pathname.replace('/chat/', '');
+      self.server.signal = io.connect('https://' + self.server.ip + ':' + self.server.port); //var txtLogger = document.getElementById('logger');
 
-      vm.server.signal.on('disconnect', function () {
+      self.server.signal.on('disconnect', function () {
         alert("Uh oh! You disconnected!");
-        vm.connections = [];
+        self.connections = [];
       });
-      vm.server.signal.on('connect', function () {
+      self.server.signal.on('connect', function () {
         console.log("Connected to signal server. Sending auth..."); //Pass to the server that we want to join this chat room with this user
         //It will use the user to annouce to other connections who you are
 
-        vm.server.signal.emit('join', {
-          chatId: vm.chatId,
-          user: vm.user.getAuthObject()
+        self.server.signal.emit('join', {
+          chatId: self.chatId,
+          user: self.user.getAuthObject()
         });
       });
       /**
@@ -3031,37 +3031,37 @@ __webpack_require__.r(__webpack_exports__);
        * for every client in the mesh that it needs to connec tto
        */
 
-      vm.server.signal.on('inithosts', function (numHosts) {
+      self.server.signal.on('inithosts', function (numHosts) {
         console.log("init (" + numHosts + ") hosts");
 
         for (var i = 0; i < numHosts; i++) {
-          var peer = new _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__["default"](vm.server.signal, true, vm.user.preferredBandwidth);
+          var peer = new _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__["default"](self.server.signal, true, self.user.preferredBandwidth);
           var id = peer.id;
           console.log("Created host id " + id); //Add this peer to the connections[id] and also reactive for vue
 
-          vm.$set(vm.connections, id, peer);
-          vm.connections[id].connection.on('connect', function () {
+          self.$set(self.connections, id, peer);
+          self.connections[id].connection.on('connect', function () {
             console.log("Connection established between host -> client");
-            vm.ui.sound.play('connect');
-            vm.outputConnections();
+            self.ui.sound.play('connect');
+            self.outputConnections();
 
-            if (vm.stream.videoenabled || vm.stream.screenshareenabled) {
+            if (self.stream.videoenabled || self.stream.screenshareenabled) {
               console.log("Try and send a stream to " + this._id);
-              vm.sendStream(this._id);
+              self.sendStream(this._id);
             }
           });
-          vm.connections[id].connection.on('close', function () {
-            vm.handlePeerDisconnect(this._id);
+          self.connections[id].connection.on('close', function () {
+            self.handlePeerDisconnect(this._id);
           });
-          vm.connections[id].connection.on('error', function () {
-            vm.handlePeerDisconnect(this._id);
+          self.connections[id].connection.on('error', function () {
+            self.handlePeerDisconnect(this._id);
           });
-          vm.connections[id].connection.on('data', function (data) {
-            vm.recieveData(this._id, vm.connections[this._id].user, data);
+          self.connections[id].connection.on('data', function (data) {
+            self.recieveData(this._id, self.connections[this._id].user, data);
           });
-          vm.connections[id].connection.on('stream', function (stream) {
+          self.connections[id].connection.on('stream', function (stream) {
             //console.log("Recieved peer stream");
-            vm.onPeerStream(stream, this._id);
+            self.onPeerStream(stream, this._id);
           });
         }
       });
@@ -3069,16 +3069,16 @@ __webpack_require__.r(__webpack_exports__);
        * Fires when the client has generated a WebRTC token and it needs to get back to the host
        */
 
-      vm.server.signal.on('sendtohost', function (obj) {
+      self.server.signal.on('sendtohost', function (obj) {
         //Prevent signals to bad hosts that have closed
-        if (typeof vm.connections[obj.hostid] != 'undefined' && !vm.connections[obj.hostid].connection.destroyed) {
+        if (typeof self.connections[obj.hostid] != 'undefined' && !self.connections[obj.hostid].connection.destroyed) {
           //console.log("host - binding returned client info");
-          vm.connections[obj.hostid].signal(obj.webRtcId);
-          vm.connections[obj.hostid].setUser(obj.user);
-          vm.connections[obj.hostid].setClientId(obj.clientid);
+          self.connections[obj.hostid].signal(obj.webRtcId);
+          self.connections[obj.hostid].setUser(obj.user);
+          self.connections[obj.hostid].setClientId(obj.clientid);
         } else {
           console.log("UH OH");
-          delete vm.connections[obj.hostid];
+          delete self.connections[obj.hostid];
         }
       });
       /**
@@ -3086,62 +3086,62 @@ __webpack_require__.r(__webpack_exports__);
        * If there's no open client for this match host one will be created
        */
 
-      vm.server.signal.on('initclient', function (obj) {
+      self.server.signal.on('initclient', function (obj) {
         //console.log("Got request to init a client for host " + obj.hostid);
         var id = obj.hostid; //Key to the host id since it can possibly reqest to init a bunch of times during the handshake
 
-        if (typeof vm.connections[id] == 'undefined') {
+        if (typeof self.connections[id] == 'undefined') {
           //console.log("Init a peer for host " + id);
-          var peer = new _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__["default"](vm.server.signal, false, vm.user.preferredBandwidth);
-          vm.$set(vm.connections, id, peer);
-          vm.connections[id].setHostId(obj.hostid);
-          vm.connections[id].setUser(obj.user);
-          vm.connections[id].connection.on('connect', function () {
+          var peer = new _models_PeerConnection_js__WEBPACK_IMPORTED_MODULE_3__["default"](self.server.signal, false, self.user.preferredBandwidth);
+          self.$set(self.connections, id, peer);
+          self.connections[id].setHostId(obj.hostid);
+          self.connections[id].setUser(obj.user);
+          self.connections[id].connection.on('connect', function () {
             console.log("Connection established between client -> host"); //console.log(this);
-            //console.log(vm.connections[id].user);
+            //console.log(self.connections[id].user);
 
-            vm.ui.sound.play('connect');
-            vm.outputConnections();
+            self.ui.sound.play('connect');
+            self.outputConnections();
 
-            if (vm.stream.videoenabled || vm.stream.screenshareenabled) {
+            if (self.stream.videoenabled || self.stream.screenshareenabled) {
               console.log("Try and send a client stream to " + id);
-              vm.sendStream(id);
+              self.sendStream(id);
             }
           });
-          vm.connections[id].connection.on('close', function () {
-            vm.handlePeerDisconnect(id);
+          self.connections[id].connection.on('close', function () {
+            self.handlePeerDisconnect(id);
           });
-          vm.connections[id].connection.on('error', function () {
-            vm.handlePeerDisconnect(id);
+          self.connections[id].connection.on('error', function () {
+            self.handlePeerDisconnect(id);
           });
-          vm.connections[id].connection.on('data', function (data) {
-            vm.recieveData(id, vm.connections[id].user, data);
+          self.connections[id].connection.on('data', function (data) {
+            self.recieveData(id, self.connections[id].user, data);
           });
-          vm.connections[id].connection.on('stream', function (stream) {
-            vm.onPeerStream(stream, id);
+          self.connections[id].connection.on('stream', function (stream) {
+            self.onPeerStream(stream, id);
           });
         } //Use the remote host id so that the client is overridden if it re-signals
         //console.log("Signal host (" + obj.hostid + ") connection to client");
 
 
-        vm.connections[id].signal(obj.webRtcId);
+        self.connections[id].signal(obj.webRtcId);
       });
     }
   },
   mounted: function mounted() {
     console.log('Chat Component mounted.'); //View model reference for inside scoped functions
 
-    var vm = this;
-    vm.ui.sound = new _models_SoundEffect_js__WEBPACK_IMPORTED_MODULE_0__["default"](); //Hide the video button since they don't support mediaDevices
+    var self = this;
+    self.ui.sound = new _models_SoundEffect_js__WEBPACK_IMPORTED_MODULE_0__["default"](); //Hide the video button since they don't support mediaDevices
 
-    vm.ui.deviceAccess = typeof navigator.mediaDevices != 'undefined';
-    vm.user = new _models_User_js__WEBPACK_IMPORTED_MODULE_1__["default"](); //Discover and set the devices before we init stuff
+    self.ui.deviceAccess = typeof navigator.mediaDevices != 'undefined';
+    self.user = new _models_User_js__WEBPACK_IMPORTED_MODULE_1__["default"](); //Discover and set the devices before we init stuff
 
-    vm.user.discoverDevices(function (devices) {
-      vm.user.auth().then(function (response) {
+    self.user.discoverDevices(function (devices) {
+      self.user.auth().then(function (response) {
         //Prompt for a name
         if (response.success) {
-          vm.init();
+          self.init();
         }
       });
     });
@@ -3191,8 +3191,8 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {},
   mounted: function mounted() {
-    var vm = this;
-    vm.showModal = typeof navigator.mediaDevices == 'undefined';
+    var self = this;
+    self.showModal = typeof navigator.mediaDevices == 'undefined';
   }
 });
 
@@ -3355,18 +3355,18 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {
     onClick: function onClick(e) {
-      var vm = this;
-      navigator.clipboard.writeText(vm.text);
-      vm.showCopiedBadge = true;
+      var self = this;
+      navigator.clipboard.writeText(self.text);
+      self.showCopiedBadge = true;
       setTimeout(function () {
-        vm.showCopiedBadge = false;
+        self.showCopiedBadge = false;
       }, 300);
     }
   },
   mounted: function mounted() {
     console.log('Copy Component mounted.'); //View model reference for inside scoped functions
 
-    var vm = this;
+    var self = this;
   }
 });
 
@@ -3426,18 +3426,18 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {
     onClick: function onClick(e) {
-      var vm = this;
-      navigator.clipboard.writeText(vm.text);
-      vm.showCopiedBadge = true;
+      var self = this;
+      navigator.clipboard.writeText(self.text);
+      self.showCopiedBadge = true;
       setTimeout(function () {
-        vm.showCopiedBadge = false;
+        self.showCopiedBadge = false;
       }, 300);
     }
   },
   mounted: function mounted() {
     console.log('Copy Component mounted.'); //View model reference for inside scoped functions
 
-    var vm = this;
+    var self = this;
   }
 });
 
@@ -3521,7 +3521,7 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {
     animateScroll: function animateScroll(duration) {
-      var vm = this;
+      var self = this;
       var messages = this.$refs['messages'];
       var start = messages.scrollTop;
       var end = messages.scrollHeight;
@@ -3558,11 +3558,11 @@ __webpack_require__.r(__webpack_exports__);
   mounted: function mounted() {
     console.log('Messages Component mounted.'); //View model reference for inside scoped functions
 
-    var vm = this;
+    var self = this;
   },
   updated: function updated() {
-    var vm = this;
-    vm.animateScroll(300);
+    var self = this;
+    self.animateScroll(300);
   }
 });
 
@@ -3702,26 +3702,26 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {},
   beforeMount: function beforeMount() {
-    var vm = this; //Make sure the props are valid
+    var self = this; //Make sure the props are valid
 
-    if (typeof vm.close != 'undefined' && vm.close["class"]) {
-      vm.closeClass = vm.close["class"];
+    if (typeof self.close != 'undefined' && self.close["class"]) {
+      self.closeClass = self.close["class"];
     }
 
-    if (typeof vm.close != 'undefined' && vm.close.text) {
-      vm.closeText = vm.close.text;
+    if (typeof self.close != 'undefined' && self.close.text) {
+      self.closeText = self.close.text;
     }
 
-    if (typeof vm.confirm != 'undefined' && vm.confirm["class"]) {
-      vm.confirmClass = vm.confirm["class"];
+    if (typeof self.confirm != 'undefined' && self.confirm["class"]) {
+      self.confirmClass = self.confirm["class"];
     }
 
-    if (typeof vm.confirm != 'undefined' && vm.confirm.text) {
-      vm.confirmText = vm.confirm.text;
+    if (typeof self.confirm != 'undefined' && self.confirm.text) {
+      self.confirmText = self.confirm.text;
     }
   },
   mounted: function mounted() {
-    var vm = this;
+    var self = this;
   }
 });
 
@@ -3807,16 +3807,15 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {
     emitData: function emitData() {
-      var vm = this;
+      var self = this;
       return {
-        bandwidth: vm.userPreferredBandwidth,
-        video: vm.userDevices.active.video,
-        audio: vm.userDevices.active.audio
+        bandwidth: self.userPreferredBandwidth,
+        video: self.userDevices.active.video,
+        audio: self.userDevices.active.audio
       };
     }
   },
   mounted: function mounted() {
-    var vm = this;
     console.log("Modal Settings Mounted");
   }
 });
@@ -3871,17 +3870,17 @@ __webpack_require__.r(__webpack_exports__);
     inFullscreen: Boolean
   },
   mounted: function mounted() {
-    var vm = this;
+    var self = this;
     console.log("Network Graph Mounted");
     window.addEventListener("orientationchange", function (e) {
       //Orientation change, recalculate the width of the chart
       setTimeout(function () {
-        vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
-        vm.svg.attr("width", vm.width);
-        vm.update(vm.connections);
+        self.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
+        self.svg.attr("width", self.width);
+        self.update(self.connections);
       }, 200);
     });
-    vm.init();
+    self.init();
   },
   data: function data() {
     return {
@@ -3904,8 +3903,8 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {
     init: function init() {
-      var vm = this;
-      vm.color = d3.scaleOrdinal(d3.schemeTableau10); // set the dimensions and margins of the graph
+      var self = this;
+      self.color = d3.scaleOrdinal(d3.schemeTableau10); // set the dimensions and margins of the graph
 
       var margin = {
         top: 10,
@@ -3913,27 +3912,27 @@ __webpack_require__.r(__webpack_exports__);
         bottom: 30,
         left: 40
       };
-      vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
-      vm.height = 150;
-      vm.tooltip = d3.select("#active-network-chart").append("div").attr("class", "network-node-tooltip").style("position", "absolute").style("top", "0px").style("left", "0px").style("font-size", "16px").style("z-index", "10").style("visibility", "hidden").style("background", "#fff").style("border-radius", "5px").style("padding", "5px").text("---");
-      vm.svg = d3.select("#active-network-chart").append("svg").attr("width", vm.width).attr("height", vm.height); //.attr("viewBox", [-vm.width / 2, -vm.height / 2, vm.width, vm.height]);
+      self.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
+      self.height = 150;
+      self.tooltip = d3.select("#active-network-chart").append("div").attr("class", "network-node-tooltip").style("position", "absolute").style("top", "0px").style("left", "0px").style("font-size", "16px").style("z-index", "10").style("visibility", "hidden").style("background", "#fff").style("border-radius", "5px").style("padding", "5px").text("---");
+      self.svg = d3.select("#active-network-chart").append("svg").attr("width", self.width).attr("height", self.height); //.attr("viewBox", [-self.width / 2, -self.height / 2, self.width, self.height]);
 
-      vm.simulation = d3.forceSimulation().force("charge", d3.forceManyBody().strength(-400)).force("link", d3.forceLink().id(function (d) {
+      self.simulation = d3.forceSimulation().force("charge", d3.forceManyBody().strength(-400)).force("link", d3.forceLink().id(function (d) {
         return d.id;
-      }).distance(75)).force("x", d3.forceX(vm.width / 2)).force("y", d3.forceY(vm.height / 2)).on("tick", vm.tick);
-      vm.link = vm.svg.append("g").attr("stroke", "#ccc").attr("stroke-width", 1.5).selectAll("line");
-      vm.node = vm.svg.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5).selectAll("circle");
-      vm.label = vm.svg.append("g").attr("class", "labels").style("cursor", "default").selectAll("text");
-      vm.update(vm.connections);
+      }).distance(75)).force("x", d3.forceX(self.width / 2)).force("y", d3.forceY(self.height / 2)).on("tick", self.tick);
+      self.link = self.svg.append("g").attr("stroke", "#ccc").attr("stroke-width", 1.5).selectAll("line");
+      self.node = self.svg.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5).selectAll("circle");
+      self.label = self.svg.append("g").attr("class", "labels").style("cursor", "default").selectAll("text");
+      self.update(self.connections);
     },
     update: function update(data) {
       //console.log("Recieved");
       //console.log(data);
-      var vm = this;
-      vm.connections = data; // Make a shallow copy to protect against mutation, while
+      var self = this;
+      self.connections = data; // Make a shallow copy to protect against mutation, while
       // recycling old nodes to preserve position and velocity.
 
-      var old = new Map(vm.node.data().map(function (d) {
+      var old = new Map(self.node.data().map(function (d) {
         return [d.id, d];
       }));
       data.nodes = data.nodes.map(function (d) {
@@ -3942,72 +3941,72 @@ __webpack_require__.r(__webpack_exports__);
       data.links = data.links.map(function (d) {
         return Object.assign({}, d);
       });
-      vm.node = vm.node.data(data.nodes, function (d) {
+      self.node = self.node.data(data.nodes, function (d) {
         return d.id;
       }).join(function (enter) {
         return enter.append("circle").attr("r", 20).attr("fill", function (d) {
-          return vm.color(d.id);
-        }).on("mouseover", vm.onHover).on("mousemove", vm.onMove).on("mouseout", vm.onOut);
+          return self.color(d.id);
+        }).on("mouseover", self.onHover).on("mousemove", self.onMove).on("mouseout", self.onOut);
       });
-      vm.link = vm.link.data(data.links, function (d) {
+      self.link = self.link.data(data.links, function (d) {
         return [d.source, d.target];
       }).join("line");
-      vm.label = vm.label.data(data.nodes, function (d) {
+      self.label = self.label.data(data.nodes, function (d) {
         return d.name;
       }).join(function (enter) {
         return enter.append("text").attr("class", "label").html(function (d) {
           d.truncated = d.name.toLowerCase() != 'me';
           return !d.truncated ? d.name : d.name.substr(0, 1);
-        }).on("mouseover", vm.onHover).on("mousemove", vm.onMove).on("mouseout", vm.onOut);
+        }).on("mouseover", self.onHover).on("mousemove", self.onMove).on("mouseout", self.onOut);
       });
-      vm.simulation.nodes(data.nodes);
-      vm.simulation.force("link").links(data.links);
-      vm.simulation.alpha(1).restart();
+      self.simulation.nodes(data.nodes);
+      self.simulation.force("link").links(data.links);
+      self.simulation.alpha(1).restart();
     },
     onHover: function onHover(node, index) {
-      var vm = this;
+      var self = this;
 
       if (node.id == 'me') {
-        return vm.tooltip.style("visibility", "hidden");
+        return self.tooltip.style("visibility", "hidden");
       }
 
-      return vm.tooltip.style("visibility", "visible"); //console.log(node);
+      return self.tooltip.style("visibility", "visible"); //console.log(node);
       //console.log(index);
     },
     onMove: function onMove(node, index) {
-      var vm = this;
+      var self = this;
 
       if (node.id == 'me') {
-        return vm.tooltip.style("visibility", "hidden");
+        return self.tooltip.style("visibility", "hidden");
       }
 
-      return vm.tooltip.style("top", d3.event.pageY - 50 + "px").style("left", d3.event.pageX - node.name.length * 8 / 2 + "px").text(node.name);
+      return self.tooltip.style("top", d3.event.pageY - 50 + "px").style("left", d3.event.pageX - node.name.length * 8 / 2 + "px").text(node.name);
     },
     onOut: function onOut(node, index) {
-      var vm = this;
-      return vm.tooltip.style("visibility", "hidden");
+      var self = this;
+      return self.tooltip.style("visibility", "hidden");
     },
     tick: function tick() {
-      var vm = this;
-      vm.node.attr("cx", function (d) {
+      var self = this;
+      self.node.attr("cx", function (d) {
         //Hard lock the me element to center
         if (d.id == 'me') {
-          return d.x = vm.width / 2;
+          return d.x = self.width / 2;
         }
 
-        return d.x = Math.max(20, Math.min(vm.width - 20, d.x));
+        return d.x = Math.max(20, Math.min(self.width - 20, d.x));
       }).attr("cy", function (d) {
         //Hard lock the me element to center
         if (d.id == 'me') {
-          return d.y = vm.height / 2;
+          return d.y = self.height / 2;
         }
 
-        return d.y = Math.max(20, Math.min(vm.height - 20, d.y));
-      }); //vm.node.attr("cx", d => d.x)
+        return d.y = Math.max(20, Math.min(self.height - 20, d.y));
+      }); //self.node.attr("cx", d => d.x)
       //    .attr("cy", d => d.y)
-      //console.log(vm.width);
+      //console.log(self.width);
 
-      vm.link.attr("x1", function (d) {
+      self.link.attr("x1", function (d) {
         return d.source.x;
       }).attr("y1", function (d) {
         return d.source.y;
@@ -4016,7 +4015,7 @@ __webpack_require__.r(__webpack_exports__);
       }).attr("y2", function (d) {
         return d.target.y;
       });
-      vm.label.attr("x", function (d) {
+      self.label.attr("x", function (d) {
         return d.x - 10 + (d.truncated ? 5 : 0);
       }).attr("y", function (d) {
         return d.y + 5;
@@ -4132,19 +4131,19 @@ __webpack_require__.r(__webpack_exports__);
     startFullscreen: {
       immediate: true,
       handler: function handler(newVal) {
-        var vm = this;
+        var self = this;
 
         if (newVal) {
-          vm.ui.inFullscreen = true;
+          self.ui.inFullscreen = true;
         }
       }
     }
   },
   methods: {
     onDoubleClickCheck: function onDoubleClickCheck(e) {
-      var vm = this; //Don't pullscreen because there's no stream;
+      var self = this; //Don't pullscreen because there's no stream;
 
-      if (vm.peer.stream == null) {
+      if (self.peer.stream == null) {
         return;
       } //Play the video if you touched it
       //Chrome disables auto-play if you don't interact with the document first
@@ -4152,17 +4151,17 @@ __webpack_require__.r(__webpack_exports__);
 
       e.target.play(); //Clicked again within 1s, trigger fullscreen
 
-      if (vm.ui.dblClickTimer != null && Date.now() - 1000 <= vm.ui.dblClickTimer) {
-        vm.ui.dblClickTimer = null;
-        vm.ui.inFullscreen = !vm.ui.inFullscreen;
+      if (self.ui.dblClickTimer != null && Date.now() - 1000 <= self.ui.dblClickTimer) {
+        self.ui.dblClickTimer = null;
+        self.ui.inFullscreen = !self.ui.inFullscreen;
 
-        if (vm.ui.inFullscreen) {
-          vm.$emit('openFullscreen', vm.peer);
+        if (self.ui.inFullscreen) {
+          self.$emit('openFullscreen', self.peer);
         } else {
-          vm.$emit('closeFullscreen', vm.peer);
+          self.$emit('closeFullscreen', self.peer);
         }
       } else {
-        vm.ui.dblClickTimer = Date.now();
+        self.ui.dblClickTimer = Date.now();
       }
     },
     setDefaultVolume: function setDefaultVolume(e) {
@@ -4170,24 +4169,24 @@ __webpack_require__.r(__webpack_exports__);
     }
   },
   beforeDestroy: function beforeDestroy() {
-    var vm = this;
-    vm.$emit('closeFullscreenOnDestroy', vm.peer);
+    var self = this;
+    self.$emit('closeFullscreenOnDestroy', self.peer);
   },
   mounted: function mounted() {
     console.log('Peer Video Component mounted.');
-    var vm = this;
+    var self = this;
     document.addEventListener("speaking", function (e) {
       //Check to see if this this the right video that's speaking
-      if (vm.peer.hostid == e.peer.hostid) {
-        vm.peer.user.isSpeaking = true;
-        vm.$forceUpdate();
+      if (self.peer.hostid == e.peer.hostid) {
+        self.peer.user.isSpeaking = true;
+        self.$forceUpdate();
       }
     });
     document.addEventListener("stopped_speaking", function (e) {
       //Check to see if this this the right video that's speaking
-      if (vm.peer.hostid == e.peer.hostid) {
-        vm.peer.user.isSpeaking = false;
-        vm.$forceUpdate();
+      if (self.peer.hostid == e.peer.hostid) {
+        self.peer.user.isSpeaking = false;
+        self.$forceUpdate();
       }
     });
   }
@@ -77140,14 +77139,15 @@ webpackContext.id = "./resources/js/components sync recursive \\.vue$/";
 /*!***************************************************!*\
   !*** ./resources/js/components/ChatComponent.vue ***!
   \***************************************************/
-/*! exports provided: default */
+/*! no static exports found */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _ChatComponent_vue_vue_type_template_id_80d584ac_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ChatComponent.vue?vue&type=template&id=80d584ac&scoped=true& */ "./resources/js/components/ChatComponent.vue?vue&type=template&id=80d584ac&scoped=true&");
 /* harmony import */ var _ChatComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ChatComponent.vue?vue&type=script&lang=js& */ "./resources/js/components/ChatComponent.vue?vue&type=script&lang=js&");
-/* empty/unused harmony star reexport *//* harmony import */ var _ChatComponent_vue_vue_type_style_index_0_id_80d584ac_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ChatComponent.vue?vue&type=style&index=0&id=80d584ac&scoped=true&lang=css& */ "./resources/js/components/ChatComponent.vue?vue&type=style&index=0&id=80d584ac&scoped=true&lang=css&");
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _ChatComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__) if(__WEBPACK_IMPORT_KEY__ !== 'default') (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _ChatComponent_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+/* harmony import */ var _ChatComponent_vue_vue_type_style_index_0_id_80d584ac_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ChatComponent.vue?vue&type=style&index=0&id=80d584ac&scoped=true&lang=css& */ "./resources/js/components/ChatComponent.vue?vue&type=style&index=0&id=80d584ac&scoped=true&lang=css&");
 /* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
 
 
@@ -77179,7 +77179,7 @@ component.options.__file = "resources/js/components/ChatComponent.vue"
 /*!****************************************************************************!*\
   !*** ./resources/js/components/ChatComponent.vue?vue&type=script&lang=js& ***!
   \****************************************************************************/
-/*! exports provided: default */
+/*! no static exports found */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

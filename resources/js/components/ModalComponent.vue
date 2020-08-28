@@ -127,27 +127,27 @@ export default {
 
     },
     beforeMount() {
-        var vm = this;
+        let self = this;
 
         //Make sure the props are valid
-        if(typeof vm.close != 'undefined' && vm.close.class) {
-            vm.closeClass = vm.close.class;
+        if(typeof self.close != 'undefined' && self.close.class) {
+            self.closeClass = self.close.class;
         }
 
-        if(typeof vm.close != 'undefined' && vm.close.text) {
-            vm.closeText = vm.close.text;
+        if(typeof self.close != 'undefined' && self.close.text) {
+            self.closeText = self.close.text;
         }
 
-        if(typeof vm.confirm != 'undefined' && vm.confirm.class) {
-            vm.confirmClass = vm.confirm.class;
+        if(typeof self.confirm != 'undefined' && self.confirm.class) {
+            self.confirmClass = self.confirm.class;
         }
 
-        if(typeof vm.confirm != 'undefined' && vm.confirm.text) {
-            vm.confirmText = vm.confirm.text;
+        if(typeof self.confirm != 'undefined' && self.confirm.text) {
+            self.confirmText = self.confirm.text;
         }
     },
     mounted() {
-        var vm = this;
+        let self = this;
 
     }
 }

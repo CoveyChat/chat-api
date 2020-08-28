@@ -34,8 +34,8 @@ export default {
 
     },
     mounted() {
-        var vm = this;
-        vm.showModal = typeof navigator.mediaDevices == 'undefined';
+        let self = this;
+        self.showModal = typeof navigator.mediaDevices == 'undefined';
 
     }
 }

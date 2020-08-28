@@ -92,9 +92,9 @@ export default {
         startFullscreen: {
             immediate: true,
             handler(newVal) {
-                var vm = this;
+                let self = this;
                 if(newVal) {
-                    vm.ui.inFullscreen = true;
+                    self.ui.inFullscreen = true;
                 }
             }
         }
@@ -102,10 +102,10 @@ export default {
     },
     methods: {
         onDoubleClickCheck(e) {
-            var vm = this;
+            let self = this;
 
             //Don't pullscreen because there's no stream;
-            if(vm.peer.stream == null) {
+            if(self.peer.stream == null) {
                 return;
             }
 
@@ -114,16 +114,16 @@ export default {
             e.target.play();
 
             //Clicked again within 1s, trigger fullscreen
-            if(vm.ui.dblClickTimer != null && Date.now() - 1000 <= vm.ui.dblClickTimer) {
-                vm.ui.dblClickTimer = null;
-                vm.ui.inFullscreen = !vm.ui.inFullscreen;
-                if(vm.ui.inFullscreen) {
-                    vm.$emit('openFullscreen', vm.peer);
+            if(self.ui.dblClickTimer != null && Date.now() - 1000 <= self.ui.dblClickTimer) {
+                self.ui.dblClickTimer = null;
+                self.ui.inFullscreen = !self.ui.inFullscreen;
+                if(self.ui.inFullscreen) {
+                    self.$emit('openFullscreen', self.peer);
                 } else {
-                    vm.$emit('closeFullscreen', vm.peer);
+                    self.$emit('closeFullscreen', self.peer);
                 }
             } else {
-                vm.ui.dblClickTimer = Date.now();
+                self.ui.dblClickTimer = Date.now();
             }
         },
         setDefaultVolume(e) {
@@ -131,26 +131,26 @@ export default {
         }
     },
     beforeDestroy() {
-        var vm = this;
-        vm.$emit('closeFullscreenOnDestroy', vm.peer);
+        let self = this;
+        self.$emit('closeFullscreenOnDestroy', self.peer);
     },
     mounted() {
         console.log('Peer Video Component mounted.');
-        var vm = this;
+        let self = this;
 
         document.addEventListener("speaking", function(e) {
             //Check to see if this this the right video that's speaking
-            if(vm.peer.hostid == e.peer.hostid) {
-                vm.peer.user.isSpeaking = true;
-                vm.$forceUpdate();
+            if(self.peer.hostid == e.peer.hostid) {
+                self.peer.user.isSpeaking = true;
+                self.$forceUpdate();
             }
         });
 
         document.addEventListener("stopped_speaking", function(e) {
             //Check to see if this this the right video that's speaking
-            if(vm.peer.hostid == e.peer.hostid) {
-                vm.peer.user.isSpeaking = false;
-                vm.$forceUpdate();
+            if(self.peer.hostid == e.peer.hostid) {
+                self.peer.user.isSpeaking = false;
+                self.$forceUpdate();
             }
         });
 

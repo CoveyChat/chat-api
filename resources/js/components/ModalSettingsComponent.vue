@@ -73,16 +73,15 @@ export default {
     },
     methods: {
         emitData() {
-            var vm = this;
+            let self = this;
             return {
-                bandwidth: vm.userPreferredBandwidth,
-                video: vm.userDevices.active.video,
-                audio: vm.userDevices.active.audio
+                bandwidth: self.userPreferredBandwidth,
+                video: self.userDevices.active.video,
+                audio: self.userDevices.active.audio
             };
         }
     },
     mounted() {
-        var vm = this;
         console.log("Modal Settings Mounted");
     }
 }

@@ -71,7 +71,7 @@ export default {
     },
     methods: {
         animateScroll(duration) {
-            var vm = this;
+            let self = this;
             var messages = this.$refs['messages'];
 
             var start = messages.scrollTop;
@@ -103,12 +103,12 @@ export default {
 mounted() {
     console.log('Messages Component mounted.');
     //View model reference for inside scoped functions
-    var vm = this;
+    let self = this;
 
 },
 updated() {
-    var vm = this;
-    vm.animateScroll(300);
+    let self = this;
+    self.animateScroll(300);
 }
 }
 

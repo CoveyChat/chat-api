@@ -38,20 +38,20 @@
             inFullscreen: Boolean
         },
         mounted() {
-            var vm = this;
+            let self = this;
             console.log("Network Graph Mounted");
             window.addEventListener("orientationchange", function(e) {
                 //Orientation change, recalculate the width of the chart
                 setTimeout(function() {
 
-                    vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
+                    self.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
 
-                    vm.svg.attr("width", vm.width);
-                    vm.update(vm.connections);
+                    self.svg.attr("width", self.width);
+                    self.update(self.connections);
                 }, 200);
 
             });
-            vm.init();
+            self.init();
         },
         data: function () {
             return {
@@ -76,16 +76,16 @@
         },
         methods: {
             init () {
-                var vm = this;
+                let self = this;
 
-                vm.color = d3.scaleOrdinal(d3.schemeTableau10);
+                self.color = d3.scaleOrdinal(d3.schemeTableau10);
 
                 // set the dimensions and margins of the graph
                 var margin = {top: 10, right: 30, bottom: 30, left: 40};
-                vm.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
-                vm.height = 150;
+                self.width = +d3.select('#active-network-chart').style('width').slice(0, -2);
+                self.height = 150;
 
-                vm.tooltip = d3.select("#active-network-chart")
+                self.tooltip = d3.select("#active-network-chart")
                     .append("div")
                     .attr("class", "network-node-tooltip")
                     .style("position", "absolute")
@@ -100,133 +100,133 @@
                     .text("---");
 
 
-                vm.svg = d3.select("#active-network-chart")
+                self.svg = d3.select("#active-network-chart")
                     .append("svg")
-                    .attr("width", vm.width)
-                    .attr("height", vm.height)
-                    //.attr("viewBox", [-vm.width / 2, -vm.height / 2, vm.width, vm.height]);
+                    .attr("width", self.width)
+                    .attr("height", self.height)
+                    //.attr("viewBox", [-self.width / 2, -self.height / 2, self.width, self.height]);
 
-                vm.simulation = d3.forceSimulation()
+                self.simulation = d3.forceSimulation()
                     .force("charge", d3.forceManyBody().strength(-400))
                     .force("link", d3.forceLink().id(d => d.id).distance(75))
-                    .force("x", d3.forceX(vm.width / 2))
-                    .force("y", d3.forceY(vm.height / 2))
-                    .on("tick", vm.tick);
+                    .force("x", d3.forceX(self.width / 2))
+                    .force("y", d3.forceY(self.height / 2))
+                    .on("tick", self.tick);
 
-                vm.link = vm.svg.append("g")
+                self.link = self.svg.append("g")
                     .attr("stroke", "#ccc")
                     .attr("stroke-width", 1.5)
                     .selectAll("line");
 
-                vm.node = vm.svg.append("g")
+                self.node = self.svg.append("g")
                     .attr("stroke", "#fff")
                     .attr("stroke-width", 1.5)
                     .selectAll("circle");
 
-                vm.label = vm.svg.append("g")
+                self.label = self.svg.append("g")
                     .attr("class", "labels")
                     .style("cursor", "default")
                     .selectAll("text")
 
 
-                vm.update(vm.connections);
+                self.update(self.connections);
 
             },
             update(data) {
                 //console.log("Recieved");
                 //console.log(data);
-                var vm = this;
-                vm.connections = data;
+                let self = this;
+                self.connections = data;
 
                 // Make a shallow copy to protect against mutation, while
                 // recycling old nodes to preserve position and velocity.
-                const old = new Map(vm.node.data().map(d => [d.id, d]));
+                const old = new Map(self.node.data().map(d => [d.id, d]));
 
                 data.nodes = data.nodes.map(d => Object.assign(old.get(d.id) || {}, d));
                 data.links = data.links.map(d => Object.assign({}, d));
 
-                vm.node = vm.node
+                self.node = self.node
                     .data(data.nodes, d => d.id)
                     .join(
                         enter => enter.append("circle")
                         .attr("r", 20)
-                        .attr("fill", d => vm.color(d.id))
-                        .on("mouseover", vm.onHover)
-                        .on("mousemove", vm.onMove)
-                        .on("mouseout", vm.onOut)
+                        .attr("fill", d => self.color(d.id))
+                        .on("mouseover", self.onHover)
+                        .on("mousemove", self.onMove)
+                        .on("mouseout", self.onOut)
                     );
 
-                vm.link = vm.link
+                self.link = self.link
                     .data(data.links, d => [d.source, d.target])
                     .join("line");
 
 
-                vm.label = vm.label
+                self.label = self.label
                     .data(data.nodes, d => d.name)
                     .join(enter => enter.append("text")
                         .attr("class", "label")
                         .html(function(d) { d.truncated = d.name.toLowerCase() != 'me'; return !d.truncated ? d.name : d.name.substr(0,1); })
-                        .on("mouseover", vm.onHover)
-                        .on("mousemove", vm.onMove)
-                        .on("mouseout", vm.onOut)
+                        .on("mouseover", self.onHover)
+                        .on("mousemove", self.onMove)
+                        .on("mouseout", self.onOut)
 
                     );
 
-                vm.simulation.nodes(data.nodes);
-                vm.simulation.force("link").links(data.links);
-                vm.simulation.alpha(1).restart();
+                self.simulation.nodes(data.nodes);
+                self.simulation.force("link").links(data.links);
+                self.simulation.alpha(1).restart();
 
             },
             onHover(node, index) {
-                var vm = this;
+                let self = this;
                 if(node.id == 'me') {
-                    return vm.tooltip.style("visibility", "hidden");
+                    return self.tooltip.style("visibility", "hidden");
                 }
-                return vm.tooltip.style("visibility", "visible");
+                return self.tooltip.style("visibility", "visible");
                 //console.log(node);
                 //console.log(index);
             },
             onMove(node, index) {
-                var vm = this;
+                let self = this;
                 if(node.id == 'me') {
-                    return vm.tooltip.style("visibility", "hidden");
+                    return self.tooltip.style("visibility", "hidden");
                 }
 
-                return vm.tooltip
+                return self.tooltip
                     .style("top", (d3.event.pageY - 50)+"px")
                     .style("left",(d3.event.pageX - ((node.name.length * 8) / 2))+"px")
                     .text(node.name);
             },
             onOut(node, index) {
-                var vm = this;
-                return vm.tooltip.style("visibility", "hidden");
+                let self = this;
+                return self.tooltip.style("visibility", "hidden");
             },
             tick() {
-                var vm = this;
+                let self = this;
 
-                vm.node.attr("cx", function(d) {
+                self.node.attr("cx", function(d) {
                         //Hard lock the me element to center
-                        if(d.id == 'me') {return d.x= vm.width/2;}
-                        return d.x = Math.max(20, Math.min(vm.width - 20, d.x));
+                        if(d.id == 'me') {return d.x= self.width/2;}
+                        return d.x = Math.max(20, Math.min(self.width - 20, d.x));
                     })
                     .attr("cy", function(d) {
                          //Hard lock the me element to center
-                        if(d.id == 'me') {return d.y = vm.height/2;}
-                        return d.y = Math.max(20, Math.min(vm.height - 20, d.y));
+                        if(d.id == 'me') {return d.y = self.height/2;}
+                        return d.y = Math.max(20, Math.min(self.height - 20, d.y));
                     });
 
 
-                //vm.node.attr("cx", d => d.x)
+                //self.node.attr("cx", d => d.x)
                 //    .attr("cy", d => d.y)
-                //console.log(vm.width);
+                //console.log(self.width);
 
 
-                vm.link.attr("x1", d => d.source.x)
+                self.link.attr("x1", d => d.source.x)
                     .attr("y1", d => d.source.y)
                     .attr("x2", d => d.target.x)
                     .attr("y2", d => d.target.y);
 
-                vm.label
+                self.label
                     .attr("x", function(d) { return d.x-10 + (d.truncated ? 5 : 0); })
                     .attr("y", function (d) { return d.y+5; })
                     .style("font-size", "15px")
