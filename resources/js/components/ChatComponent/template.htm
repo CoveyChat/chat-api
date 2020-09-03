@@ -106,7 +106,11 @@
             </div>
             <div v-for="peer in peerStreams"
                 :key="peer.id"
-                class="col-sm-6 col-md-6 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3">
+                :class="{
+                    'col-sm-6 col-md-6 col-lg-4': (peerStreams.length <= 3),
+                    'col-sm-4 col-md-4 col-lg-2': (peerStreams.length > 3)
+                }"
+                class="col-ml-auto embed-responsive embed-responsive-4by3">
 
                 <peer-video-component
                 ref="peerVideos"

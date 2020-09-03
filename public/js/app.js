@@ -61169,7 +61169,13 @@ var render = function() {
                           {
                             key: peer.id,
                             staticClass:
-                              "col-sm-6 col-md-6 col-lg-4 col-ml-auto embed-responsive embed-responsive-4by3"
+                              "col-ml-auto embed-responsive embed-responsive-4by3",
+                            class: {
+                              "col-sm-6 col-md-6 col-lg-4":
+                                _vm.peerStreams.length <= 3,
+                              "col-sm-4 col-md-4 col-lg-2":
+                                _vm.peerStreams.length > 3
+                            }
                           },
                           [
                             _c("peer-video-component", {
