@@ -12,7 +12,7 @@
                 'btn-off': !videoEnabled,
                 'local-video-overlay': inFullscreen
             }"
-            @click="$emit('changeSettings')">
+            @click="$emit('change-settings')">
 
             <span class="sr-only">Settings</span>
             <i class="fas fa-cog"></i>
@@ -29,7 +29,7 @@
                 'local-video-overlay': inFullscreen
             }"
             v-if="deviceAccess"
-            @click="$emit('toggleVideo')">
+            @click="$emit('toggle-video')">
 
             <span class="sr-only" v-if="!videoEnabled">Start Video</span>
             <i class="fas fa-video-slash" v-if="!videoEnabled"></i>
@@ -47,7 +47,7 @@
                 'local-audio-overlay': inFullscreen
             }"
             v-if="videoEnabled || screenshareEnabled"
-            @click="$emit('toggleAudio')">
+            @click="$emit('toggle-audio')">
 
             <span class="sr-only" v-if="!audioEnabled">Enable Audio</span>
             <i class="fas fa-microphone-slash" v-if="!audioEnabled"></i>
@@ -65,7 +65,7 @@
                 'local-screenshare-overlay': inFullscreen
             }"
             v-if="(videoEnabled || screenshareEnabled) && !isMobile"
-            @click="$emit('toggleScreenshare')">
+            @click="$emit('toggle-screenshare')">
 
             <span class="sr-only" v-if="!screenshareEnabled">Enable Screenshare</span>
             <i class="fas fa-desktop" v-if="!screenshareEnabled"></i>
@@ -83,7 +83,7 @@
                 'local-swapvideo-overlay': inFullscreen
             }"
             v-if="videoEnabled && videoDevices.length > 1"
-            @click="$emit('swapVideoFeed')">
+            @click="$emit('swap-video-feed')">
 
             <span class="sr-only">Switch Video</span>
             <i class="fas fa-sync-alt"></i>

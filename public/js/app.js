@@ -60114,7 +60114,7 @@ var render = function() {
           attrs: { type: "button", id: "btn-local-video-toggle" },
           on: {
             click: function($event) {
-              return _vm.$emit("changeSettings")
+              return _vm.$emit("change-settings")
             }
           }
         },
@@ -60137,7 +60137,7 @@ var render = function() {
               attrs: { type: "button", id: "btn-local-video-toggle" },
               on: {
                 click: function($event) {
-                  return _vm.$emit("toggleVideo")
+                  return _vm.$emit("toggle-video")
                 }
               }
             },
@@ -60175,7 +60175,7 @@ var render = function() {
               attrs: { type: "button", id: "btn-local-audio-toggle" },
               on: {
                 click: function($event) {
-                  return _vm.$emit("toggleAudio")
+                  return _vm.$emit("toggle-audio")
                 }
               }
             },
@@ -60213,7 +60213,7 @@ var render = function() {
               attrs: { type: "button", id: "btn-local-screenshare-toggle" },
               on: {
                 click: function($event) {
-                  return _vm.$emit("toggleScreenshare")
+                  return _vm.$emit("toggle-screenshare")
                 }
               }
             },
@@ -60256,7 +60256,7 @@ var render = function() {
               attrs: { type: "button", id: "btn-local-swapvideo-toggle" },
               on: {
                 click: function($event) {
-                  return _vm.$emit("swapVideoFeed")
+                  return _vm.$emit("swap-video-feed")
                 }
               }
             },
@@ -61061,11 +61061,11 @@ var render = function() {
                   videoDevices: _vm.user.devices.video
                 },
                 on: {
-                  toggleVideo: _vm.toggleVideo,
-                  toggleAudio: _vm.toggleAudio,
-                  toggleScreenshare: _vm.toggleScreenshare,
-                  swapVideoFeed: _vm.swapVideoFeed,
-                  changeSettings: _vm.changeSettings
+                  "toggle-video": _vm.toggleVideo,
+                  "toggle-audio": _vm.toggleAudio,
+                  "toggle-screenshare": _vm.toggleScreenshare,
+                  "swap-video-feed": _vm.swapVideoFeed,
+                  "change-settings": _vm.changeSettings
                 }
               }),
               _vm._v(" "),
