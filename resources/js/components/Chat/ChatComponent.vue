@@ -3,11 +3,12 @@
 
 <script>
 
-import SoundEffect from '../models/SoundEffect.js';
-import User from '../models/User.js';
-import Message from '../models/Message.js';
-import PeerConnection from '../models/PeerConnection.js';
-import Modal from '../models/Modal.js';
+import SoundEffect from '../../models/SoundEffect.js';
+import User from '../../models/User.js';
+import Message from '../../models/Message.js';
+import PeerConnection from '../../models/PeerConnection.js';
+import Modal from '../../models/Modal.js';
+import ModalSettingsComponent from './ModalSettingsComponent.vue'
 
 export default {
     props: {
@@ -85,7 +86,7 @@ export default {
                 }
             };
 
-            var modal = new Modal(self.$refs.modalcontainer, options, 'settings');
+            var modal = new Modal(self.$refs.modalcontainer, options, ModalSettingsComponent);
 
             //Store the old settings to check against because vue binding already applied them
             var oldSettings = {

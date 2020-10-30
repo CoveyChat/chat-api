@@ -1,16 +1,10 @@
+import Vue from 'vue'
 import ModalComponent from '../components/ModalComponent.vue'
-import ModalSettingsComponent from '../components/ModalSettingsComponent.vue'
 
 export default class Modal {
-    constructor(target, options, component) {
+    constructor(target, options, component = ModalComponent) {
         if(typeof options.props == 'undefined') {
             options.props = {};
-        }
-
-        if(typeof component != 'undefined' && component == 'settings') {
-            component = ModalSettingsComponent;
-        } else {
-            component = ModalComponent;
         }
 
         const ModalWindow = Vue.extend(component);
