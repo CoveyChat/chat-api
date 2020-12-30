@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Chat;
+namespace App\Http\Requests\User;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ChatCreateRequest extends FormRequest
+class RegisterRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,9 +24,9 @@ class ChatCreateRequest extends FormRequest
     public function rules()
     {
         return [
-            'chat.name'=> 'required|string',
-            'chat.description'=> 'string|nullable',
-            'chat.password'=> 'string|nullable',
+            'user.name' => 'required|string',
+            'user.email'=> 'required|email',
+            'user.password'=> 'required|string',
         ];
     }
 }

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+/*
 Route::get('/', function () {return view('home');});
 
 Route::middleware('auth:web')->get('/bridge/usertoken', 'Api\AuthController@get');
@@ -34,6 +35,6 @@ Route::post('/chat/{chat}', 'Chat\ChatController@verifyLaunchPassword');
 Route::group(['prefix' => 'bridge'], function() {
     Route::get('whoami', 'Api\UserController@whoami');
 });
+*/
 
-
-Auth::routes();
+//Auth::routes();

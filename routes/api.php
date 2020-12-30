@@ -16,16 +16,26 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['namespace' => 'Api', 'prefix' => '1.0'], function () use ($router) {
 
+    Route::post('users/login', 'AuthController@login');
+    Route::post('users/register', 'UserController@register');
+    Route::post('users/password/reset', 'UserController@passwordReset')->name('password.reset');
+    Route::post('users/password/forgot', 'UserController@passwordForgot');
+
     Route::group(['prefix' => 'chats'], function() {
-        Route::get('{chat}', 'ChatController@get');
-        Route::patch('{chat}', 'ChatController@update');
+        Route::get('{chat}', 'Chat\ChatController@get');
+        Route::post('', 'Chat\ChatController@create');
+        Route::patch('{chat}', 'Chat\ChatController@update');
+        Route::delete('{chat}', 'Chat\ChatController@delete');
     });
 
-    Route::post('users/login', 'AuthController@login');
-
+    //Authenticated Routes
     Route::group(['middleware' => 'auth:api'], function() {
         Route::group(['prefix' => 'users'], function() {
             Route::get('whoami', 'UserController@whoami');
+            Route::patch('users/password', 'AuthController@updatePassword');
+
+            Route::get('{user_id}/chats/', 'Chat\ChatController@getUserChat');
+            Route::post('{user_id}/chats', 'Chat\ChatController@createUserChat');
         });
     });
 
