@@ -31,7 +31,7 @@ Route::group(['namespace' => 'Api', 'prefix' => '1.0'], function () use ($router
 
     //Authenticated Routes
     Route::group(['middleware' => 'auth:api'], function() {
-        Route::delete('users/logout', 'AuthController@logout');
+        Route::post('users/logout', 'AuthController@logout');
 
         Route::group(['prefix' => 'users'], function() {
             Route::get('whoami', 'UserController@whoami');

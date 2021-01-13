@@ -33,7 +33,7 @@ class AuthController extends Controller
             $token->revoke();
         }
 
-        return response()->api()->deleted();
+        return response()->api()->get('logged out');
         //Auth::user()->invalidate(true);
     }
 
