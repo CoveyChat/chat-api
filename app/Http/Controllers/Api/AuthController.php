@@ -25,6 +25,18 @@ class AuthController extends Controller
         return $this->resolveAuthFromCredentials($request->auth['email'], $request->auth['password']);
     }
 
+    public function logout() {
+        $user = Auth::user();
+        $userTokens = $user->tokens;
+
+        foreach($userTokens as $token) {
+            $token->revoke();
+        }
+
+        return response()->api()->deleted();
+        //Auth::user()->invalidate(true);
+    }
+
     public function get(){
         $user = Auth::user();
         if(!empty($user)) {

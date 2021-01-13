@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::group(['namespace' => 'Api', 'prefix' => '1.0'], function () use ($router) {
 
     Route::post('users/login', 'AuthController@login');
+
     Route::post('users/register', 'UserController@register');
     Route::post('users/password/reset', 'UserController@passwordReset')->name('password.reset');
     Route::post('users/password/forgot', 'UserController@passwordForgot');
@@ -30,6 +31,8 @@ Route::group(['namespace' => 'Api', 'prefix' => '1.0'], function () use ($router
 
     //Authenticated Routes
     Route::group(['middleware' => 'auth:api'], function() {
+        Route::delete('users/logout', 'AuthController@logout');
+
         Route::group(['prefix' => 'users'], function() {
             Route::get('whoami', 'UserController@whoami');
             Route::patch('users/password', 'AuthController@updatePassword');
