@@ -34,6 +34,11 @@ class ChatController extends Controller
 
     public function create(ChatCreateRequest $request, $user = null)
     {
+        //No user passed, try and see if we are logged in
+        if(empty($user)) {
+            $user = Auth::user();
+        }
+
         $chat = new Chat([
             'created_by' => $user->id ?? null,
             'name' => $request->chat['name'],
