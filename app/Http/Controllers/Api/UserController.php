@@ -33,7 +33,7 @@ class UserController extends Controller
     {
         $user = Auth::user();
         $user->token = $this->generateTokenForUser($user);
-        return response()->api()->get(['user' => $user]);
+        return response()->api()->get($user);
     }
 
     public function register(RegisterRequest $request)
@@ -48,7 +48,7 @@ class UserController extends Controller
             throw new DataConflictException($e->errorInfo[2]);
         }
 
-        return response()->api()->created(['user' => $user]);
+        return response()->api()->created($user);
     }
 
     public function passwordForgot(ForgotPasswordRequest $request)

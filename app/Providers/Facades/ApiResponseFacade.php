@@ -17,13 +17,17 @@ class ApiResponseFacade extends Response{
         if(is_array($data) && !empty($data['data'])) {$data = $data['data'];}
         if(is_object($data) && !empty($data->data)) {$data = $data->data;}
 
+        return self::json($data, $status, $headers, $options);
+
+        /*
+        // Old format which doesn't follow the json spec / api-query format
         return self::json(
             [
                 'success' => true,
                 'message'=>$message,
                 'data'=> $data,
             ],
-            $status, $headers, $options);
+            $status, $headers, $options);*/
     }
 
     /**
