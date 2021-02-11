@@ -33,7 +33,7 @@ class UserController extends Controller
     {
         $user = Auth::user();
         $user->token = $this->generateTokenForUser($user);
-        return response()->api()->get($user);
+        return response()->api()->get(['user'=>$user]);
     }
 
     public function register(RegisterRequest $request)
