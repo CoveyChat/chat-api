@@ -39,6 +39,8 @@ Route::group(['namespace' => 'Api', 'prefix' => '1.0'], function () use ($router
 
             Route::get('{user_id}/chats/', 'Chat\ChatController@getUserChat');
             Route::post('{user_id}/chats', 'Chat\ChatController@createUserChat');
+            Route::put('{user_id}/chats/{chat}', 'Chat\ChatController@update');
+            Route::delete('{user_id}/chats/{chat}', 'Chat\ChatController@delete');
         });
     });
 

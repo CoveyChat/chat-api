@@ -24,9 +24,9 @@ class ChatUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'chat.name'=> 'required|string',
-            'chat.description'=> 'string|nullable',
-            'chat.password'=> 'string|nullable',
+            'name'=> 'required|string',
+            'description'=> 'string|nullable',
+            'password'=> 'string|nullable',
         ];
     }
 }
