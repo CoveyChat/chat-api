@@ -85,13 +85,13 @@
         </div>
         <div class="row">
             <div class="col-md-12 text-center">
-                <img src='{{URL::asset('img/logo_color.png')}}' alt='BevyChat Logo' class='img-fluid mx-auto' />
+                <img src='{{URL::asset('img/logo_color.png')}}' alt='CoveyChat Logo' class='img-fluid mx-auto' />
             </div>
         </div>
         <div class="row body">
             <div class="col-6 text-right">
-                <h1 class='title'>Bevy</h1>
-                <h2><span class="text-muted pr-2 phonetic">/ˈbevē/</span></h2>
+                <h1 class='title'>Covey</h1>
+                <h2><span class="text-muted pr-2 phonetic">/ˈkəvē/</span></h2>
                 <blockquote class='mr-4'>
                     <p>
                         <h3><em>noun</em></h3>
@@ -99,10 +99,10 @@
                     <p>
                         <ol class='pr-3 definition'>
                             <li>
-                                <span class="text-muted">1.</span> large group or collection
+                                <span class="text-muted">1.</span> a small party or flock of birds, especially partridge.
                             </li>
                             <li>
-                                <span class="text-muted">2.</span> a group of animals and especially quail
+                                <span class="text-muted">2.</span> a small group of people or things
                             </li>
                         </ul>
                     </p>

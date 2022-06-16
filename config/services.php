@@ -16,7 +16,7 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => 'https://bevy.chat/oauth/google/callback',
+        'redirect' => 'https://covey.chat/oauth/google/callback',
     ],
 
     'mailgun' => [
